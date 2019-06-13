@@ -14,7 +14,7 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
-  using RoadId = road::RoadId;
+  using RoadId = int;
 
   struct GeometryArc {
     double curvature  { 0.0 };
@@ -45,7 +45,7 @@ namespace parser {
   };
 
   struct Geometry {
-    RoadId road_id      { 0u };
+    RoadId road_id      { -1 };
     double s            { 0.0 };
     double x            { 0.0 };
     double y            { 0.0 };
@@ -74,7 +74,7 @@ namespace parser {
           Geometry geo;
 
           // get road id
-          geo.road_id = node_road.attribute("id").as_uint();
+          geo.road_id = node_road.attribute("id").as_int();
 
           // get common properties
           geo.s = node_geo.attribute("s").as_double();

@@ -31,6 +31,8 @@ namespace geom {
 
     Vector2D() = default;
 
+    Vector2D(const Vector2D &) = default;
+
     Vector2D(float ix, float iy)
       : x(ix),
         y(iy) {}
@@ -39,18 +41,18 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    float SquaredLength() const {
+    double SquaredLength() const {
       return x * x + y * y;
     }
 
-    float Length() const {
+    double Length() const {
        return std::sqrt(SquaredLength());
     }
 
     Vector2D MakeUnitVector() const {
-      const float len = Length();
-      DEVELOPMENT_ASSERT(len > 2.0f * std::numeric_limits<float>::epsilon());
-      const float k = 1.0f / len;
+      const double len = Length();
+      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
+      double k = 1.0 / len;
       return Vector2D(x * k, y * k);
     }
 
@@ -80,34 +82,34 @@ namespace geom {
       return lhs;
     }
 
-    Vector2D &operator*=(float rhs) {
+    Vector2D &operator*=(const double &rhs) {
       x *= rhs;
       y *= rhs;
       return *this;
     }
 
-    friend Vector2D operator*(Vector2D lhs, float rhs) {
+    friend Vector2D operator*(Vector2D lhs, const double &rhs) {
       lhs *= rhs;
       return lhs;
     }
 
-    friend Vector2D operator*(float lhs, Vector2D rhs) {
+    friend Vector2D operator*(const double &lhs, Vector2D rhs) {
       rhs *= lhs;
       return rhs;
     }
 
-    Vector2D &operator/=(float rhs) {
+    Vector2D &operator/=(const double &rhs) {
       x /= rhs;
       y /= rhs;
       return *this;
     }
 
-    friend Vector2D operator/(Vector2D lhs, float rhs) {
+    friend Vector2D operator/(Vector2D lhs, const double &rhs) {
       lhs /= rhs;
       return lhs;
     }
 
-    friend Vector2D operator/(float lhs, Vector2D rhs) {
+    friend Vector2D operator/(const double &lhs, Vector2D rhs) {
       rhs /= lhs;
       return rhs;
     }
@@ -130,22 +132,27 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    /// Return a Vector2D converted from centimeters to meters.
-    Vector2D ToMeters() const {
-      return *this * 1e-2f;
+    Vector2D(const FVector2D &vector)
+      : Vector2D(vector.X, vector.Y) {}
+
+    Vector2D &ToMeters(void) { // from centimeters to meters.
+       x *= 0.001f;
+       y *= 0.001f;
+       return *this;
     }
 
-    /// Return a Vector2D converted from meters to centimeters.
-    Vector2D ToCentimeters() const {
-      return *this * 1e2f;
+    Vector2D &ToCentimeters(void) { // from meters to centimeters.
+       x *= 100.0f;
+       y *= 100.0f;
+       return *this;
     }
 
-    FVector2D ToFVector2D() const {
+    operator FVector2D() const {
       return FVector2D{x, y};
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
-
+  
     MSGPACK_DEFINE_ARRAY(x, y)
   };
 

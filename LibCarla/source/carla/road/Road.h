@@ -45,7 +45,7 @@ namespace road {
 
     bool IsJunction() const;
 
-    JuncId GetJunctionId() const;
+    JuncId GetJunction() const;
 
     Lane &GetLaneByDistance(double s, LaneId lane_id);
 
@@ -63,10 +63,9 @@ namespace road {
 
     Lane *GetPrevLane(const double s, const LaneId lane_id);
 
-    /// Get the start section (from road coordinates s) given a @a lane id
+    // get the start and end section with a lan id
     LaneSection *GetStartSection(LaneId id);
 
-    /// Get the end section (from road coordinates s) given a @a lane id
     LaneSection *GetEndSection(LaneId id);
 
     std::vector<Road *> GetNexts() const;

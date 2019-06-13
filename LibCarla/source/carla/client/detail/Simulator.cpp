@@ -130,15 +130,13 @@ namespace detail {
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
-      rpc::AttachmentType attachment_type,
       GarbageCollectionPolicy gc) {
     rpc::Actor actor;
     if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
-          parent->GetId(),
-          attachment_type);
+          parent->GetId());
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),

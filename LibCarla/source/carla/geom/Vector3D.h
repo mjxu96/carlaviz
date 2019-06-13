@@ -33,6 +33,8 @@ namespace geom {
 
     Vector3D() = default;
 
+    Vector3D(const Vector3D &) = default;
+
     Vector3D(float ix, float iy, float iz)
       : x(ix),
         y(iy),
@@ -42,18 +44,18 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    float SquaredLength() const {
+    double SquaredLength() const {
       return x * x + y * y + z * z;
     }
 
-    float Length() const {
+    double Length() const {
        return std::sqrt(SquaredLength());
     }
 
     Vector3D MakeUnitVector() const {
-      const float length = Length();
-      DEVELOPMENT_ASSERT(length > 2.0f * std::numeric_limits<float>::epsilon());
-      const float k = 1.0f / length;
+      const double len = Length();
+      DEBUG_ASSERT(len > std::numeric_limits<double>::epsilon());
+      double k = 1.0 / len;
       return Vector3D(x * k, y * k, z * k);
     }
 
@@ -85,36 +87,36 @@ namespace geom {
       return lhs;
     }
 
-    Vector3D &operator*=(float rhs) {
+    Vector3D &operator*=(const double &rhs) {
       x *= rhs;
       y *= rhs;
       z *= rhs;
       return *this;
     }
 
-    friend Vector3D operator*(Vector3D lhs, float rhs) {
+    friend Vector3D operator*(Vector3D lhs, const double &rhs) {
       lhs *= rhs;
       return lhs;
     }
 
-    friend Vector3D operator*(float lhs, Vector3D rhs) {
+    friend Vector3D operator*(const double &lhs, Vector3D rhs) {
       rhs *= lhs;
       return rhs;
     }
 
-    Vector3D &operator/=(float rhs) {
+    Vector3D &operator/=(const double &rhs) {
       x /= rhs;
       y /= rhs;
       z /= rhs;
       return *this;
     }
 
-    friend Vector3D operator/(Vector3D lhs, float rhs) {
+    friend Vector3D operator/(Vector3D lhs, const double &rhs) {
       lhs /= rhs;
       return lhs;
     }
 
-    friend Vector3D operator/(float lhs, Vector3D rhs) {
+    friend Vector3D operator/(const double &lhs, Vector3D rhs) {
       rhs /= lhs;
       return rhs;
     }
@@ -137,17 +139,24 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    /// Return a Vector3D converted from centimeters to meters.
-    Vector3D ToMeters() const {
-      return *this * 1e-2f;
+    Vector3D(const FVector &vector)
+      : Vector3D(vector.X, vector.Y, vector.Z) {}
+
+    Vector3D &ToMeters(void) { // from centimeters to meters.
+       x *= 0.001f;
+       y *= 0.001f;
+       z *= 0.001f;
+       return *this;
     }
 
-    /// Return a Vector3D converted from meters to centimeters.
-    Vector3D ToCentimeters() const {
-      return *this * 1e2f;
+    Vector3D &ToCentimeters(void) { // from meters to centimeters.
+       x *= 100.0f;
+       y *= 100.0f;
+       z *= 100.0f;
+       return *this;
     }
 
-    FVector ToFVector() const {
+    operator FVector() const {
       return FVector{x, y, z};
     }
 

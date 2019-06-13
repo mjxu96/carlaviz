@@ -19,8 +19,7 @@ namespace pointcloud {
 
     template <typename PointIt>
     static void Dump(std::ostream &out, PointIt begin, PointIt end) {
-      DEBUG_ASSERT(std::distance(begin, end) >= 0);
-      WriteHeader(out, static_cast<size_t>(std::distance(begin, end)));
+      WriteHeader(out, std::distance(begin, end));
       for (; begin != end; ++begin) {
         out << begin->x << ' ' << begin->y << ' ' << begin->z << '\n';
       }

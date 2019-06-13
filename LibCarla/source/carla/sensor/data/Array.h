@@ -87,8 +87,7 @@ namespace data {
     }
 
     size_type size() const {
-      DEBUG_ASSERT(std::distance(begin(), end()) >= 0);
-      return static_cast<size_type>(std::distance(begin(), end()));
+     return std::distance(begin(), end());
     }
 
     value_type *data() {

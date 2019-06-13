@@ -30,6 +30,8 @@ namespace geom {
 
     GeoLocation() = default;
 
+    GeoLocation(const GeoLocation &) = default;
+
     GeoLocation(double latitude, double longitude, double altitude)
       : latitude(latitude),
         longitude(longitude),

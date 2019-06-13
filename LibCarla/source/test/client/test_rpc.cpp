@@ -16,7 +16,6 @@
 #include <thread>
 
 using namespace carla::rpc;
-using namespace std::chrono_literals;
 
 TEST(rpc, compilation_tests) {
   Server server(TESTING_PORT);
@@ -29,7 +28,7 @@ TEST(rpc, compilation_tests) {
 TEST(rpc, server_bind_sync_run_on_game_thread) {
   const auto main_thread_id = std::this_thread::get_id();
 
-  const uint16_t port = (TESTING_PORT != 0u ? TESTING_PORT : 2017u);
+  const auto port = (TESTING_PORT != 0u ? TESTING_PORT : 2017u);
 
   Server server(port);
 

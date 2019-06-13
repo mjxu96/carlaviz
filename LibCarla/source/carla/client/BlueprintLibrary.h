@@ -51,8 +51,7 @@ namespace client {
 
     /// @warning Linear complexity.
     const_reference operator[](size_type pos) const {
-      using diff_t = std::iterator_traits<const_iterator>::difference_type;
-      return std::next(_blueprints.begin(), static_cast<diff_t>(pos))->second;
+      return std::next(_blueprints.begin(), pos)->second;
     }
 
     /// @warning Linear complexity.

@@ -1,4 +1,4 @@
-CURDIR=/home/ubuntu/carla-test/Examples/CppClient
+CURDIR=$(PWD)
 CARLADIR=$(CURDIR)/../..
 BUILDDIR=$(CURDIR)/build
 BINDIR=$(CURDIR)/bin

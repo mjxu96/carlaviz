@@ -12,7 +12,6 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
-#include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
@@ -108,8 +107,7 @@ namespace detail {
     rpc::Actor SpawnActorWithParent(
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
-        rpc::ActorId parent,
-        rpc::AttachmentType attachment_type);
+        rpc::ActorId parent);
 
     bool DestroyActor(rpc::ActorId actor);
 
@@ -176,15 +174,13 @@ namespace detail {
 
     void StopRecorder();
 
-    std::string ShowRecorderFileInfo(std::string name, bool show_all);
+    std::string ShowRecorderFileInfo(std::string name);
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2);
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
-
-    void SetReplayerTimeFactor(double time_factor);
 
     void SubscribeToStream(
         const streaming::Token &token,

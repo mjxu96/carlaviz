@@ -243,12 +243,12 @@ namespace road {
 
   // build road objects
   carla::road::Road *MapBuilder::AddRoad(
-      const RoadId road_id,
+      const uint32_t road_id,
       const std::string name,
       const double length,
-      const JuncId junction_id,
-      const RoadId predecessor,
-      const RoadId successor) {
+      const int32_t junction_id,
+      const int32_t predecessor,
+      const int32_t successor) {
 
     // add it
     auto road = &(_map_data._roads.emplace(road_id, Road()).first->second);
@@ -307,12 +307,11 @@ namespace road {
       const double hdg,
       const double length) {
     DEBUG_ASSERT(road != nullptr);
-    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
-    auto line_geometry = std::make_unique<GeometryLine>(
-        s,
+
+    auto line_geometry = std::make_unique<GeometryLine>(s,
         length,
         hdg,
-        location);
+        geom::Location(x, y, 0.0));
 
     _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
         std::move(line_geometry))));
@@ -348,12 +347,11 @@ namespace road {
       const double length,
       const double curvature) {
     DEBUG_ASSERT(road != nullptr);
-    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
-    auto arc_geometry = std::make_unique<GeometryArc>(
-        s,
+
+    auto arc_geometry = std::make_unique<GeometryArc>(s,
         length,
         hdg,
-        location,
+        geom::Location(x, y, 0.0),
         curvature);
 
     _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
@@ -410,20 +408,20 @@ namespace road {
   }
 
   void MapBuilder::AddConnection(
-      const JuncId junction_id,
-      const ConId connection_id,
-      const RoadId incoming_road,
-      const RoadId connecting_road) {
+      const int32_t junction_id,
+      const int32_t connection_id,
+      const int32_t incoming_road,
+      const int32_t connecting_road) {
     DEBUG_ASSERT(_map_data.GetJunction(junction_id) != nullptr);
     _map_data.GetJunction(junction_id)->GetConnections().emplace(connection_id,
         Junction::Connection(connection_id, incoming_road, connecting_road));
   }
 
   void MapBuilder::AddLaneLink(
-      const JuncId junction_id,
-      const ConId connection_id,
-      const LaneId from,
-      const LaneId to) {
+      const int32_t junction_id,
+      const int32_t connection_id,
+      const int32_t from,
+      const int32_t to) {
     DEBUG_ASSERT(_map_data.GetJunction(junction_id) != nullptr);
     _map_data.GetJunction(junction_id)->GetConnection(connection_id)->AddLaneLink(from, to);
   }
@@ -461,8 +459,8 @@ namespace road {
   }
 
   void MapBuilder::AddDependencyToSignal(
-      const RoadId road_id,
-      const SignId signal_id,
+      const uint32_t road_id,
+      const uint32_t signal_id,
       const uint32_t dependency_id,
       const std::string dependency_type) {
     DEBUG_ASSERT(_map_data.GetRoad(road_id).GetSignal(signal_id) != nullptr);
@@ -508,10 +506,7 @@ namespace road {
 
   // return a list of pointers to all lanes from a lane (using road and junction
   // info)
-  std::vector<Lane *> MapBuilder::GetLaneNext(
-      RoadId road_id,
-      SectionId section_id,
-      LaneId lane_id) {
+  std::vector<Lane *> MapBuilder::GetLaneNext(RoadId road_id, int section_id, LaneId lane_id) {
     std::vector<Lane *> result;
 
     if (!_map_data.ContainsRoad(road_id)) {
@@ -561,11 +556,7 @@ namespace road {
       }
     } else {
       // several roads (junction)
-
-      /// @todo Is it correct to use a road id as section id? (NS: I just added
-      /// this cast to avoid compiler warnings).
-      auto next_road_as_junction = static_cast<JuncId>(next_road);
-      auto options = GetJunctionLanes(next_road_as_junction, road_id, lane_id);
+      auto options = GetJunctionLanes(next_road, road_id, lane_id);
       for (auto opt : options) {
         result.push_back(GetEdgeLanePointer(opt.first, (opt.second <= 0), opt.second));
       }
@@ -575,7 +566,7 @@ namespace road {
   }
 
   std::vector<std::pair<RoadId, LaneId>> MapBuilder::GetJunctionLanes(
-      JuncId junction_id,
+      RoadId junction_id,
       RoadId road_id,
       LaneId lane_id) {
     std::vector<std::pair<RoadId, LaneId>> result;

@@ -9,8 +9,6 @@
 #include <carla/RecurrentSharedFuture.h>
 #include <carla/ThreadGroup.h>
 
-using namespace std::chrono_literals;
-
 TEST(recurrent_shared_future, use_case) {
   using namespace carla;
   ThreadGroup threads;
@@ -31,10 +29,10 @@ TEST(recurrent_shared_future, use_case) {
     }
   });
 
-  std::this_thread::sleep_for(100ms);
+  std::this_thread::sleep_for(12ms);
   for (auto i = 0u; i < number_of_openings - 1u; ++i) {
     future.SetValue(42);
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(4ms);
   }
   done = true;
   future.SetValue(42);

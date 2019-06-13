@@ -60,18 +60,16 @@ namespace client {
   SharedPtr<Actor> World::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
-      Actor *parent_actor,
-      rpc::AttachmentType attachment_type) {
-    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor, attachment_type);
+      Actor *parent_actor) {
+    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor);
   }
 
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
-      Actor *parent_actor,
-      rpc::AttachmentType attachment_type) noexcept {
+      Actor *parent_actor) noexcept {
     try {
-      return SpawnActor(blueprint, transform, parent_actor, attachment_type);
+      return SpawnActor(blueprint, transform, parent_actor);
     } catch (const std::exception &e) {
       return nullptr;
     }

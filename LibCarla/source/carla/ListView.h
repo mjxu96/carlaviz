@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "carla/Debug.h"
-
 #include <type_traits>
 #include <iterator>
 
@@ -21,16 +19,13 @@ namespace carla {
 
     using iterator = IT;
     using const_iterator = typename std::add_const<IT>::type;
-    using size_type = size_t;
     using difference_type = typename std::iterator_traits<iterator>::difference_type;
     using value_type = typename std::iterator_traits<iterator>::value_type;
     using pointer = typename std::iterator_traits<iterator>::pointer;
     using reference = typename std::iterator_traits<iterator>::reference;
 
     explicit ListView(iterator begin, iterator end)
-      : _begin(begin), _end(end) {
-      DEBUG_ASSERT(std::distance(_begin, _end) >= 0);
-    }
+      : _begin(begin), _end(end) {}
 
     ListView(const ListView &) = default;
     ListView &operator=(const ListView &) = delete;
@@ -63,8 +58,8 @@ namespace carla {
       return _begin == _end;
     }
 
-    size_type size() const {
-      return static_cast<size_t>(std::distance(begin(), end()));
+    difference_type size() const {
+      return std::distance(_begin, _end);
     }
 
   private:

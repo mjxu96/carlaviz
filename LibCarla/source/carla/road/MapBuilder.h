@@ -22,12 +22,12 @@ namespace road {
 
     // called from road parser
     carla::road::Road *AddRoad(
-        const RoadId road_id,
+        const uint32_t road_id,
         const std::string name,
         const double length,
-        const JuncId junction_id,
-        const RoadId predecessor,
-        const RoadId successor);
+        const int32_t junction_id,
+        const int32_t predecessor,
+        const int32_t successor);
 
     carla::road::LaneSection *AddRoadSection(
         carla::road::Road *road,
@@ -36,11 +36,11 @@ namespace road {
 
     carla::road::Lane *AddRoadSectionLane(
         carla::road::LaneSection *section,
-        const LaneId lane_id,
+        const int32_t lane_id,
         const uint32_t lane_type,
         const bool lane_level,
-        const LaneId predecessor,
-        const LaneId successor);
+        const int32_t predecessor,
+        const int32_t successor);
 
     // called from geometry parser
     void AddRoadGeometryLine(
@@ -136,8 +136,8 @@ namespace road {
 
     // Signal methods
     void AddSignal(
-        const RoadId road_id,
-        const SignId signal_id,
+        const uint32_t road_id,
+        const uint32_t signal_id,
         const double s,
         const double t,
         const std::string name,
@@ -157,31 +157,29 @@ namespace road {
         const double roll);
 
     void AddValidityToLastAddedSignal(
-        const RoadId road_id,
-        const SignId signal_id,
-        const LaneId from_lane,
-        const LaneId to_lane);
+        const uint32_t road_id,
+        const uint32_t signal_id,
+        const int32_t from_lane,
+        const int32_t to_lane);
 
     // called from junction parser
-    void AddJunction(
-        const JuncId id,
-        const std::string name);
+    void AddJunction(const int32_t id, const std::string name);
 
     void AddConnection(
-        const JuncId junction_id,
-        const ConId connection_id,
-        const RoadId incoming_road,
-        const RoadId connecting_road);
+        const int32_t junction_id,
+        const int32_t connection_id,
+        const int32_t incoming_road,
+        const int32_t connecting_road);
 
     void AddLaneLink(
-        const JuncId junction_id,
-        const ConId connection_id,
-        const LaneId from,
-        const LaneId to);
+        const int32_t junction_id,
+        const int32_t connection_id,
+        const int32_t from,
+        const int32_t to);
 
     void AddRoadSection(
-        const RoadId road_id,
-        const SectionId section_index,
+        const uint32_t road_id,
+        const uint32_t section_index,
         const double s,
         const double a,
         const double b,
@@ -189,13 +187,13 @@ namespace road {
         const double d);
 
     void SetRoadLaneLink(
-        const RoadId road_id,
-        const SectionId section_index,
-        const LaneId lane_id,
+        const uint32_t road_id,
+        const int32_t section_index,
+        const int32_t lane_id,
         const Lane::LaneType lane_type,
         const bool lane_level,
-        const LaneId predecessor,
-        const LaneId successor);
+        const int32_t predecessor,
+        const int32_t successor);
 
     // called from lane parser
     void CreateLaneAccess(
@@ -291,27 +289,27 @@ namespace road {
         const std::string unit);
 
     void AddValidityToSignal(
-        const RoadId road_id,
-        const SignId signal_id,
-        const LaneId from_lane,
-        const LaneId to_lane);
+        const uint32_t road_id,
+        const uint32_t signal_id,
+        const int32_t from_lane,
+        const int32_t to_lane);
 
     void AddValidityToSignalReference(
-        const RoadId road_id,
-        const SignId signal_reference_id,
-        const LaneId from_lane,
-        const LaneId to_lane);
+        const uint32_t road_id,
+        const uint32_t signal_reference_id,
+        const int32_t from_lane,
+        const int32_t to_lane);
 
     void AddSignalReference(
-        const RoadId road_id,
-        const SignId signal_reference_id,
+        const uint32_t road_id,
+        const uint32_t signal_reference_id,
         const double s_position,
         const double t_position,
         const std::string signal_reference_orientation);
 
     void AddDependencyToSignal(
-        const RoadId road_id,
-        const SignId signal_id,
+        const uint32_t road_id,
+        const uint32_t signal_id,
         const uint32_t dependency_id,
         const std::string dependency_type);
 
@@ -339,13 +337,10 @@ namespace road {
 
     /// Return a list of pointers to all lanes from a lane (using road and
     /// junction info).
-    std::vector<Lane *> GetLaneNext(
-        RoadId road_id,
-        SectionId section_id,
-        LaneId lane_id);
+    std::vector<Lane *> GetLaneNext(RoadId road_id, int section_id, LaneId lane_id);
 
     std::vector<std::pair<RoadId, LaneId>> GetJunctionLanes(
-        JuncId junction_id,
+        RoadId junction_id,
         RoadId road_id,
         LaneId lane_id);
 

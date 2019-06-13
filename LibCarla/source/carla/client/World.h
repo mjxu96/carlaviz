@@ -13,7 +13,6 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
-#include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
@@ -76,16 +75,14 @@ namespace client {
     SharedPtr<Actor> SpawnActor(
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
-        Actor *parent = nullptr,
-        rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid);
+        Actor *parent = nullptr);
 
     /// Same as SpawnActor but return nullptr on failure instead of throwing an
     /// exception.
     SharedPtr<Actor> TrySpawnActor(
         const ActorBlueprint &blueprint,
         const geom::Transform &transform,
-        Actor *parent = nullptr,
-        rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid) noexcept;
+        Actor *parent = nullptr) noexcept;
 
     /// Block calling thread until a world tick is received.
     Timestamp WaitForTick(time_duration timeout) const;

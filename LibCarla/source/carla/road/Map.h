@@ -64,8 +64,6 @@ namespace road {
 
     double GetLaneWidth(Waypoint waypoint) const;
 
-    JuncId GetJunctionId(RoadId road_id) const;
-
     bool IsJunction(RoadId road_id) const;
 
     std::pair<const element::RoadInfoMarkRecord *, const element::RoadInfoMarkRecord *>
@@ -83,7 +81,6 @@ namespace road {
     /// successor lane; i.e., the list of each waypoint in the next road segment
     /// that a vehicle could drive from @a waypoint.
     std::vector<Waypoint> GetSuccessors(Waypoint waypoint) const;
-    std::vector<Waypoint> GetPredecessors(Waypoint waypoint) const;
 
     /// Return the list of waypoints at @a distance such that a vehicle at @a
     /// waypoint could drive to.
@@ -97,9 +94,6 @@ namespace road {
 
     /// Generate all the waypoints in @a map separated by @a approx_distance.
     std::vector<Waypoint> GenerateWaypoints(double approx_distance) const;
-
-    /// Generate waypoints on each @a lane at the start of each @a road
-    std::vector<Waypoint> GenerateWaypointsOnRoadEntries() const;
 
     /// Generate the minimum set of waypoints that define the topology of @a
     /// map. The waypoints are placed at the entrance of each lane.
