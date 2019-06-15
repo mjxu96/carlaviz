@@ -10,8 +10,8 @@ command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
 }
 
 CXX_TAG=c7
-export CC=/usr/bin/clang-7
-export CXX=/usr/bin/clang++-7
+export CC=/usr/bin/gcc-7
+export CXX=/usr/bin/g++-7
 
 source $(dirname "$0")/Environment.sh
 
@@ -93,14 +93,14 @@ else
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  BOOST_TOOLSET="clang-7.1"
+  BOOST_TOOLSET="gcc-7.4"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   py2="/usr/bin/env python2"
   py2_root=`${py2} -c "import sys; print(sys.prefix)"`
   pyv=`$py2 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
-      --with-toolset=clang \
+      --with-toolset=gcc \
       --prefix=../boost-install \
       --with-libraries=python,filesystem \
       --with-python=${py2} --with-python-root=${py2_root}
@@ -130,7 +130,7 @@ else
   py3_root=`${py3} -c "import sys; print(sys.prefix)"`
   pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
-      --with-toolset=clang \
+      --with-toolset=gcc \
       --prefix=../boost-install \
       --with-libraries=python \
       --with-python=${py3} --with-python-root=${py3_root}
