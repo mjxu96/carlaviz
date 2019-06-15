@@ -19,53 +19,6 @@ mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 # ==============================================================================
-# -- Get and compile libc++ ----------------------------------------------------
-# ==============================================================================
-
-LLVM_BASENAME=llvm-7.0
-
-LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
-LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
-
-if [[ -d "${LLVM_BASENAME}-install" ]] ; then
-  log "${LLVM_BASENAME} already installed."
-else
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-  log "Retrieving libc++."
-
-  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_70  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
-
-  log "Compiling libc++."
-
-  mkdir -p ${LLVM_BASENAME}-build
-
-  pushd ${LLVM_BASENAME}-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
-      -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
-      -DLLVM_ENABLE_EH=OFF \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="../${LLVM_BASENAME}-install" \
-      ../${LLVM_BASENAME}-source
-
-  ninja cxx
-
-  ninja install-libcxx
-
-  ninja install-libcxxabi
-
-  popd >/dev/null
-
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-fi
-
-unset LLVM_BASENAME
-
-# ==============================================================================
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
@@ -177,27 +130,6 @@ else
 
   git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
 
-  log "Building rpclib with libc++."
-
-  # rpclib does not use any cmake 3.9 feature.
-  # As cmake 3.9 is not standard in Ubuntu 16.04, change cmake version to 3.5
-  sed -i s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
-
-  mkdir -p ${RPCLIB_BASENAME}-libcxx-build
-
-  pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
-      -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
-      ../${RPCLIB_BASENAME}-source
-
-  ninja
-
-  ninja install
-
-  popd >/dev/null
-
   log "Building rpclib with libstdc++."
 
   mkdir -p ${RPCLIB_BASENAME}-libstdcxx-build
@@ -215,7 +147,7 @@ else
 
   popd >/dev/null
 
-  rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libcxx-build ${RPCLIB_BASENAME}-libstdcxx-build
+  rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
 
 fi
 
@@ -245,23 +177,6 @@ else
 
   git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
-  log "Building Google Test with libc++."
-
-  mkdir -p ${GTEST_BASENAME}-libcxx-build
-
-  pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
-      -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
-      ../${GTEST_BASENAME}-source
-
-  ninja
-
-  ninja install
-
-  popd >/dev/null
-
   log "Building Google Test with libstdc++."
 
   mkdir -p ${GTEST_BASENAME}-libstdcxx-build
@@ -279,7 +194,7 @@ else
 
   popd >/dev/null
 
-  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libcxx-build ${GTEST_BASENAME}-libstdcxx-build
+  rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
 
 fi
 
