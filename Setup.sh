@@ -10,8 +10,8 @@ command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
 }
 
 CXX_TAG=c7
-export CC=/usr/bin/gcc-7
-export CXX=/usr/bin/g++-7
+export CC=/usr/bin/gcc
+export CXX=/usr/bin/g++
 
 source $(dirname "$0")/Environment.sh
 
@@ -93,7 +93,7 @@ else
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  BOOST_TOOLSET="gcc-7.4"
+  BOOST_TOOLSET="gcc"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   py2="/usr/bin/env python2"
