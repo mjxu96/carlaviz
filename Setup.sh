@@ -51,8 +51,7 @@ else
 
   ./bootstrap.sh \
       --with-toolset=gcc \
-      --prefix=../boost-install \
-      --with-libraries=filesystem
+      --prefix=../boost-install
 
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
