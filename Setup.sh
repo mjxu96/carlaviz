@@ -51,7 +51,7 @@ else
 
   ./bootstrap.sh \
       --with-toolset=gcc \
-      --prefix=../boost-install
+      --prefix=../boost-install \
       --with-libraries=filesystem
 
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
@@ -119,8 +119,6 @@ unset RPCLIB_BASENAME
 GTEST_VERSION=1.8.1
 GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
 
-GTEST_LIBCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libcxx-install/include
-GTEST_LIBCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libcxx-install/lib
 GTEST_LIBSTDCXX_INCLUDE=${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
 GTEST_LIBSTDCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
 
@@ -129,8 +127,8 @@ if [[ -d "${GTEST_BASENAME}-libstdcxx-install" ]] ; then
 else
   rm -Rf \
       ${GTEST_BASENAME}-source \
-      ${GTEST_BASENAME}-libcxx-build ${GTEST_BASENAME}-libstdcxx-build \
-      ${GTEST_BASENAME}-libcxx-install ${GTEST_BASENAME}-libstdcxx-install
+      ${GTEST_BASENAME}-libstdcxx-build \
+      ${GTEST_BASENAME}-libstdcxx-install
 
   log "Retrieving Google Test."
 
