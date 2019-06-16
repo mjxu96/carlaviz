@@ -1,5 +1,11 @@
+# VScode tmp files
 .vscode/
-Build/
+
+# Installed Boost, PRC and GTEST lib
+lib/boost*
+lib/rpc*
+lib/gtest*
+
 # Prerequisites
 *.d
 

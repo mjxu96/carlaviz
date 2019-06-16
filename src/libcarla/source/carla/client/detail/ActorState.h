@@ -53,6 +53,12 @@ namespace detail {
 
   protected:
 
+    ActorState(
+        rpc::Actor description,
+        EpisodeProxy episode,
+        SharedPtr<Actor> parent);
+
+
     const geom::BoundingBox &GetBoundingBox() const {
       return _description.bounding_box;
     }
@@ -72,11 +78,6 @@ namespace detail {
   private:
 
     friend class Simulator;
-
-    ActorState(
-        rpc::Actor description,
-        EpisodeProxy episode,
-        SharedPtr<Actor> parent);
 
     rpc::Actor _description;
 
