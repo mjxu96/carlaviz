@@ -16,6 +16,13 @@
 #    define LIBCARLA_FORCEINLINE inline
 #  endif // NDEBUG
 #  define LIBCARLA_NOINLINE __attribute__((noinline))
+#elif defined(__clang__)
+#  if defined(NDEBUG)
+#    define LIBCARLA_FORCEINLINE inline __attribute__((always_inline))
+#  else
+#    define LIBCARLA_FORCEINLINE inline
+#  endif // NDEBUG
+#  define LIBCARLA_NOINLINE __attribute__((noinline))
 #else
 #  warning Compiler not supported.
 #  define LIBCARLA_NOINLINE
