@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(CARLA)
+project(carla-client-example)
 
-include("lib/CMakeLists.txt.in")
 
-add_subdirectory("src/libcarla/cmake")
+add_subdirectory("src/example")

@@ -23,7 +23,7 @@ build: $(BINDIR)/cpp_client
 $(BINDIR)/cpp_client:
 	$(call log,Compiling C++ Client...)
 	@mkdir -p $(BINDIR)
-	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include -L$(INSTALLDIR)/lib \
+	@$(CXX) $(CXXFLAGS) -I$(INSTALLDIR)/include/lib -L$(INSTALLDIR)/lib \
 		-o $(BINDIR)/cpp_client main.cpp \
 		-Wl,-Bstatic -lcarla_client -lrpc -lboost_filesystem -Wl,-Bdynamic \
 		-lpng -ltiff -ljpeg
