@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.5.1)
 
 SET(CMAKE_C_COMPILER /usr/bin/clang)
 SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
-
-add_executable(main main.cpp)
+SET(CMAKE_CXX_FLAGS "-std=c++14 -pthread -fPIC -O3 -DNDEBUG")
 
 include_directories(../../include/lib)
 link_directories(../../lib)
+
+add_executable(main main.cpp)
 
 target_link_libraries(main carla_client rpc boost_filesystem png tiff jpeg)
