@@ -45,8 +45,7 @@ function fatal_error {
 
 
 function get_git_repository_version {
-  echo -e "0.9.5-158-g114d54d8"
-  # git describe --tags --dirty --always
+  git describe --tags --dirty --always
 }
 
 function copy_if_changed {
