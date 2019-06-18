@@ -16,6 +16,8 @@ unset CARLA_FOLDER
 
 log "clean up previous build files"
 rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build ${CARLA_ROOT_FOLDER}/include/lib
+rm -f ${CMAKE_CONFIG_FILE}
+rm -f ${LIBCARLA_BUILD_TOOLCHAIN}
 
 CXX_TAG=c7
 export CC=/usr/bin/gcc
@@ -270,7 +272,12 @@ make -j${LIB_BUILD_CONCURRENCY}
 make install
 
 popd >/dev/null
+# ==============================================================================
+# -- Clean up ------------------------------------------------------------------
+# ==============================================================================
 rm -rf ${LIBCARLA_BUILD_PATH}
+rm -f ${CMAKE_CONFIG_FILE}
+rm -f ${LIBCARLA_BUILD_TOOLCHAIN}
 
 
 # ==============================================================================
