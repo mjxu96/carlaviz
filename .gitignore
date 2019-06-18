@@ -5,6 +5,7 @@
 lib/boost*
 lib/rpc*
 lib/gtest*
+include/lib/
 
 # Build files
 build/
