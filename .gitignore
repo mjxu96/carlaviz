@@ -6,6 +6,10 @@ lib/boost*
 lib/rpc*
 lib/gtest*
 
+# Build files
+build/
+bin/
+
 # Prerequisites
 *.d
 

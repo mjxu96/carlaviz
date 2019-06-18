@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-SET(CMAKE_C_COMPILER /usr/bin/clang)
-SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
 SET(CMAKE_CXX_FLAGS "-std=c++14 -pthread -fPIC -O3 -DNDEBUG")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../bin)
 
 include_directories(../../include/lib)
 link_directories(../../lib)
