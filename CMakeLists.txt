@@ -9,4 +9,6 @@ if (USE_CLANG)
 endif(USE_CLANG)
 unset(USE_CLANG CACHE)
 
+SET(CLIENT_ROOT_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_subdirectory("src/example")
