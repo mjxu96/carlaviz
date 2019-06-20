@@ -3,7 +3,7 @@ project(carla-client-example)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CLIENT_ROOT_FOLDER}/bin)
 
-include_directories(${CLIENT_ROOT_FOLDER}/include ${CLIENT_ROOT_FOLDER}/include/lib)
+include_directories(${CLIENT_ROOT_FOLDER}/include/lib)
 link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
 add_executable(main main.cpp)
