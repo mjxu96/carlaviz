@@ -8,8 +8,11 @@
 /include/lib/gtest/
 
 # Build files
-build/
-bin/
+/build/
+/bin/
+
+# Carla version file
+# /include/lib/carla/Version.h
 
 # Prerequisites
 *.d
