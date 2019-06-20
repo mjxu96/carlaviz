@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-SET(CMAKE_CXX_FLAGS "-std=c++14 -pthread -fPIC -O3 -DNDEBUG")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CLIENT_ROOT_FOLDER}/bin)
 
-include_directories(${CLIENT_ROOT_FOLDER}/include/lib)
+include_directories(${CLIENT_ROOT_FOLDER}/include ${CLIENT_ROOT_FOLDER}/include/lib)
 link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
 add_executable(main main.cpp)

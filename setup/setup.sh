@@ -247,37 +247,14 @@ popd >/dev/null
 
 log "Begin to build carla library"
 
-mkdir -p ${LIBCARLA_LIB_INSTALL_PATH}
-mkdir -p ${LIBCARLA_HEADER_INSTALL_PATH}
-mkdir -p ${LIBCARLA_BUILD_PATH}
 
-echo "set(CMAKE_C_COMPILER "${CC}")" > ${LIBCARLA_BUILD_TOOLCHAIN}
-echo "set(CMAKE_CXX_COMPILER "${CXX}")" >> ${LIBCARLA_BUILD_TOOLCHAIN}
-echo "set(CMAKE_CXX_FLAGS \"\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC -O3 -DNDEBUG\" CACHE STRING \"\" FORCE)" >> ${LIBCARLA_BUILD_TOOLCHAIN}
 
-pushd ${LIBCARLA_BUILD_PATH} >/dev/null
 
-cmake \
-  -G "Unix Makefiles" \
-  -DCMAKE_BUILD_TYPE=Client \
-  -DLIBCARLA_BUILD_RELEASE=ON \
-  -DLIBCARLA_BUILD_DEBUG=OFF \
-  -DLIBCARLA_BUILD_TEST=OFF \
-  -DCMAKE_TOOLCHAIN_FILE=${LIBCARLA_BUILD_TOOLCHAIN} \
-  -DLIBCARLA_LIB_INSTALL_PATH=${LIBCARLA_LIB_INSTALL_PATH} \
-  -DLIBCARLA_HEADER_INSTALL_PATH=${LIBCARLA_HEADER_INSTALL_PATH} \
-  ${CARLA_ROOT_FOLDER}/src/libcarla/cmake; \
 
-make -j${LIB_BUILD_CONCURRENCY}
-make install
-
-popd >/dev/null
 # ==============================================================================
 # -- Clean up ------------------------------------------------------------------
 # ==============================================================================
 rm -rf ${LIBCARLA_BUILD_PATH}
-rm -f ${CMAKE_CONFIG_FILE}
-rm -f ${LIBCARLA_BUILD_TOOLCHAIN}
 
 
 # ==============================================================================
