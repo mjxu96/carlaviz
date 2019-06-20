@@ -2,8 +2,10 @@
 .vscode/
 
 # Installed Boost, PRC and GTEST lib
-lib/
-include/lib/
+/lib/
+/include/lib/boost/
+/include/lib/rpc/
+/include/lib/gtest/
 
 # Build files
 build/

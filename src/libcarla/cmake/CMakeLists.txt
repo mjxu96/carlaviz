@@ -4,7 +4,7 @@ include("CMakeLists.txt.in")
 
 set(libcarla_source_path "${CMAKE_CURRENT_SOURCE_DIR}/../source")
 
-include_directories(${CLIENT_ROOT_FOLDER}/include/carla)
+include_directories(${CLIENT_ROOT_FOLDER}/include/lib)
 
 if (CARLA_VERSION)
   configure_file(${libcarla_source_path}/carla/Version.h.in ${CLIENT_ROOT_FOLDER}/include/carla/Version.h)
