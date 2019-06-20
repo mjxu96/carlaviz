@@ -58,8 +58,8 @@
  Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
  */
 
-#include "const.h"
-#include "polevl.h"
+#include "carla/road/element/cephes/const.h"
+#include "carla/road/element/cephes/polevl.h"
 #include <math.h>
 
 
