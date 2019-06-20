@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(libcarla-client)
 
 # Add sources.
 file(GLOB libcarla_carla_sources
