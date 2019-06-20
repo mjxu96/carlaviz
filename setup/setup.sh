@@ -15,9 +15,9 @@ source ${CARLA_FOLDER}/setup/environment.sh
 unset CARLA_FOLDER
 
 log "clean up previous build files"
-rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build ${CARLA_ROOT_FOLDER}/include/lib
+rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build 
+rm -rf ${CARLA_ROOT_FOLDER}/include/lib/boost ${CARLA_ROOT_FOLDER}/include/lib/rpc ${CARLA_ROOT_FOLDER}/include/lib/gtest
 rm -f ${CMAKE_CONFIG_FILE}
-rm -f ${LIBCARLA_BUILD_TOOLCHAIN}
 
 CXX_TAG=c7
 export CC=/usr/bin/gcc
