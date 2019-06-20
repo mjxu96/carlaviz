@@ -11,8 +11,11 @@
 /build/
 /bin/
 
+# CMake file
+/src/libcarla/cmake/CMakeLists.txt.in
+
 # Carla version file
-# /include/lib/carla/Version.h
+/include/lib/carla/Version.h
 
 # Prerequisites
 *.d
