@@ -24,8 +24,12 @@ int main() {
 
     rothberg::utils::Package package(boost::make_shared<carla::client::World>(client.GetWorld()));
     while (true) {
+      auto time1 = std::chrono::system_clock::now();
       package.Update();
       package.TmpOutput();
+      auto time2 = std::chrono::system_clock::now();
+      std::chrono::duration<double> durat = time2 - time1;
+      std::cout << "use: " << durat.count() << std::endl;
       std::this_thread::sleep_for(1s);
     }
 
