@@ -102,7 +102,8 @@ int main(int argc, const char *argv[]) {
     // Apply control to vehicle.
     cc::Vehicle::Control control;
     control.throttle = 1.0f;
-    vehicle->ApplyControl(control);
+    //vehicle->ApplyControl(control);
+    vehicle->SetAutopilot(true);
 
     // Move spectator so we can see the vehicle from the simulator window.
     auto spectator = world.GetSpectator();
@@ -130,7 +131,7 @@ int main(int argc, const char *argv[]) {
       SaveSemSegImageToDisk(*image);
     });
 
-    std::this_thread::sleep_for(10s);
+    std::this_thread::sleep_for(10min);
 
     // Remove actors from the simulation.
     camera->Destroy();

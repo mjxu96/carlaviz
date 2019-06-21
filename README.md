@@ -1,10 +1,16 @@
-# carla c++ client for 095 release version
+# Carla C++ Client
 
+## Notice
+master branch is used for furthur development based on this c++ client and contains irrelevant codes. 
+
+If you want to use client of 0.9.5 version, please checkout out to 0.9.5 tag branch.
+
+## Instruction
 This repo is used to generate carla c++ client with least source files. 
 
 It will also try to use GNU build tools (like g++ instead of clang++) to build this client. For fast build, this repo also retain the way to build with clang-7.
 
-usage:
+## Usage:
 ```
 $ git clone https://github.com/wx9698/carla-client-cpp.git
 $ cd carla-client-cpp
