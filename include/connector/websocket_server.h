@@ -46,7 +46,6 @@ private:
 
   // TODO remove tmp
   double tmp_pos{-122.4};
-  double now_time_{1000};
 };
 
 } // namespace rothberg
