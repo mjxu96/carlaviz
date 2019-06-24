@@ -1,5 +1,8 @@
 #include "connector/websocket_server.h"
 
+using namespace std::chrono_literals;
+using namespace std::string_literals;
+
 namespace rothberg {
 
 
@@ -51,14 +54,25 @@ void WebsocketServer::DoSession(boost::asio::basic_stream_socket<boost::asio::ip
     boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws{std::move(socket)};
 
     ws.accept();
+    boost::beast::multi_buffer init_buffer;
+    std::string init_meda_data = GetInitMetaDataJson();
+    boost::beast::ostream(init_buffer) << init_meda_data;
+    ws.write(init_buffer.data());
+    std::cout << "sent: " << init_meda_data << std::endl;;
     for(;;) {
       boost::beast::multi_buffer buffer;
-
+      /*
       ws.read(buffer);
       std::cout << boost::beast::buffers(buffer.data()) << std::endl;
 
       ws.text(ws.got_text());
       ws.write(buffer.data());
+      */
+      std::string update_data = GetLiveDataJson();
+      boost::beast::ostream(buffer) << update_data;
+      ws.write(buffer.data());
+      std::cout << "sent: " << update_data << std::endl;;
+      std::this_thread::sleep_for(1s);
     }
   } catch(boost::system::system_error const& se) {
     if(se.code() != boost::beast::websocket::error::closed) {
@@ -72,14 +86,25 @@ void WebsocketServer::DoSession(boost::asio::basic_stream_socket<boost::asio::ip
 
 }
 
-nlohmann::json WebsocketServer::GetInitMetaDataJson() {
-  std::string json_str = "{ \"type\": \"xviz/metadata\",\"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/tracking_point\": { \"category\": \"primitive\", \"coordinate\": \"VEHICLE_RELATIVE\", \"stream_style\": { \"fill_color\": \"#fb0\" }, \"primitive_type\": \"circle\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"VEHICLE_RELATIVE\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } }, \"log_info\": { \"start_time\": 1000, \"end_time\": 1005 } } }";
-  return nlohmann::json::parse(json_str);
+std::string WebsocketServer::GetInitMetaDataJson() {
+  std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"GEOGRAPHIC\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
+  // "{ \"type\": \"xviz/metadata\",\"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/tracking_point\": { \"category\": \"primitive\", \"coordinate\": \"VEHICLE_RELATIVE\", \"stream_style\": { \"fill_color\": \"#fb0\" }, \"primitive_type\": \"circle\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"VEHICLE_RELATIVE\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } }, \"log_info\": { \"start_time\": 1000, \"end_time\": 1005 } } }";
+  return nlohmann::json::parse(json_str).dump();
 
 }
 
-nlohmann::json WebsocketServer::GetLiveDataJson() {
-
+std::string WebsocketServer::GetLiveDataJson() {
+  std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+  double now_time = now.time_since_epoch().count() / 1e9;
+  //std::stringstream ss;
+  //ss << std::fixed << std::setprecision(-6) << now_time;
+  std::string now_time_str = std::to_string(now_time);//ss.str();
+  std::cout << "now time: " << now_time_str << std::endl;
+  std::string json_str = std::string("{ \"type\": \"xviz/state_update\", \"data\":{ \"update_type\": \"snapshot\", \"updates\": [ { \"timestamp\": ") + now_time_str + std::string(", \"poses\": { \"/vehicle_pose\": { \"timestamp\":") +  now_time_str + std::string(", \"map_origin\": { \"longitude\": ") +  std::to_string(tmp_pos) + std::string(",\"latitude\": 37.8, \"altitude\": 0 }, \"orientation\": [ 0, 0, 0 ] } }, \"primitives\": { \"/object/shape\": { \"polygons\": [ { \"vertices\": [ [ -122.4, 37.8, 0 ], [ -122.40001, 37.79999, 0 ], [ -122.40002, 37.80001, 0 ] ], \"base\": { \"object_id\": \"object-1\" } } ] } } } ] } }");
+  nlohmann::json json = nlohmann::json::parse(json_str);
+  tmp_pos += 0.00001;
+  now_time_ += 1;
+  return json.dump();
 }
 
 } // namespace rothberg

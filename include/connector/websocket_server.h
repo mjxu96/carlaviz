@@ -12,10 +12,12 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <chrono>
 
 namespace rothberg {
 
@@ -31,14 +33,20 @@ public:
 private:
   void DoSession(boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
-  nlohmann::json GetInitMetaDataJson();
-  nlohmann::json GetLiveDataJson();
+  //nlohmann::json GetInitMetaDataJson();
+  //nlohmann::json GetLiveDataJson();
+  std::string GetInitMetaDataJson();
+  std::string GetLiveDataJson();
 
   std::string host_{"127.0.0.1"};
   uint16_t port_{8081u};
   boost::shared_ptr<rothberg::utils::Package> package_ptr_{nullptr};
   boost::shared_ptr<std::mutex> package_mutex_{nullptr};
   std::vector<std::thread> threads_{};
+
+  // TODO remove tmp
+  double tmp_pos{-122.4};
+  double now_time_{1000};
 };
 
 } // namespace rothberg
