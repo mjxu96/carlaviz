@@ -1,5 +1,6 @@
 
 #include "connector/utils/package.h"
+#include "connector/websocket_server.h"
 
 #include "carla/client/Client.h"
 #include "carla/client/TimeoutException.h"
@@ -15,6 +16,7 @@ using namespace std::chrono_literals;
 using namespace std::string_literals;
 
 int main() {
+  /*
   try {
     std::string host("localhost");
     uint16_t port(2000u);
@@ -40,5 +42,9 @@ int main() {
     std::cout << "Exception: " << e.what() << std::endl;
     return 2;
   }
+  */
+  rothberg::WebsocketServer socket_server;
+  socket_server.Init(nullptr, nullptr);
+  socket_server.Run();
   return 0;
 }

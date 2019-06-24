@@ -9,8 +9,11 @@ link_directories(${CLIENT_ROOT_FOLDER}/lib)
 add_library(connector-utils
   utils/package.cpp
 )
+add_library(websocket-server
+  websocket_server.cpp
+)
 
 add_executable(connector connector.cpp)
 
 target_link_libraries(connector-utils carla_client rpc boost_filesystem)
-target_link_libraries(connector connector-utils)
+target_link_libraries(connector connector-utils websocket-server)
