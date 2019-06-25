@@ -5,6 +5,13 @@ using namespace std::string_literals;
 
 namespace rothberg {
 
+std::string ReadGeoJsonFromFile(std::string file_name) {
+  std::ifstream t(file_name);
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+  return buffer.str();
+}
+
 
 void WebsocketServer::Init(boost::shared_ptr<rothberg::utils::Package> package_ptr, 
   boost::shared_ptr<std::mutex> package_mutex,
@@ -80,7 +87,10 @@ void WebsocketServer::DoSession(boost::asio::basic_stream_socket<boost::asio::ip
 
 std::string WebsocketServer::GetInitMetaDataJson() {
   std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"GEOGRAPHIC\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
-  return nlohmann::json::parse(json_str).dump();
+  nlohmann::json json = nlohmann::json::parse(json_str);
+  json["data"]["map"] = ReadGeoJsonFromFile("map.geojson");
+  return json.dump();
+  //return nlohmann::json::parse(json_str).dump();
 
 }
 
@@ -88,9 +98,11 @@ std::string WebsocketServer::GetLiveDataJson() {
   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
   double now_time = now.time_since_epoch().count() / 1e9;
   std::string now_time_str = std::to_string(now_time);//ss.str();
-  std::string json_str = std::string("{ \"type\": \"xviz/state_update\", \"data\":{ \"update_type\": \"snapshot\", \"updates\": [ { \"timestamp\": ") + now_time_str + std::string(", \"poses\": { \"/vehicle_pose\": { \"timestamp\":") +  now_time_str + std::string(", \"map_origin\": { \"longitude\": ") +  std::to_string(tmp_pos) + std::string(",\"latitude\": 37.8, \"altitude\": 0 }, \"orientation\": [ 0, 0, 0 ] } }, \"primitives\": { \"/object/shape\": { \"polygons\": [ { \"vertices\": [ [ -122.4, 37.8, 0 ], [ -122.40001, 37.79999, 0 ], [ -122.40002, 37.80001, 0 ] ], \"base\": { \"object_id\": \"object-1\" } } ] } } } ] } }");
+  std::string json_str = std::string("{ \"type\": \"xviz/state_update\", \"data\":{ \"update_type\": \"snapshot\", \"updates\": [ { \"timestamp\": ") + 
+    now_time_str + std::string(", \"poses\": { \"/vehicle_pose\": { \"timestamp\":") +  now_time_str + std::string(", \"map_origin\": { \"longitude\": ") +  
+    std::to_string(tmp_pos_x) + std::string(",\"latitude\": ") + std::to_string(tmp_pos_y) + std::string(", \"altitude\": 0 }, \"orientation\": [ 0, 0, 0 ] } }, \"primitives\": { \"/object/shape\": { \"polygons\": [ { \"vertices\": [ [ 0, 0, 0 ], [ -0.00001, 0.00001, 0 ], [ -0.00002, 0.00001, 0 ] ], \"base\": { \"object_id\": \"object-1\" } } ] } } } ] } }");
   nlohmann::json json = nlohmann::json::parse(json_str);
-  tmp_pos += 0.00001/25.0;
+  tmp_pos_x += 0.00001/25.0;
   return json.dump();
 }
 

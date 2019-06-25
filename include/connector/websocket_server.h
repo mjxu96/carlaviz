@@ -13,6 +13,7 @@
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -45,7 +46,8 @@ private:
   std::vector<std::thread> threads_{};
 
   // TODO remove tmp
-  double tmp_pos{-122.4};
+  double tmp_pos_x{0};
+  double tmp_pos_y{0};
 };
 
 } // namespace rothberg
