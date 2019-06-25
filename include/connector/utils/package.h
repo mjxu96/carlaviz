@@ -22,8 +22,9 @@ class Package {
 public:
   Package(boost::shared_ptr<carla::client::World> world_ptr);
   void Update();
+  boost::shared_ptr<carla::client::ActorList> GetActorListPtr() const;
   void TmpOutput();
-  std::vector<char> ToWebSocketData();
+  //std::vector<char> ToWebSocketData();
 
 private:
 

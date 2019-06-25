@@ -8,7 +8,7 @@ namespace utils {
 Package::Package(boost::shared_ptr<carla::client::World> world_ptr) :
   world_ptr_(std::move(world_ptr)) {
   map_ptr_ = world_ptr_->GetMap();
-  }
+}
 
 void Package::TmpOutput() {
   std::cout << "road count: " << map_detail_->GetMap().GetRoads().size() << std::endl;
@@ -27,9 +27,8 @@ void Package::Update() {
   actor_list_ptr_ = world_ptr_->GetActors();
 }
 
-std::vector<char> Package::ToWebSocketData() {
-  return std::vector<char>();
+boost::shared_ptr<carla::client::ActorList> Package::GetActorListPtr() const {
+  return actor_list_ptr_;
 }
-
 }
 }
