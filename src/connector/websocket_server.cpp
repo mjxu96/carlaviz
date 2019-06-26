@@ -110,6 +110,13 @@ std::string WebsocketServer::GetLiveDataJson() {
   json["type"] = "xviz/state_update";
   json["data"]["update_type"] = "snapshot";
   json["data"]["updates"][0]["timestamp"] = now_time_str;
+  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["timestamp"] = now_time_str;
+  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["map_origin"]["longitude"] = 0;
+  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["map_origin"]["latitude"] = 0;
+  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["map_origin"]["altitude"] = 0;
+  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][0] = 0;
+  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][1] = 0;
+  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][2] = 0;
   package_mutex_->lock();
   auto actor_list = package_ptr_->GetActorListPtr();
   int i = 0;
