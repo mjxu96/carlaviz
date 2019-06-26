@@ -47,6 +47,7 @@ int main() {
     return 2;
   }
   */
+
   rothberg::WebsocketServer socket_server;
   socket_server.Init(nullptr, nullptr);
   socket_server.Run();
