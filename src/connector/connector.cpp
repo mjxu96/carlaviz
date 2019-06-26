@@ -15,28 +15,43 @@
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-void RunCarlaClient() {
-
+void RunWebsocketServer(rothberg::WebsocketServer& socket_server) {
+  socket_server.Run();
 }
 
 int main() {
-  /*
   try {
     std::string host("localhost");
     uint16_t port(2000u);
 
+    std::cout << "[Connector Log] Connecting Carla Server..." << std::endl; 
     carla::client::Client client(host, port);
     client.SetTimeout(10s);
 
-    rothberg::utils::Package package(boost::make_shared<carla::client::World>(client.GetWorld()));
+    //rothberg::utils::Package package(boost::make_shared<carla::client::World>(client.GetWorld()));
+    boost::shared_ptr<rothberg::utils::Package> package_ptr = 
+      boost::make_shared<rothberg::utils::Package>(boost::make_shared<carla::client::World>(client.GetWorld()));
+    boost::shared_ptr<std::mutex> mutex_ptr = boost::make_shared<std::mutex>();
+
+    std::cout << "[Connector Log] Connected with Carla Server!" << std::endl; 
+
+    std::cout << "[Connector Log] Starting Websocket Server for data transmission..." << std::endl; 
+    rothberg::WebsocketServer socket_server;
+    socket_server.Init(package_ptr, mutex_ptr);
+    std::thread t = std::thread{std::bind(&RunWebsocketServer, 
+      std::move(socket_server))};
+    t.detach();
+
     while (true) {
-      auto time1 = std::chrono::system_clock::now();
-      package.Update();
-      package.TmpOutput();
-      auto time2 = std::chrono::system_clock::now();
-      std::chrono::duration<double> durat = time2 - time1;
-      std::cout << "use: " << durat.count() << std::endl;
-      std::this_thread::sleep_for(1s);
+      //auto time1 = std::chrono::system_clock::now();
+      mutex_ptr->lock();
+      package_ptr->Update();
+      mutex_ptr->unlock();
+      //packageTmpOutput();
+      //auto time2 = std::chrono::system_clock::now();
+      //std::chrono::duration<double> durat = time2 - time1;
+      //std::cout << "use: " << durat.count() << std::endl;
+      std::this_thread::sleep_for(40ms);
     }
 
   } catch (const carla::client::TimeoutException& e) {
@@ -46,10 +61,5 @@ int main() {
     std::cout << "Exception: " << e.what() << std::endl;
     return 2;
   }
-  */
-
-  rothberg::WebsocketServer socket_server;
-  socket_server.Init(nullptr, nullptr);
-  socket_server.Run();
   return 0;
 }
