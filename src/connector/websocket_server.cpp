@@ -69,7 +69,6 @@ void WebsocketServer::DoSession(boost::asio::basic_stream_socket<boost::asio::ip
       boost::beast::multi_buffer buffer;
    
       std::string update_data = GetLiveDataJson();
-      std::cout << update_data << std::endl;
       boost::beast::ostream(buffer) << update_data;
       ws.write(buffer.data());
       std::this_thread::sleep_for(40ms);
