@@ -120,13 +120,13 @@ std::string WebsocketServer::GetLiveDataJson() {
   auto actor_list = package_ptr_->GetActorListPtr();
   int i = 0;
   double of = 2.0;
-  std::vector<std::pair<double, double>> offset = {{-of, 0.0}, {0.0, of}, {of, 0.0}, {0.0, -of}};
+  std::vector<std::pair<double, double>> offset = {{-of, -of}, {-of, of}, {of, of}, {-of, -of}};
   for (const auto& actor : *actor_list) {
     if (actor->GetTypeId().substr(0, 2) != "ve") {
       continue;
     }
-    double x = actor->GetLocation().x;
-    double y = actor->GetLocation().y;
+    double x = -actor->GetLocation().y * 2.8;
+    double y = actor->GetLocation().x * 2.8;
     for (int j = 0; j < offset.size(); j++) {
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][0] = x + offset[j].first;
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][1] = y + offset[j].second;

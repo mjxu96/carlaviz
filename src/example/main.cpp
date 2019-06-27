@@ -74,6 +74,7 @@ int main(int argc, const char *argv[]) {
 
     // Load a random town.
     auto town_name = RandomChoice(client.GetAvailableMaps(), rng);
+    town_name = "Town01";
     std::cout << "Loading world: " << town_name << std::endl;
     auto world = client.LoadWorld(town_name);
 
