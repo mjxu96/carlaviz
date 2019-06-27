@@ -34,7 +34,8 @@ void WebsocketServer::Run() {
     const auto port = port_;
 
     boost::asio::io_context ioc{1};
-    boost::asio::ip::tcp::acceptor accetor{ioc, {address, port}};
+    boost::asio::ip::tcp::acceptor accetor{ioc, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)};
+    //{address, port}};
 
     std::cout << "[Websocket Server Log] Start listening to " << address << ":" << port << std::endl;
 
@@ -120,7 +121,7 @@ std::string WebsocketServer::GetLiveDataJson() {
   auto actor_list = package_ptr_->GetActorListPtr();
   int i = 0;
   double of = 2.0;
-  std::vector<std::pair<double, double>> offset = {{-of, -of}, {-of, of}, {of, of}, {-of, -of}};
+  std::vector<std::pair<double, double>> offset = {{-of, -of}, {-of, of}, {of, of}, {of, -of}};
   for (const auto& actor : *actor_list) {
     if (actor->GetTypeId().substr(0, 2) != "ve") {
       continue;
