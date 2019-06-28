@@ -15,5 +15,8 @@ add_library(websocket-server
 
 add_executable(connector connector.cpp)
 
+add_executable(converter utils/xodr_geojson_converter.cpp)
+
 target_link_libraries(connector-utils carla_client rpc boost_filesystem)
 target_link_libraries(connector connector-utils websocket-server)
+target_link_libraries(converter connector-utils websocket-server)

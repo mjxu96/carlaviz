@@ -70,7 +70,7 @@ namespace element {
       return _heading;
     }
 
-    const geom::Location &GetStartPosition() {
+    const geom::Location &GetStartPosition() const {
       return _start_position;
     }
 
