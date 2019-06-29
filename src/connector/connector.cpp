@@ -2,6 +2,8 @@
 #include "connector/utils/package.h"
 #include "connector/websocket_server.h"
 
+#include "connector/utils/xodr_geojson_converter.h"
+
 #include "carla/client/Client.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/client/World.h"
@@ -35,8 +37,21 @@ int main() {
 
     std::cout << "[Connector Log] Connected with Carla Server!" << std::endl; 
 
+    std::string geojson_str = rothberg::utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(client.GetWorld().GetMap());
+
+/*
+  std::ofstream geojson_file("example.geojson", std::ios::out | std::ios::trunc);
+  if (geojson_file.is_open()) {
+    geojson_file << geojson_str;
+    geojson_file.close();
+  } else {
+    std::cerr << "Not open" << std::endl;
+  }
+  */
+  //XodrGeojsonConverter::Convert(buffer.str());
+
     std::cout << "[Connector Log] Starting Websocket Server for data transmission..." << std::endl; 
-    rothberg::WebsocketServer socket_server;
+    rothberg::WebsocketServer socket_server(geojson_str);
     socket_server.Init(package_ptr, mutex_ptr);
     std::thread t = std::thread{std::bind(&RunWebsocketServer, 
       std::move(socket_server))};

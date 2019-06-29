@@ -25,7 +25,7 @@ namespace rothberg {
 
 class WebsocketServer {
 public:
-  WebsocketServer() = default;
+  WebsocketServer(std::string map_json) : map_json_(std::move(map_json)) {}
   void Init(boost::shared_ptr<rothberg::utils::Package> package_ptr, 
     boost::shared_ptr<std::mutex> package_mutex, 
     std::string host="127.0.0.1", uint16_t port=8081u);
@@ -48,6 +48,8 @@ private:
   // TODO remove tmp
   double tmp_pos_x{0};
   double tmp_pos_y{0};
+  
+  std::string map_json_{};
 };
 
 } // namespace rothberg

@@ -89,7 +89,7 @@ void WebsocketServer::DoSession(boost::asio::basic_stream_socket<boost::asio::ip
 std::string WebsocketServer::GetInitMetaDataJson() {
   std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"IDENTITY\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
   nlohmann::json json = nlohmann::json::parse(json_str);
-  json["data"]["map"] = ReadGeoJsonFromFile("map.geojson");
+  json["data"]["map"] = map_json_;//ReadGeoJsonFromFile("map.geojson");
   return json.dump();
   //return nlohmann::json::parse(json_str).dump();
 
@@ -126,8 +126,12 @@ std::string WebsocketServer::GetLiveDataJson() {
     if (actor->GetTypeId().substr(0, 2) != "ve") {
       continue;
     }
+    /*
     double x = -actor->GetLocation().y * 2.8;
     double y = actor->GetLocation().x * 2.8;
+    */
+    double x = actor->GetLocation().x;
+    double y = actor->GetLocation().y;
     for (int j = 0; j < offset.size(); j++) {
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][0] = x + offset[j].first;
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][1] = y + offset[j].second;
