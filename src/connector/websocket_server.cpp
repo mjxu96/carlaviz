@@ -5,6 +5,10 @@ using namespace std::string_literals;
 
 namespace rothberg {
 
+std::pair<double, double> AfterRotate(double x, double y, double yaw) {
+  return {std::cos(yaw)*x - std::sin(yaw)*y, std::sin(yaw)*x + std::cos(yaw)*y};
+}
+
 std::string ReadGeoJsonFromFile(std::string file_name) {
   std::ifstream t(file_name);
   std::stringstream buffer;
@@ -130,6 +134,13 @@ std::string WebsocketServer::GetLiveDataJson() {
     double x = -actor->GetLocation().y * 2.8;
     double y = actor->GetLocation().x * 2.8;
     */
+    auto bounding_box = (boost::static_pointer_cast<carla::client::Vehicle>(actor))->GetBoundingBox();
+    double x_off = bounding_box.extent.x;
+    double y_off = bounding_box.extent.y;
+    double yaw = actor->GetTransform().rotation.yaw / 180.0 * M_PI;
+    offset = {AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+              AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
+//(static_cast<carla::client::Vehicle
     double x = actor->GetLocation().x;
     double y = actor->GetLocation().y;
     for (int j = 0; j < offset.size(); j++) {

@@ -4,6 +4,8 @@
 #include "connector/utils/package.h"
 #include "connector/utils/json.hpp"
 
+#include "carla/client/Vehicle.h"
+
 #include <boost/shared_ptr.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
@@ -19,6 +21,7 @@
 #include <vector>
 #include <mutex>
 #include <chrono>
+#include <cmath>
 
 namespace rothberg {
 
