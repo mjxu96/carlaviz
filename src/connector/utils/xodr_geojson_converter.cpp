@@ -38,8 +38,23 @@ std::string XodrGeojsonConverter::GetGeoJsonFromCarlaMap(boost::shared_ptr<carla
   auto json = InitGeoJson();
   uint32_t idx = 0u;
   for (const auto& point_pair : topology) {
+    //auto waypoint = point_pair.first;
+    AddOneSide(point_pair.first, json, idx);
+    AddOneSide(point_pair.second, json, idx+2);
+    idx+=4;
+  }
+  return json.dump();
+}
+
+nlohmann::json XodrGeojsonConverter::InitGeoJson() {
+  nlohmann::json json;
+  json["type"] = "FeatureCollection";
+  return std::move(json);
+}
+
+void XodrGeojsonConverter::AddOneSide(const carla::SharedPtr<carla::client::Waypoint>& waypoint,
+  nlohmann::json& json, const uint32_t& index) {
     std::vector<carla::SharedPtr<carla::client::Waypoint>> tmp_waypoints;
-    auto waypoint = point_pair.first;
     uint32_t road_id = waypoint->GetRoadId();
     auto next_waypoints = waypoint->GetNext(precision_);
     tmp_waypoints.push_back(waypoint);
@@ -54,28 +69,20 @@ std::string XodrGeojsonConverter::GetGeoJsonFromCarlaMap(boost::shared_ptr<carla
     }
     std::vector<point_t> points;
     for (const auto& waypoint : tmp_waypoints) {
-      points.push_back(LateralShift(waypoint->GetTransform(), waypoint->GetLaneWidth()));
+      points.push_back(LateralShift(waypoint->GetTransform(), -waypoint->GetLaneWidth() * 0.5));
     }
+    AddOneLine(points, road_id, json, index);
+    points.clear();
+    for (const auto& waypoint : tmp_waypoints) {
+      points.push_back(LateralShift(waypoint->GetTransform(), waypoint->GetLaneWidth() * 0.5));
+    }
+    AddOneLine(points, road_id, json, index+1);
     //points.push_back(LateralShift(point_pair.first->GetTransform(), point_pair.first->GetLaneWidth()));
     //points.push_back(LateralShift(point_pair.second->GetTransform(), point_pair.second->GetLaneWidth()));
-    AddOneLine(points, road_id, json, idx);
-    idx++;
-  }
-  return json.dump();
-}
-
-nlohmann::json XodrGeojsonConverter::InitGeoJson() {
-  nlohmann::json json;
-  json["type"] = "FeatureCollection";
-  return std::move(json);
-}
-
-void XodrGeojsonConverter::AddOneSide(const carla::SharedPtr<carla::client::Waypoint>& waypoint,
-  nlohmann::json& json, uint32_t& index) {
 }
 
 void XodrGeojsonConverter::AddOneLine(const std::vector<point_t>& points, const uint32_t& road_id,
-    nlohmann::json& json, uint32_t& index) {
+    nlohmann::json& json, const uint32_t& index) {
   json["features"][index]["type"] = "Feature";
   json["features"][index]["id"] = std::to_string(index);
   json["features"][index]["properties"]["name"] = std::to_string(road_id);

@@ -28,9 +28,9 @@ private:
 
   static nlohmann::json InitGeoJson();
   static void AddOneLine(const std::vector<point_t>& points, const uint32_t& road_id,
-    nlohmann::json& json, uint32_t& index);
+    nlohmann::json& json, const uint32_t& index);
   static void AddOneSide(const carla::SharedPtr<carla::client::Waypoint>& waypoint,
-    nlohmann::json& json, uint32_t& index);
+    nlohmann::json& json, const uint32_t& index);
     //const std::vector<point_t>& points, const uint32_t& road_id,
     //nlohmann::json& json, uint32_t& index);
 
