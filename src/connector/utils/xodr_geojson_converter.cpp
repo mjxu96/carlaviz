@@ -12,6 +12,7 @@ std::string XodrGeojsonConverter::Convert(std::string xodr) {
   auto& map_data = map.get().GetMap();
   auto& road_map = map_data.GetRoads();
 
+/*
   for (const auto& road_pair : road_map) {
     double length = road_pair.second.GetLength();
     std::cout << "road length: " << length << std::endl;
@@ -32,6 +33,7 @@ std::string XodrGeojsonConverter::Convert(std::string xodr) {
     t += 1;
     s += 1;
     }
+    */
     /* 
     std::cout << "start point: " << road_geometry_ptr->GetStartPosition().x << ", " << road_geometry_ptr->GetStartPosition().y << std::endl;
     road_info_geo = road_pair.second.GetInfo<carla::road::element::RoadInfoGeometry>(length-15);
@@ -39,9 +41,9 @@ std::string XodrGeojsonConverter::Convert(std::string xodr) {
     //road_geometry = road_info_geo->GetGeometry();
     road_geometry_ptr = &(road_info_geo->GetGeometry());//std::make_shared<carla::road::element::GeometryLine>(road_info_geo->GetGeometry());
     std::cout << "start point: " << road_geometry_ptr->GetStartPosition().x << ", " << road_geometry_ptr->GetStartPosition().y << std::endl;
-    */
     break;
   }
+    */
 
   return std::string();
 }
