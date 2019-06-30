@@ -90,7 +90,7 @@ void XodrGeojsonConverter::AddOneLine(const std::vector<point_t>& points, const 
   int i = 0;
   for (const auto& point : points) {
     json["features"][index]["geometry"]["coordinates"][i][0] = point.get<0>();
-    json["features"][index]["geometry"]["coordinates"][i][1] = point.get<1>();
+    json["features"][index]["geometry"]["coordinates"][i][1] = -point.get<1>();
     json["features"][index]["geometry"]["coordinates"][i][2] = point.get<2>();
     i++;
   }
