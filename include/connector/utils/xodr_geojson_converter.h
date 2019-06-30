@@ -14,7 +14,7 @@
 #include <iostream>
 #include <fstream>
 
-typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> point_t;
+typedef boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian> point_t;
 
 namespace rothberg {
 namespace utils {
@@ -36,7 +36,7 @@ private:
 
   static point_t LateralShift(carla::geom::Transform transform, double shift);
 
-  constexpr static const double precision_{0.05};
+  constexpr static const double precision_{0.5};
 
 
 };

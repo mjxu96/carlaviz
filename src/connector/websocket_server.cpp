@@ -143,10 +143,11 @@ std::string WebsocketServer::GetLiveDataJson() {
 //(static_cast<carla::client::Vehicle
     double x = actor->GetLocation().x;
     double y = actor->GetLocation().y;
+    double z = actor->GetLocation().z;
     for (int j = 0; j < offset.size(); j++) {
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][0] = x + offset[j].first;
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][1] = y + offset[j].second;
-      json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][2] = 0;
+      json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][2] = z;
     }
     json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["base"]["object_id"] = actor->GetTypeId() + std::to_string(actor->GetId());
     i++;

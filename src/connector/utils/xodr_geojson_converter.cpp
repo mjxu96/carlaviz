@@ -91,17 +91,18 @@ void XodrGeojsonConverter::AddOneLine(const std::vector<point_t>& points, const 
   for (const auto& point : points) {
     json["features"][index]["geometry"]["coordinates"][i][0] = point.get<0>();
     json["features"][index]["geometry"]["coordinates"][i][1] = point.get<1>();
+    json["features"][index]["geometry"]["coordinates"][i][2] = point.get<2>();
     i++;
   }
 }
 
 point_t XodrGeojsonConverter::LateralShift(carla::geom::Transform transform, double shift) {
   transform.rotation.yaw += 90.0;
-  point_t p1(transform.location.x, transform.location.y);
+  point_t p1(transform.location.x, transform.location.y, transform.location.z);
   auto p2_tmp = shift * transform.GetForwardVector();
-  point_t p2(p2_tmp.x, p2_tmp.y);
+  point_t p2(p2_tmp.x, p2_tmp.y, p2_tmp.z);
   //auto point = transform.location + shift * transform.GetForwardVector();
-  return point_t(p1.get<0>() + p2.get<0>(), p1.get<1>() + p2.get<1>());
+  return point_t(p1.get<0>() + p2.get<0>(), p1.get<1>() + p2.get<1>(), p1.get<2>() + p2.get<2>());
 }
 
 // Save following previous codes for future reference
