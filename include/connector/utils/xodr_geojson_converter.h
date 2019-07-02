@@ -1,5 +1,5 @@
-#ifndef ROTHEBERG_XODR_GEOJSON_CONVERTER_H_
-#define ROTHEBERG_XODR_GEOJSON_CONVERTER_H_
+#ifndef MELLOCOLATE_XODR_GEOJSON_CONVERTER_H_
+#define MELLOCOLATE_XODR_GEOJSON_CONVERTER_H_
 
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoGeometry.h"
