@@ -3,6 +3,7 @@
 
 #include "connector/utils/package.h"
 #include "connector/utils/json.hpp"
+#include "connector/xviz/xviz_metadata_builder.h"
 
 #include "carla/client/Vehicle.h"
 
