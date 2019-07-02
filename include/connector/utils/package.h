@@ -15,7 +15,7 @@
 #include <iostream>
 #include <vector>
 
-namespace rothberg {
+namespace mellocolate {
 namespace utils {
 
 class Package {
@@ -40,7 +40,7 @@ private:
 
   
 } // namespace utils
-} // namespace rothberg
+} // namespace mellocolate
 
 
 

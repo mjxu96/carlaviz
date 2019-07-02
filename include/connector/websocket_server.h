@@ -23,13 +23,13 @@
 #include <chrono>
 #include <cmath>
 
-namespace rothberg {
+namespace mellocolate {
 
 
 class WebsocketServer {
 public:
   WebsocketServer(std::string map_json) : map_json_(std::move(map_json)) {}
-  void Init(boost::shared_ptr<rothberg::utils::Package> package_ptr, 
+  void Init(boost::shared_ptr<mellocolate::utils::Package> package_ptr, 
     boost::shared_ptr<std::mutex> package_mutex, 
     std::string host="127.0.0.1", uint16_t port=8081u);
   void Run();
@@ -44,7 +44,7 @@ private:
 
   std::string host_{"127.0.0.1"};
   uint16_t port_{8081u};
-  boost::shared_ptr<rothberg::utils::Package> package_ptr_{nullptr};
+  boost::shared_ptr<mellocolate::utils::Package> package_ptr_{nullptr};
   boost::shared_ptr<std::mutex> package_mutex_{nullptr};
   std::vector<std::thread> threads_{};
 
@@ -55,5 +55,5 @@ private:
   std::string map_json_{};
 };
 
-} // namespace rothberg
+} // namespace mellocolate
 #endif

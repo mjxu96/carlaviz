@@ -1,7 +1,7 @@
 
 #include "connector/utils/package.h"
 
-namespace rothberg {
+namespace mellocolate {
 namespace utils {
 
 
