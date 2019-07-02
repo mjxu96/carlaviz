@@ -37,8 +37,6 @@ public:
 private:
   void DoSession(boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
-  //nlohmann::json GetInitMetaDataJson();
-  //nlohmann::json GetLiveDataJson();
   std::string GetInitMetaDataJson();
   std::string GetLiveDataJson();
 

@@ -24,7 +24,6 @@ public:
   void Update();
   boost::shared_ptr<carla::client::ActorList> GetActorListPtr() const;
   void TmpOutput();
-  //std::vector<char> ToWebSocketData();
 
 private:
 

@@ -4,22 +4,8 @@
 using namespace mellocolate::utils;
 
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
-  //boost::optional<carla::road::Map> map = carla::opendrive::OpenDriveParser::Load(xodr);
   carla::client::Map map("map", xodr);
-  /*
-  if (map == boost::none) {
-    std::cerr << "[XODR GEOJSON CONVERTER ERROR] Xodr string is not correct." << std::endl;
-    return std::string();
-  }
-  auto topology = map.get().GenerateTopology();
-  auto json = InitGeoJson();
-  */
-  /*
-  for (const auto& point_pair : topology) {
-    std::vector<point_t> points;
-    points.push_back(LateralShift(point_pair.first))
-  }
-  */
+
   auto topology = map.GetTopology();
   auto json = InitGeoJson();
   uint32_t idx = 0u;
@@ -77,8 +63,6 @@ void XodrGeojsonConverter::AddOneSide(const carla::SharedPtr<carla::client::Wayp
       points.push_back(LateralShift(waypoint->GetTransform(), waypoint->GetLaneWidth() * 0.5));
     }
     AddOneLine(points, road_id, json, index+1);
-    //points.push_back(LateralShift(point_pair.first->GetTransform(), point_pair.first->GetLaneWidth()));
-    //points.push_back(LateralShift(point_pair.second->GetTransform(), point_pair.second->GetLaneWidth()));
 }
 
 void XodrGeojsonConverter::AddOneLine(const std::vector<point_t>& points, const uint32_t& road_id,

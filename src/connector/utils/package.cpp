@@ -30,5 +30,5 @@ void Package::Update() {
 boost::shared_ptr<carla::client::ActorList> Package::GetActorListPtr() const {
   return actor_list_ptr_;
 }
-}
-}
+} // namespace utils
+} // namespace mellocolate

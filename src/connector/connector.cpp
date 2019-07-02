@@ -39,17 +39,6 @@ int main() {
 
     std::string geojson_str = mellocolate::utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(client.GetWorld().GetMap());
 
-/*
-  std::ofstream geojson_file("example.geojson", std::ios::out | std::ios::trunc);
-  if (geojson_file.is_open()) {
-    geojson_file << geojson_str;
-    geojson_file.close();
-  } else {
-    std::cerr << "Not open" << std::endl;
-  }
-  */
-  //XodrGeojsonConverter::Convert(buffer.str());
-
     std::cout << "[Connector Log] Starting Websocket Server for data transmission..." << std::endl; 
     mellocolate::WebsocketServer socket_server(geojson_str);
     socket_server.Init(package_ptr, mutex_ptr);
@@ -58,14 +47,9 @@ int main() {
     t.detach();
 
     while (true) {
-      //auto time1 = std::chrono::system_clock::now();
       mutex_ptr->lock();
       package_ptr->Update();
       mutex_ptr->unlock();
-      //packageTmpOutput();
-      //auto time2 = std::chrono::system_clock::now();
-      //std::chrono::duration<double> durat = time2 - time1;
-      //std::cout << "use: " << durat.count() << std::endl;
       std::this_thread::sleep_for(40ms);
     }
 
