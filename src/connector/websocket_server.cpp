@@ -3,7 +3,7 @@
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-namespace rothberg {
+namespace mellocolate {
 
 std::pair<double, double> AfterRotate(double x, double y, double yaw) {
   return {std::cos(yaw)*x - std::sin(yaw)*y, std::sin(yaw)*x + std::cos(yaw)*y};
@@ -17,7 +17,7 @@ std::string ReadGeoJsonFromFile(std::string file_name) {
 }
 
 
-void WebsocketServer::Init(boost::shared_ptr<rothberg::utils::Package> package_ptr, 
+void WebsocketServer::Init(boost::shared_ptr<mellocolate::utils::Package> package_ptr, 
   boost::shared_ptr<std::mutex> package_mutex,
   std::string host, uint16_t port) {
   package_ptr_ = std::move(package_ptr);
@@ -157,4 +157,4 @@ std::string WebsocketServer::GetLiveDataJson() {
   return json.dump();
 }
 
-} // namespace rothberg
+} // namespace mellocolate

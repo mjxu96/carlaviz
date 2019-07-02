@@ -16,7 +16,7 @@
 
 typedef boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian> point_t;
 
-namespace rothberg {
+namespace mellocolate {
 namespace utils {
 
 class XodrGeojsonConverter {
@@ -42,7 +42,7 @@ private:
 };
 
 } // namespace utils
-} // namespace rothberg
+} // namespace mellocolate
 
 
 #endif

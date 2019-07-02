@@ -17,7 +17,7 @@
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-void RunWebsocketServer(rothberg::WebsocketServer& socket_server) {
+void RunWebsocketServer(mellocolate::WebsocketServer& socket_server) {
   socket_server.Run();
 }
 
@@ -30,14 +30,14 @@ int main() {
     carla::client::Client client(host, port);
     client.SetTimeout(10s);
 
-    //rothberg::utils::Package package(boost::make_shared<carla::client::World>(client.GetWorld()));
-    boost::shared_ptr<rothberg::utils::Package> package_ptr = 
-      boost::make_shared<rothberg::utils::Package>(boost::make_shared<carla::client::World>(client.GetWorld()));
+    //mellocolate::utils::Package package(boost::make_shared<carla::client::World>(client.GetWorld()));
+    boost::shared_ptr<mellocolate::utils::Package> package_ptr = 
+      boost::make_shared<mellocolate::utils::Package>(boost::make_shared<carla::client::World>(client.GetWorld()));
     boost::shared_ptr<std::mutex> mutex_ptr = boost::make_shared<std::mutex>();
 
     std::cout << "[Connector Log] Connected with Carla Server!" << std::endl; 
 
-    std::string geojson_str = rothberg::utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(client.GetWorld().GetMap());
+    std::string geojson_str = mellocolate::utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(client.GetWorld().GetMap());
 
 /*
   std::ofstream geojson_file("example.geojson", std::ios::out | std::ios::trunc);
@@ -51,7 +51,7 @@ int main() {
   //XodrGeojsonConverter::Convert(buffer.str());
 
     std::cout << "[Connector Log] Starting Websocket Server for data transmission..." << std::endl; 
-    rothberg::WebsocketServer socket_server(geojson_str);
+    mellocolate::WebsocketServer socket_server(geojson_str);
     socket_server.Init(package_ptr, mutex_ptr);
     std::thread t = std::thread{std::bind(&RunWebsocketServer, 
       std::move(socket_server))};
