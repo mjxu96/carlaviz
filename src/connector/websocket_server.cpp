@@ -95,17 +95,18 @@ std::string WebsocketServer::GetInitMetaDataJson() {
   XVIZMetaDataBuilder xviz_metadata_builder;
   xviz_metadata_builder
     .SetMap(map_json_)
-    .AddStream(metadata::Stream("/vehicle_pose").AddCategory("pose"))
+    .AddStream(metadata::Stream("/vehicle_pose")
+      .AddCategory("pose"))
     .AddStream(metadata::Stream("/object/shape")
       .AddCategory("primitive")
       .AddCoordinate("IDENTITY")
       .AddStreamStyle({std::nullopt, true, "#fb0", 1.5})
       .AddType("polygon"));
-  nlohmann::json json = nlohmann::json::parse(json_str);
-  json["data"]["map"] = map_json_;//ReadGeoJsonFromFile("map.geojson");
-  std::cout <<  xviz_metadata_builder.GetMetaData() << std::endl;
-  std::cout << json_str << std::endl;
   return xviz_metadata_builder.GetMetaData();
+  //nlohmann::json json = nlohmann::json::parse(json_str);
+  //json["data"]["map"] = map_json_;//ReadGeoJsonFromFile("map.geojson");
+  //std::cout <<  xviz_metadata_builder.GetMetaData() << std::endl;
+  //std::cout << json_str << std::endl;
   //json.dump();
   //return nlohmann::json::parse(json_str).dump();
 
