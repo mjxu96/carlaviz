@@ -91,7 +91,6 @@ void WebsocketServer::DoSession(boost::asio::basic_stream_socket<boost::asio::ip
 }
 
 std::string WebsocketServer::GetInitMetaDataJson() {
-  std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"IDENTITY\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
   XVIZMetaDataBuilder xviz_metadata_builder;
   xviz_metadata_builder
     .SetMap(map_json_)
@@ -100,9 +99,13 @@ std::string WebsocketServer::GetInitMetaDataJson() {
     .AddStream(metadata::Stream("/object/shape")
       .AddCategory("primitive")
       .AddCoordinate("IDENTITY")
-      .AddStreamStyle({std::nullopt, true, "#fb0", 1.5})
+      .AddStreamStyle(metadata::StreamStyle()
+        .AddExtruded(true)
+        .AddFillColor("#fb0")
+        .AddHeight(1.5))//{boost::none, true, "#fb0", 1.5})
       .AddType("polygon"));
   return xviz_metadata_builder.GetMetaData();
+  //std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"IDENTITY\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
   //nlohmann::json json = nlohmann::json::parse(json_str);
   //json["data"]["map"] = map_json_;//ReadGeoJsonFromFile("map.geojson");
   //std::cout <<  xviz_metadata_builder.GetMetaData() << std::endl;

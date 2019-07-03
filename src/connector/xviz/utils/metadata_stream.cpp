@@ -3,6 +3,27 @@
 
 using namespace mellocolate::metadata;
 
+StreamStyle& StreamStyle::AddExtruded(bool is_extruded) {
+  extruded_ = is_extruded;
+  return *this;
+}
+
+StreamStyle& StreamStyle::AddStroked(bool is_stroked) {
+  stroked_ = is_stroked;
+  return *this;
+}
+
+StreamStyle& StreamStyle::AddFillColor(std::string fill_color) {
+  fill_color_ = std::move(fill_color);
+  return *this;
+}
+
+StreamStyle& StreamStyle::AddHeight(double height) {
+  height_ = height;
+  return *this;
+}
+
+
 Stream::Stream(std::string stream_name) :
   stream_name_(std::move(stream_name)) {}
 

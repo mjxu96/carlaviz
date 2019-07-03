@@ -20,9 +20,9 @@ public:
 private:
   std::vector<metadata::Stream> streams_;
   std::string version_ = "2.0.0";
-  std::optional<double> start_time_;
-  std::optional<double> end_time_;
-  std::optional<std::string> map_;
+  boost::optional<double> start_time_ = boost::none;
+  boost::optional<double> end_time_ = boost::none;
+  boost::optional<std::string> map_ = boost::none;
 };
 
 } // namespace mellocolate
