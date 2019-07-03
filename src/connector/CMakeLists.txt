@@ -9,6 +9,10 @@ link_directories(${CLIENT_ROOT_FOLDER}/lib)
 add_library(xviz
   xviz/utils/metadata_stream.cpp
   xviz/xviz_metadata_builder.cpp
+  xviz/xviz_builder.cpp
+  xviz/xviz_pose_builder.cpp
+  xviz/xviz_primitive_builder.cpp
+  xviz/xviz_time_series_builder.cpp
 )
 
 add_library(connector-utils

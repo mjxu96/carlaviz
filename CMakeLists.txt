@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.1)
 
 SET(CMAKE_C_COMPILER /usr/bin/gcc)
 SET(CMAKE_CXX_COMPILER /usr/bin/g++)
-SET(CMAKE_CXX_FLAGS "-std=c++17 -pthread -fPIC -O3 -DNDEBUG")
+SET(CMAKE_CXX_FLAGS "-std=c++14 -pthread -fPIC -O3 -DNDEBUG")
 if (USE_CLANG)
     SET(CMAKE_C_COMPILER /usr/bin/clang)
     SET(CMAKE_CXX_COMPILER /usr/bin/clang++)

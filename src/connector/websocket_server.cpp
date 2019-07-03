@@ -91,7 +91,6 @@ void WebsocketServer::DoSession(boost::asio::basic_stream_socket<boost::asio::ip
 }
 
 std::string WebsocketServer::GetInitMetaDataJson() {
-  std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"IDENTITY\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
   XVIZMetaDataBuilder xviz_metadata_builder;
   xviz_metadata_builder
     .SetMap(map_json_)
@@ -100,9 +99,13 @@ std::string WebsocketServer::GetInitMetaDataJson() {
     .AddStream(metadata::Stream("/object/shape")
       .AddCategory("primitive")
       .AddCoordinate("IDENTITY")
-      .AddStreamStyle({std::nullopt, true, "#fb0", 1.5})
+      .AddStreamStyle(metadata::StreamStyle()
+        .AddExtruded(true)
+        .AddFillColor("#fb0")
+        .AddHeight(1.5))//{boost::none, true, "#fb0", 1.5})
       .AddType("polygon"));
   return xviz_metadata_builder.GetMetaData();
+  //std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"IDENTITY\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
   //nlohmann::json json = nlohmann::json::parse(json_str);
   //json["data"]["map"] = map_json_;//ReadGeoJsonFromFile("map.geojson");
   //std::cout <<  xviz_metadata_builder.GetMetaData() << std::endl;
@@ -115,6 +118,7 @@ std::string WebsocketServer::GetInitMetaDataJson() {
 std::string WebsocketServer::GetLiveDataJson() {
   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
   double now_time = now.time_since_epoch().count() / 1e9;
+  /*
   std::string now_time_str = std::to_string(now_time);//ss.str();
 
   nlohmann::json json;
@@ -128,6 +132,18 @@ std::string WebsocketServer::GetLiveDataJson() {
   json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][0] = 0;
   json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][1] = 0;
   json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][2] = 0;
+  */
+
+  XVIZBuilder xviz_builder;
+  xviz_builder
+    .AddTimestamp(now_time)
+    .AddPose(XVIZPoseBuilder("/vehicle_pose")
+      .AddMapOrigin(point_3d_t(0, 0, 0))
+      .AddOrientation(point_3d_t(0, 0, 0))
+      .AddPosition(point_3d_t(0, 0, 0))
+      .AddTimestamp(now_time));
+  XVIZPrimitiveBuider xviz_primitive_builder("/object/shape");
+
   package_mutex_->lock();
   auto actor_list = package_ptr_->GetActorListPtr();
   int i = 0;
@@ -147,16 +163,29 @@ std::string WebsocketServer::GetLiveDataJson() {
     double x = actor->GetLocation().x;
     double y = actor->GetLocation().y;
     double z = actor->GetLocation().z;
+    std::vector<point_3d_t> vertices;
     for (int j = 0; j < offset.size(); j++) {
+      vertices.emplace_back(x + offset[j].first, -(y + offset[j].second), z);
+      /*
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][0] = x + offset[j].first;
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][1] = -(y + offset[j].second);
       json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][2] = z;
+      */
     }
+    xviz_primitive_builder
+        .AddPolygon(XVIZPrimitivePolygonBuilder(vertices)
+          .AddId(actor->GetTypeId() + std::to_string(actor->GetId())));
+    /*
     json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["base"]["object_id"] = actor->GetTypeId() + std::to_string(actor->GetId());
     i++;
+    */
   }
   package_mutex_->unlock();
-  return json.dump();
+
+
+  xviz_builder.AddPrimitive(xviz_primitive_builder);
+  return xviz_builder.GetData();
+  //return json.dump();
 }
 
 } // namespace mellocolate
