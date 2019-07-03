@@ -4,6 +4,8 @@
 #include <string>
 #include <boost/optional.hpp>
 
+#include <connector/utils/json.hpp>
+
 namespace mellocolate {
 
 namespace metadata {
@@ -56,6 +58,8 @@ public:
   StreamStyle& AddFillColor(std::string fill_color);
   StreamStyle& AddHeight(double height);
 
+  nlohmann::json GetMetaData() const;
+
   boost::optional<bool> stroked_ = boost::none;
   boost::optional<bool> extruded_ = boost::none;
   boost::optional<std::string> fill_color_ = boost::none;
@@ -71,8 +75,11 @@ public:
   Stream& AddType(std::string type);
   Stream& AddStreamStyle(StreamStyle stream_style);
 
+  std::string GetName() const;
+  nlohmann::json GetMetaData() const;
+
   std::string stream_name_{""};
-  boost::optional<std::string> categroy_ = boost::none;
+  boost::optional<std::string> category_ = boost::none;
   boost::optional<std::string> coordinate_ = boost::none;
   boost::optional<std::string> type_ = boost::none;
   boost::optional<StreamStyle> stream_style_ = boost::none;

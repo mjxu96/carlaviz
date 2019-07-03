@@ -18,8 +18,11 @@ std::string XVIZMetaDataBuilder::GetMetaData() {
     json["data"]["map"] = map_.value();
   }
   for (const auto& stream : streams_) {
-    if (stream.categroy_ != boost::none) {
-      std::string category = stream.categroy_.value();
+    //std::string stream_name = stream.GetName();
+    json["data"]["streams"][stream.GetName()] = stream.GetMetaData();
+    /*
+    if (stream.category_ != boost::none) {
+      std::string category = stream.category_.value();
       json["data"]["streams"][stream.stream_name_]["category"] = category;
       if (category == "primitive" || category == "PRIMITIVE") {
         if (stream.type_ != boost::none) {
@@ -50,6 +53,7 @@ std::string XVIZMetaDataBuilder::GetMetaData() {
         json["data"]["streams"][stream.stream_name_]["stream_style"]["extruded"] = (stream_style.extruded_.value() ? "true" : "false");
       }
     }
+    */
   }
   return json.dump();
 }
