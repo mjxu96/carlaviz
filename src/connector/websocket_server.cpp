@@ -185,7 +185,6 @@ std::string WebsocketServer::GetLiveDataJson() {
 
   xviz_builder.AddPrimitive(xviz_primitive_builder);
   return xviz_builder.GetData();
-  //return json.dump();
 }
 
 } // namespace mellocolate
