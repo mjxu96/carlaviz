@@ -102,7 +102,7 @@ std::string WebsocketServer::GetInitMetaDataJson() {
       .AddStreamStyle(metadata::StreamStyle()
         .AddExtruded(true)
         .AddFillColor("#fb0")
-        .AddHeight(1.5))//{boost::none, true, "#fb0", 1.5})
+        .AddHeight(1.5))
       .AddType("polygon"))
     .AddStream(metadata::Stream("/lidar/points")
       .AddCategory("primitive")
@@ -112,34 +112,11 @@ std::string WebsocketServer::GetInitMetaDataJson() {
         .AddPointCloudMode("elevation")
         .AddRadiusPixels(3.0)));
   return xviz_metadata_builder.GetMetaData();
-  //std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"IDENTITY\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
-  //nlohmann::json json = nlohmann::json::parse(json_str);
-  //json["data"]["map"] = map_json_;//ReadGeoJsonFromFile("map.geojson");
-  //std::cout <<  xviz_metadata_builder.GetMetaData() << std::endl;
-  //std::cout << json_str << std::endl;
-  //json.dump();
-  //return nlohmann::json::parse(json_str).dump();
-
 }
 
 std::string WebsocketServer::GetLiveDataJson() {
   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
   double now_time = now.time_since_epoch().count() / 1e9;
-  /*
-  std::string now_time_str = std::to_string(now_time);//ss.str();
-
-  nlohmann::json json;
-  json["type"] = "xviz/state_update";
-  json["data"]["update_type"] = "snapshot";
-  json["data"]["updates"][0]["timestamp"] = now_time_str;
-  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["timestamp"] = now_time_str;
-  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["map_origin"]["longitude"] = 0;
-  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["map_origin"]["latitude"] = 0;
-  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["map_origin"]["altitude"] = 0;
-  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][0] = 0;
-  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][1] = 0;
-  json["data"]["updates"][0]["poses"]["/vehicle_pose"]["orientation"][2] = 0;
-  */
 
   XVIZBuilder xviz_builder;
   xviz_builder
@@ -157,15 +134,13 @@ std::string WebsocketServer::GetLiveDataJson() {
   double of = 2.0;
   std::vector<std::pair<double, double>> offset = {{-of, -of}, {-of, of}, {of, of}, {of, -of}};
   for (const auto& actor : *actor_list) {
+    // Lidar sensor
     if (actor->GetTypeId() == "sensor.lidar.ray_cast") {
       uint32_t id = actor->GetId();
       internal_lidar_set_mutex_->lock();
       if (registered_sensor_id_.find(id) == registered_sensor_id_.end()) {
         registered_sensor_id_.insert(id);
         internal_lidar_set_mutex_->unlock();
-        //std::function<
-        //std::function<void (carla::SharedPtr<carla::sensor::SensorData>)> function = this->LidarDataCallback;
-        //std::function<void (carla::SharedPtr<carla::sensor::SensorData>)> function(std::bind(&WebsocketServer::LidarDataCallback, this, _1));
         (boost::static_pointer_cast<carla::client::Sensor>(actor))->Listen(
           [=] (carla::SharedPtr<carla::sensor::SensorData> data) {
             if (actor->IsAlive()) {
@@ -193,38 +168,29 @@ std::string WebsocketServer::GetLiveDataJson() {
     double yaw = actor->GetTransform().rotation.yaw / 180.0 * M_PI;
     offset = {AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
               AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
-//(static_cast<carla::client::Vehicle
     double x = actor->GetLocation().x;
     double y = actor->GetLocation().y;
     double z = actor->GetLocation().z;
     std::vector<point_3d_t> vertices;
     for (int j = 0; j < offset.size(); j++) {
       vertices.emplace_back(x + offset[j].first, -(y + offset[j].second), z);
-      /*
-      json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][0] = x + offset[j].first;
-      json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][1] = -(y + offset[j].second);
-      json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["vertices"][j][2] = z;
-      */
     }
     xviz_primitive_builder
         .AddPolygon(XVIZPrimitivePolygonBuilder(vertices)
           .AddId(actor->GetTypeId() + std::to_string(actor->GetId())));
-    /*
-    json["data"]["updates"][0]["primitives"]["/object/shape"]["polygons"][i]["base"]["object_id"] = actor->GetTypeId() + std::to_string(actor->GetId());
-    i++;
-    */
   }
   package_mutex_->unlock();
 
-
-
   xviz_builder
     .AddPrimitive(xviz_primitive_builder);
+
+  // Lidar sensor
   internal_point_cloud_mutex_->lock();
   xviz_builder
     .AddPrimitive(XVIZPrimitiveBuider("/lidar/points")
       .AddPoints(XVIZPrimitivePointBuilder(points_)));
   internal_point_cloud_mutex_->unlock();
+
   return xviz_builder.GetData();
 }
 
