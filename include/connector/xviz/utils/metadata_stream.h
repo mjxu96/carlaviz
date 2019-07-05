@@ -64,6 +64,12 @@ public:
   boost::optional<bool> extruded_ = boost::none;
   boost::optional<std::string> fill_color_ = boost::none;
   boost::optional<double> height_ = boost::none;
+  
+  // Stream style for point cloud
+  StreamStyle& AddPointCloudMode(std::string point_cloud_mode); 
+  StreamStyle& AddRadiusPixels(double radius_pixels); 
+  boost::optional<std::string> point_cloud_mode_ = boost::none;
+  boost::optional<double> radius_pixels_ = boost::none;
 };
 
 

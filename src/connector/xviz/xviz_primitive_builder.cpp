@@ -48,6 +48,29 @@ Json XVIZPrimitiveCircleBuilder::GetData() const {
   return json;
 }
 
+XVIZPrimitivePointBuilder::XVIZPrimitivePointBuilder(std::vector<point_3d_t> points) :
+  points_(std::move(points)) {}
+
+XVIZPrimitivePointBuilder& XVIZPrimitivePointBuilder::AddId(std::string id) {
+  id_ = std::move(id);
+  return *this;
+}
+
+Json XVIZPrimitivePointBuilder::GetData() const {
+  Json json;
+  size_t i = 0u;
+  for (const auto& point : points_) {
+    json["points"][i][0] = point.get<0>();
+    json["points"][i][1] = point.get<1>();
+    json["points"][i][2] = point.get<2>();
+    i++;
+  }
+  if (id_ != boost::none) {
+    json["base"]["object_id"] = id_.value();
+  }
+  return json;
+}
+
 XVIZPrimitiveBuider::XVIZPrimitiveBuider(std::string name) :
   name_(std::move(name)) {}
 
@@ -58,6 +81,11 @@ XVIZPrimitiveBuider& XVIZPrimitiveBuider::AddPolygon(XVIZPrimitivePolygonBuilder
 
 XVIZPrimitiveBuider& XVIZPrimitiveBuider::AddCircle(XVIZPrimitiveCircleBuilder circle) {
   circles_.push_back(std::move(circle));
+  return *this;
+}
+
+XVIZPrimitiveBuider& XVIZPrimitiveBuider::AddPoints(XVIZPrimitivePointBuilder points) {
+  points_.push_back(std::move(points));
   return *this;
 }
 
@@ -77,6 +105,12 @@ Json XVIZPrimitiveBuider::GetData() const {
   i = 0u;
   for (const auto& polygon : polygons_) {
     json["polygons"][i] = polygon.GetData();
+    i++;
+  }
+
+  i = 0u;
+  for (const auto& point : points_) {
+    json["points"][i] = point.GetData();
     i++;
   }
 

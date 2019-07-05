@@ -103,7 +103,14 @@ std::string WebsocketServer::GetInitMetaDataJson() {
         .AddExtruded(true)
         .AddFillColor("#fb0")
         .AddHeight(1.5))//{boost::none, true, "#fb0", 1.5})
-      .AddType("polygon"));
+      .AddType("polygon"))
+    .AddStream(metadata::Stream("/lidar/points")
+      .AddCategory("primitive")
+      .AddCoordinate("IDENTITY")
+      .AddType("points")
+      .AddStreamStyle(metadata::StreamStyle()
+        .AddPointCloudMode("elevation")
+        .AddRadiusPixels(3.0)));
   return xviz_metadata_builder.GetMetaData();
   //std::string json_str = "{\"type\": \"xviz/metadata\", \"data\": { \"version\": \"2.0.0\", \"streams\": { \"/vehicle_pose\": { \"category\": \"pose\" }, \"/object/shape\": { \"category\": \"primitive\", \"coordinate\": \"IDENTITY\", \"stream_style\": { \"fill_color\": \"#fb0\", \"height\": 1.5, \"extruded\": true }, \"primitive_type\": \"polygon\" } } } }";
   //nlohmann::json json = nlohmann::json::parse(json_str);
@@ -150,6 +157,33 @@ std::string WebsocketServer::GetLiveDataJson() {
   double of = 2.0;
   std::vector<std::pair<double, double>> offset = {{-of, -of}, {-of, of}, {of, of}, {of, -of}};
   for (const auto& actor : *actor_list) {
+    if (actor->GetTypeId() == "sensor.lidar.ray_cast") {
+      uint32_t id = actor->GetId();
+      internal_lidar_set_mutex_->lock();
+      if (registered_sensor_id_.find(id) == registered_sensor_id_.end()) {
+        registered_sensor_id_.insert(id);
+        internal_lidar_set_mutex_->unlock();
+        //std::function<
+        //std::function<void (carla::SharedPtr<carla::sensor::SensorData>)> function = this->LidarDataCallback;
+        //std::function<void (carla::SharedPtr<carla::sensor::SensorData>)> function(std::bind(&WebsocketServer::LidarDataCallback, this, _1));
+        (boost::static_pointer_cast<carla::client::Sensor>(actor))->Listen(
+          [=] (carla::SharedPtr<carla::sensor::SensorData> data) {
+            if (actor->IsAlive()) {
+              auto cast_data = boost::static_pointer_cast<carla::sensor::data::LidarMeasurement>(data);
+              this->LidarDataCallback(*cast_data, actor->GetLocation());
+            } else {
+              (boost::static_pointer_cast<carla::client::Sensor>(actor))->Stop();
+              internal_lidar_set_mutex_->lock();
+              registered_sensor_id_.erase(id);
+              internal_lidar_set_mutex_->unlock();
+            }
+          }
+        );
+      } else {
+        internal_lidar_set_mutex_->unlock();
+      }
+    }
+
     if (actor->GetTypeId().substr(0, 2) != "ve") {
       continue;
     }
@@ -183,8 +217,25 @@ std::string WebsocketServer::GetLiveDataJson() {
   package_mutex_->unlock();
 
 
-  xviz_builder.AddPrimitive(xviz_primitive_builder);
+
+  xviz_builder
+    .AddPrimitive(xviz_primitive_builder);
+  internal_point_cloud_mutex_->lock();
+  xviz_builder
+    .AddPrimitive(XVIZPrimitiveBuider("/lidar/points")
+      .AddPoints(XVIZPrimitivePointBuilder(points_)));
+  internal_point_cloud_mutex_->unlock();
   return xviz_builder.GetData();
+}
+
+void WebsocketServer::LidarDataCallback(const carla::sensor::data::LidarMeasurement& lidar_measurement,
+  const carla::geom::Location& location) {
+  internal_point_cloud_mutex_->lock();
+  points_.clear();
+  for (const auto& point : lidar_measurement) {
+    points_.emplace_back(point.x + location.x, - point.y - location.y, point.z + location.z);
+  }
+  internal_point_cloud_mutex_->unlock();
 }
 
 } // namespace mellocolate
