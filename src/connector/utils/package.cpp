@@ -19,6 +19,12 @@ void Package::TmpOutput() {
   }
 }
 
+void Package::UpdatePointCloud(const boost::shared_ptr<carla::sensor::data::LidarMeasurement>& lidar_measurement) {
+  for (const auto& point : *lidar_measurement) {
+    points_->push_back(point_3d_t(point.x, point.y, point.z));
+  }
+}
+
 void Package::Update() {
   boost::optional<carla::road::Map> map_option = carla::opendrive::OpenDriveParser::Load(map_ptr_->GetOpenDrive());
   if (map_option != boost::none) {

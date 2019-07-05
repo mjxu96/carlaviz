@@ -24,6 +24,17 @@ StreamStyle& StreamStyle::AddHeight(double height) {
   return *this;
 }
 
+// Stream style for point cloud
+StreamStyle& StreamStyle::AddPointCloudMode(std::string point_cloud_mode) {
+  point_cloud_mode_ = std::move(point_cloud_mode);
+  return *this;
+}
+
+StreamStyle& StreamStyle::AddRadiusPixels(double radius_pixels) {
+  radius_pixels_ = radius_pixels;
+  return *this;
+}
+
 Json StreamStyle::GetMetaData() const {
   Json json;
   if (fill_color_ != boost::none) {
@@ -37,6 +48,12 @@ Json StreamStyle::GetMetaData() const {
   }
   if (extruded_ != boost::none) {
     json["extruded"] = (extruded_.value() ? "true" : "false");
+  }
+  if (point_cloud_mode_ != boost::none) {
+    json["point_cloud_mode"] = point_cloud_mode_.value();
+  }
+  if (radius_pixels_ != boost::none) {
+    json["radius_pixels"] = radius_pixels_.value();
   }
   return json;
 }
@@ -58,6 +75,7 @@ Stream& Stream::AddType(std::string type) {
   type_ = std::move(type);
   return *this;
 }
+
 
 Stream& Stream::AddStreamStyle(StreamStyle stream_style) {
   stream_style_ = std::move(stream_style);

@@ -8,7 +8,11 @@
 #include "carla/client/Actor.h"
 #include "carla/client/ActorList.h"
 
+#include "carla/sensor/data/LidarMeasurement.h"
+
 #include "carla/opendrive/OpenDriveParser.h"
+
+#include "connector/utils/def.h"
 
 #include <boost/shared_ptr.hpp>
 
@@ -22,6 +26,7 @@ class Package {
 public:
   Package(boost::shared_ptr<carla::client::World> world_ptr);
   void Update();
+  void UpdatePointCloud(const boost::shared_ptr<carla::sensor::data::LidarMeasurement>& lidar_measurement);
   boost::shared_ptr<carla::client::ActorList> GetActorListPtr() const;
   void TmpOutput();
 
@@ -33,7 +38,7 @@ private:
   boost::shared_ptr<carla::client::ActorList> actor_list_ptr_{nullptr};
   boost::shared_ptr<carla::road::Map> map_detail_{nullptr};
   boost::shared_ptr<carla::client::Map> map_ptr_{nullptr};
-
+  boost::shared_ptr<std::vector<point_3d_t>> points_{boost::make_shared<std::vector<point_3d_t>>()};
 };
   
 

@@ -7,6 +7,8 @@
 #include "connector/xviz/xviz_builder.h"
 
 #include "carla/client/Vehicle.h"
+#include "carla/sensor/data/LidarMeasurement.h"
+#include "carla/client/Sensor.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/beast/core.hpp>
@@ -24,6 +26,7 @@
 #include <mutex>
 #include <chrono>
 #include <cmath>
+#include <unordered_set>
 
 namespace mellocolate {
 
@@ -46,7 +49,17 @@ private:
   uint16_t port_{8081u};
   boost::shared_ptr<mellocolate::utils::Package> package_ptr_{nullptr};
   boost::shared_ptr<std::mutex> package_mutex_{nullptr};
+  boost::shared_ptr<std::mutex> internal_point_cloud_mutex_{boost::make_shared<std::mutex>()};
+  boost::shared_ptr<std::mutex> internal_lidar_set_mutex_{boost::make_shared<std::mutex>()};
   std::vector<std::thread> threads_{};
+
+  // Sensor data
+  //void LidarDataCallback(boost::shared_ptr<carla::sensor::SensorData> lidar_measurement);
+  void LidarDataCallback(const carla::sensor::data::LidarMeasurement& lidar_measurement,
+    const carla::geom::Location& location);
+  std::vector<point_3d_t> points_;
+
+  std::unordered_set<uint32_t> registered_sensor_id_;
 
   // TODO remove tmp
   double tmp_pos_x{0};
