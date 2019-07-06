@@ -1,3 +1,7 @@
+# CLion tmp files
+.idea/
+/cmake-build-debug/
+
 # VScode tmp files
 .vscode/
 
