@@ -8,8 +8,14 @@
 #define MELLOCOLATE_PROXY_H_
 
 #include "connector/utils/def.h"
+#include "connector/xviz/xviz_builder.h"
+#include "connector/xviz/xviz_metadata_builder.h"
+#include "connector/utils/xodr_geojson_converter.h"
+
 #include "carla/client/Client.h"
 #include "carla/client/World.h"
+#include "carla/client/Actor.h"
+#include "carla/client/ActorList.h"
 #include "carla/client/TimeoutException.h"
 
 #include <boost/shared_ptr.hpp>
@@ -44,10 +50,10 @@ private:
   void Init();
   void Update();
 
-  // Carla client and world ptr
+  // Carla related
+  std::string GetMetaData();
+  std::string GetUpdateData();
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr}; 
-
-  // Carla connection variables
   std::string carla_host_{"localhost"};
   uint16_t carla_port_{2000u};
 
