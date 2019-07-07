@@ -28,8 +28,10 @@ add_library(converter
 )
 
 add_executable(connector connector.cpp)
+add_executable(proxy proxy.cpp)
 
 
 target_link_libraries(connector-utils carla_client rpc boost_filesystem)
 target_link_libraries(connector converter connector-utils websocket-server xviz)
+target_link_libraries(proxy converter connector-utils websocket-server xviz)
 # target_link_libraries(converter connector-utils websocket-server)

@@ -4,8 +4,10 @@
  * File Created: Saturday, 6th July 2019 1:52:47 pm
  */
 
-#ifndef MELLOCOLATE_CONNECTOR_DEF_H_
-#define MELLOCOLATE_CONNECTOR_DEF_H_
+#ifndef MELLOCOLATE_PROXY_DEF_H_
+#define MELLOCOLATE_PROXY_DEF_H_
+
+#include "connector/utils/macrologger.h"
 
 #include <boost/geometry.hpp>
 #include <boost/shared_ptr.hpp>
@@ -15,8 +17,6 @@ namespace mellocolate {
 using point_3d_t = boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>;
 using point_2d_t = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
 
-template < typename T >
-using SharedPtr = boost::shared_ptr<T>;
 
 } // namespace mellocolate
 
