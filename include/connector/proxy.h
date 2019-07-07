@@ -29,6 +29,7 @@
 #include <mutex>
 #include <chrono>
 #include <cmath>
+#include <memory>
 #include <unordered_set>
 
 namespace mellocolate {
@@ -50,9 +51,13 @@ private:
   std::string carla_host_{"localhost"};
   uint16_t carla_port_{2000u};
 
-  // Websocket variables
+  // Websocket related
+  void Accept();
+  void AddClient(boost::asio::ip::tcp::socket socket);
   uint16_t ws_port_{8081u};
   std::thread ws_accept_thread_;
+  std::mutex ws_lock_;
+  std::unordered_set<std::shared_ptr<boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>> ws_set_{};
 };
 
 } // namespace mellocolate
