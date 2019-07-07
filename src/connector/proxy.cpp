@@ -35,7 +35,7 @@ void Proxy::Init() {
     client.SetTimeout(10s);
     LOG_INFO("Connecting to Carla Server on %s:%u...", carla_host_.c_str(),
              carla_port_);
-    world_ptr_ = boost::make_shared<carla::client::World>(client.GetWorld());
+    //world_ptr_ = boost::make_shared<carla::client::World>(client.GetWorld());
     LOG_INFO("Connected to Carla Server");
 
     ws_accept_thread_ = std::thread(&Proxy::Accept, this);
