@@ -2,6 +2,7 @@
 #include "connector/utils/xodr_geojson_converter.h"
 
 using namespace mellocolate::utils;
+using point_t = boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>;
 
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
   carla::client::Map map("map", xodr);
