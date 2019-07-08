@@ -93,7 +93,14 @@ std::string Proxy::GetMetaData() {
         .AddExtruded(true)
         .AddFillColor("#fb0")
         .AddHeight(1.5))
-      .AddType("polygon"));
+      .AddType("polygon"))
+    .AddStream(metadata::Stream("/lidar/points")
+      .AddCategory("primitive")
+      .AddCoordinate("IDENTITY")
+      .AddType("points")
+      .AddStreamStyle(metadata::StreamStyle()
+        .AddPointCloudMode("distance_to_vehicle")
+        .AddRadiusPixels(2.0)));
   return xviz_metadata_builder.GetMetaData();
 }
 
@@ -111,11 +118,25 @@ std::string Proxy::GetUpdateData() {
       .AddTimestamp(now_time));
   XVIZPrimitiveBuider xviz_primitive_builder("/object/shape");
 
+  for (const auto& sensor_pair : sensors_) {
+    sensor_pair.second->Stop();
+  }
+  sensors_.clear();
+
   auto actor_list = world_ptr_->GetActors();
-  int i = 0;
-  double of = 2.0;
-  std::vector<std::pair<double, double>> offset = {{-of, -of}, {-of, of}, {of, of}, {of, -of}};
   for (const auto& actor : *actor_list) {
+    if (actor->GetTypeId().substr(0, 6) == "sensor") {
+      uint32_t id = actor->GetId();
+      sensors_.insert({id, boost::static_pointer_cast<carla::client::Sensor>(actor)});
+      (boost::static_pointer_cast<carla::client::Sensor>(actor))->Listen(
+        [this, id, &actor] (carla::SharedPtr<carla::sensor::SensorData> data) {
+          std::lock_guard<std::mutex> lock_guard(this->sensor_data_queue_lock_);
+          lidar_data_queues_[id] = this->GetPointCloud(*(boost::static_pointer_cast<carla::sensor::data::LidarMeasurement>(data)),
+              actor->GetLocation(), actor->GetTransform());
+        }
+      );
+    }
+
     if (actor->GetTypeId().substr(0, 2) != "ve") {
       continue;
     }
@@ -123,7 +144,7 @@ std::string Proxy::GetUpdateData() {
     double x_off = bounding_box.extent.x;
     double y_off = bounding_box.extent.y;
     double yaw = actor->GetTransform().rotation.yaw / 180.0 * M_PI;
-    offset = {AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+    std::vector<std::pair<double, double>> offset = {AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
               AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
     double x = actor->GetLocation().x;
     double y = actor->GetLocation().y;
@@ -139,6 +160,23 @@ std::string Proxy::GetUpdateData() {
 
   xviz_builder
     .AddPrimitive(xviz_primitive_builder);
+
+  // Add point cloud primitive
+  XVIZPrimitiveBuider point_cloud_builder("/lidar/points");
+  sensor_data_queue_lock_.lock();
+  std::vector<uint32_t> to_be_delete_id;
+  for (const auto& point_cloud_pair : lidar_data_queues_) {
+    if (sensors_.find(point_cloud_pair.first) != sensors_.end()) {
+      point_cloud_builder.AddPoints(XVIZPrimitivePointBuilder(point_cloud_pair.second));
+    } else {
+      to_be_delete_id.push_back(point_cloud_pair.first);
+    }
+  }
+  for (auto id : to_be_delete_id) {
+    lidar_data_queues_.erase(id);
+  }
+  sensor_data_queue_lock_.unlock();
+  xviz_builder.AddPrimitive(point_cloud_builder);
 
   return xviz_builder.GetData();
 }
@@ -181,6 +219,17 @@ void Proxy::AddClient(tcp::socket socket) {
   }
 }
 
+std::vector<point_3d_t> Proxy::GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement,
+    const carla::geom::Location& location, const carla::geom::Transform& transform) {
+  std::vector<point_3d_t> points;
+  for (const auto& point : lidar_measurement) {
+    point_3d_t offset = utils::GetOffsetAfterTransform(point_3d_t(point.x, point.y, point.z), 0/180.0 * M_PI);
+    points.emplace_back(location.x + offset.get<0>(),
+      -(location.y + offset.get<1>()),
+      location.z + offset.get<2>());
+  }
+  return points;
+}
 int main() {
   Proxy proxy;
   proxy.Run();

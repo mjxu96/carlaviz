@@ -8,6 +8,7 @@
 #define MELLOCOLATE_PROXY_H_
 
 #include "connector/utils/def.h"
+#include "connector/utils/utils.h"
 #include "connector/xviz/xviz_builder.h"
 #include "connector/xviz/xviz_metadata_builder.h"
 #include "connector/utils/xodr_geojson_converter.h"
@@ -17,6 +18,11 @@
 #include "carla/client/Actor.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/TimeoutException.h"
+#include "carla/client/Vehicle.h"
+#include "carla/sensor/data/LidarMeasurement.h"
+#include "carla/geom/Location.h"
+#include "carla/geom/Transform.h"
+#include "carla/client/Sensor.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/beast/core.hpp>
@@ -37,6 +43,7 @@
 #include <cmath>
 #include <memory>
 #include <unordered_set>
+#include <queue>
 
 namespace mellocolate {
 
@@ -56,6 +63,14 @@ private:
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr}; 
   std::string carla_host_{"localhost"};
   uint16_t carla_port_{2000u};
+  // Carla sensor related
+  std::mutex sensor_data_queue_lock_;
+  //std::unordered_map<uint32_t, std::queue<carla::sensor::SensorData>> sensor_data_queues_{};
+  std::unordered_map<uint32_t, std::vector<point_3d_t>> lidar_data_queues_{};
+  std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>> sensors_{};
+  // Carla Lidar sensor data related
+  std::vector<point_3d_t> GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement,
+    const carla::geom::Location& location, const carla::geom::Transform& transform);
 
   // Websocket related
   void Accept();
