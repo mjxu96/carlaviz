@@ -69,8 +69,7 @@ private:
   std::unordered_map<uint32_t, std::vector<point_3d_t>> lidar_data_queues_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>> sensors_{};
   // Carla Lidar sensor data related
-  std::vector<point_3d_t> GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement,
-    const carla::geom::Location& location, const carla::geom::Transform& transform);
+  std::vector<point_3d_t> GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement);
 
   // Websocket related
   void Accept();

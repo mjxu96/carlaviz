@@ -130,9 +130,11 @@ std::string Proxy::GetUpdateData() {
       sensors_.insert({id, boost::static_pointer_cast<carla::client::Sensor>(actor)});
       (boost::static_pointer_cast<carla::client::Sensor>(actor))->Listen(
         [this, id, &actor] (carla::SharedPtr<carla::sensor::SensorData> data) {
+          if (data == nullptr) {
+            return;
+          }
           std::lock_guard<std::mutex> lock_guard(this->sensor_data_queue_lock_);
-          lidar_data_queues_[id] = this->GetPointCloud(*(boost::static_pointer_cast<carla::sensor::data::LidarMeasurement>(data)),
-              actor->GetLocation(), actor->GetTransform());
+          lidar_data_queues_[id] = this->GetPointCloud(*(boost::static_pointer_cast<carla::sensor::data::LidarMeasurement>(data)));
         }
       );
     }
@@ -219,15 +221,18 @@ void Proxy::AddClient(tcp::socket socket) {
   }
 }
 
-std::vector<point_3d_t> Proxy::GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement,
-    const carla::geom::Location& location, const carla::geom::Transform& transform) {
+std::vector<point_3d_t> Proxy::GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement) {
   std::vector<point_3d_t> points;
+  double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
+  auto location = lidar_measurement.GetSensorTransform().location;
   for (const auto& point : lidar_measurement) {
-    point_3d_t offset = utils::GetOffsetAfterTransform(point_3d_t(point.x, point.y, point.z), 0/180.0 * M_PI);
+    point_3d_t offset = utils::GetOffsetAfterTransform(point_3d_t(point.x, point.y, point.z), (yaw+90.0)/180.0 * M_PI);
     points.emplace_back(location.x + offset.get<0>(),
       -(location.y + offset.get<1>()),
       location.z + offset.get<2>());
   }
+  //std::cout << "[" << lidar_measurement.GetSensorTransform().location.x << ", " << lidar_measurement.GetSensorTransform().location.y << "]" << std::endl;
+  //std::cout << "yaw: " << yaw << std::endl;
   return points;
 }
 int main() {
