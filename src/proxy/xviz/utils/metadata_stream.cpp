@@ -1,5 +1,10 @@
+/*
+ * File: metadata_stream.cpp
+ * Author: Minjun Xu (mjxu96@gmail.com)
+ * File Created: Sunday, 7th July 2019 8:52:29 pm
+ */
 
-#include "connector/xviz/utils/metadata_stream.h"
+#include "proxy/xviz/utils/metadata_stream.h"
 
 using namespace mellocolate::metadata;
 using Json = nlohmann::json;

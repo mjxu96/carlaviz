@@ -16,15 +16,15 @@ add_library(xviz
 )
 
 
-
-add_library(converter 
-  utils/xodr_geojson_converter.cpp
+add_library(proxy-utils 
+  utils/utils.cpp
 )
 
 add_executable(proxy proxy.cpp)
 
 
-target_link_libraries(converter carla_client rpc boost_filesystem)
+#target_link_libraries(carla-base carla_client rpc boost_filesystem)
+target_link_libraries(proxy-utils carla_client rpc boost_filesystem)
 #target_link_libraries(connector converter connector-utils websocket-server xviz)
-target_link_libraries(proxy converter xviz)
+target_link_libraries(proxy proxy-utils xviz)
 # target_link_libraries(converter connector-utils websocket-server)

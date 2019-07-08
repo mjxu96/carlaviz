@@ -1,10 +1,16 @@
+/*
+ * File: metadata_stream.h
+ * Author: Minjun Xu (mjxu96@gmail.com)
+ * File Created: Sunday, 7th July 2019 8:53:32 pm
+ */
+
 #ifndef MELLOCOLATE_XVIZ_UTILS_METADATA_STREAM_H_
 #define MELLOCOLATE_XVIZ_UTILS_METADATA_STREAM_H_
 
 #include <string>
 #include <boost/optional.hpp>
 
-#include <connector/utils/json.hpp>
+#include "proxy/utils/json.hpp"
 
 namespace mellocolate {
 

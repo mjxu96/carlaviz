@@ -4,7 +4,7 @@
  * File Created: Saturday, 6th July 2019 10:11:52 pm
  */
 
-#include "connector/proxy.h"
+#include "proxy/proxy.h"
 
 using namespace mellocolate;
 // For readable seconds
@@ -226,7 +226,7 @@ std::vector<point_3d_t> Proxy::GetPointCloud(const carla::sensor::data::LidarMea
   double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
   auto location = lidar_measurement.GetSensorTransform().location;
   for (const auto& point : lidar_measurement) {
-    point_3d_t offset = utils::GetOffsetAfterTransform(point_3d_t(point.x, point.y, point.z), (yaw+90.0)/180.0 * M_PI);
+    point_3d_t offset = utils::Utils::GetOffsetAfterTransform(point_3d_t(point.x, point.y, point.z), (yaw+90.0)/180.0 * M_PI);
     points.emplace_back(location.x + offset.get<0>(),
       -(location.y + offset.get<1>()),
       location.z + offset.get<2>());

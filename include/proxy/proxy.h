@@ -7,11 +7,10 @@
 #ifndef MELLOCOLATE_PROXY_H_
 #define MELLOCOLATE_PROXY_H_
 
-#include "connector/utils/def.h"
-#include "connector/utils/utils.h"
-#include "connector/xviz/xviz_builder.h"
-#include "connector/xviz/xviz_metadata_builder.h"
-#include "connector/utils/xodr_geojson_converter.h"
+#include "proxy/utils/def.h"
+#include "proxy/utils/utils.h"
+#include "proxy/xviz/xviz_builder.h"
+#include "proxy/xviz/xviz_metadata_builder.h"
 
 #include "carla/client/Client.h"
 #include "carla/client/World.h"
