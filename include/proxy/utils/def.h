@@ -7,7 +7,7 @@
 #ifndef MELLOCOLATE_PROXY_DEF_H_
 #define MELLOCOLATE_PROXY_DEF_H_
 
-#include "connector/utils/macrologger.h"
+#include "proxy/utils/macrologger.h"
 
 #include <boost/geometry.hpp>
 #include <boost/shared_ptr.hpp>

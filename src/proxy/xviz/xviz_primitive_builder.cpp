@@ -1,5 +1,10 @@
+/*
+ * File: xviz_primitive_builder.cpp
+ * Author: Minjun Xu (mjxu96@gmail.com)
+ * File Created: Sunday, 7th July 2019 8:52:29 pm
+ */
 
-#include "connector/xviz/xviz_primitive_builder.h"
+#include "proxy/xviz/xviz_primitive_builder.h"
 
 using namespace mellocolate;
 using Json = nlohmann::json;

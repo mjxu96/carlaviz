@@ -1,8 +1,14 @@
+/*
+ * File: xviz_metadata_builder.h
+ * Author: Minjun Xu (mjxu96@gmail.com)
+ * File Created: Sunday, 7th July 2019 8:52:29 pm
+ */
+
 #ifndef MELLOCOLATE_XVIZ_METADATA_BUILDER_H_
 #define MELLOCOLATE_XVIZ_METADATA_BUILDER_H_
 
-#include "connector/xviz/utils/metadata_stream.h"
-#include "connector/utils/json.hpp"
+#include "proxy/xviz/utils/metadata_stream.h"
+#include "proxy/utils/json.hpp"
 
 #include <vector>
 

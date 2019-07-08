@@ -1,8 +1,22 @@
+/*
+ * File: utils.cpp
+ * Author: Minjun Xu (mjxu96@gmail.com)
+ * File Created: Sunday, 7th July 2019 8:36:02 pm
+ */
 
-#include "connector/utils/xodr_geojson_converter.h"
+#include "proxy/utils/utils.h"
 
 using namespace mellocolate::utils;
-using point_t = boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>;
+using point_3d_t = boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>;
+
+point_3d_t Utils::GetOffsetAfterTransform(const point_3d_t& origin, double yaw) {
+  double x = origin.get<0>();
+  double y = origin.get<1>();
+  return point_3d_t(std::cos(yaw)*x - std::sin(yaw)*y,
+                    std::sin(yaw)*x + std::cos(yaw)*y,
+                    origin.get<2>());
+}
+
 
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
   carla::client::Map map("map", xodr);
@@ -11,7 +25,7 @@ std::string XodrGeojsonConverter::Convert(std::string xodr) {
   auto json = InitGeoJson();
   uint32_t idx = 0u;
   for (const auto& point_pair : topology) {
-    std::vector<point_t> points;
+    std::vector<point_3d_t> points;
     points.push_back(LateralShift(point_pair.first->GetTransform(), point_pair.first->GetLaneWidth()));
     points.push_back(LateralShift(point_pair.second->GetTransform(), point_pair.second->GetLaneWidth()));
     AddOneLine(points, point_pair.first->GetRoadId(), json, idx);
@@ -54,7 +68,7 @@ void XodrGeojsonConverter::AddOneSide(const carla::SharedPtr<carla::client::Wayp
         break;
       }
     }
-    std::vector<point_t> points;
+    std::vector<point_3d_t> points;
     for (const auto& waypoint : tmp_waypoints) {
       points.push_back(LateralShift(waypoint->GetTransform(), -waypoint->GetLaneWidth() * 0.5));
     }
@@ -66,7 +80,7 @@ void XodrGeojsonConverter::AddOneSide(const carla::SharedPtr<carla::client::Wayp
     AddOneLine(points, road_id, json, index+1);
 }
 
-void XodrGeojsonConverter::AddOneLine(const std::vector<point_t>& points, const uint32_t& road_id,
+void XodrGeojsonConverter::AddOneLine(const std::vector<point_3d_t>& points, const uint32_t& road_id,
     nlohmann::json& json, const uint32_t& index) {
   json["features"][index]["type"] = "Feature";
   json["features"][index]["id"] = std::to_string(index);
@@ -81,13 +95,13 @@ void XodrGeojsonConverter::AddOneLine(const std::vector<point_t>& points, const 
   }
 }
 
-point_t XodrGeojsonConverter::LateralShift(carla::geom::Transform transform, double shift) {
+point_3d_t XodrGeojsonConverter::LateralShift(carla::geom::Transform transform, double shift) {
   transform.rotation.yaw += 90.0;
-  point_t p1(transform.location.x, transform.location.y, transform.location.z);
+  point_3d_t p1(transform.location.x, transform.location.y, transform.location.z);
   auto p2_tmp = shift * transform.GetForwardVector();
-  point_t p2(p2_tmp.x, p2_tmp.y, p2_tmp.z);
+  point_3d_t p2(p2_tmp.x, p2_tmp.y, p2_tmp.z);
   //auto point = transform.location + shift * transform.GetForwardVector();
-  return point_t(p1.get<0>() + p2.get<0>(), p1.get<1>() + p2.get<1>(), p1.get<2>() + p2.get<2>());
+  return point_3d_t(p1.get<0>() + p2.get<0>(), p1.get<1>() + p2.get<1>(), p1.get<2>() + p2.get<2>());
 }
 
 // Save following previous codes for future reference
