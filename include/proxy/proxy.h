@@ -22,6 +22,8 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
 #include "carla/client/Sensor.h"
+#include "carla/client/WorldSnapshot.h"
+#include "carla/client/ActorSnapshot.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/beast/core.hpp>

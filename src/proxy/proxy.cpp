@@ -19,6 +19,12 @@ std::pair<double, double> AfterRotate(double x, double y, double yaw) {
   return {std::cos(yaw)*x - std::sin(yaw)*y, std::sin(yaw)*x + std::cos(yaw)*y};
 }
 
+void SnapShotsTest(const carla::client::WorldSnapshot& snapshots) {
+  for (const auto& snapshot : snapshots) {
+    std::cout << snapshot.id << std::endl;
+  }
+}
+
 Proxy::Proxy(std::string carla_host, uint16_t carla_port, uint16_t ws_port)
     : carla_host_(std::move(carla_host)),
       carla_port_(carla_port),
@@ -29,7 +35,8 @@ void Proxy::Run() {
   while (true) {
     try {
       Update();
-      world_ptr_->WaitForTick(200ms);
+      auto snapshots = world_ptr_->WaitForTick(200ms);
+      //SnapShotsTest(snapshots);
     } catch (const std::exception& e) {
       LOG_ERROR("%s", e.what());
     }
