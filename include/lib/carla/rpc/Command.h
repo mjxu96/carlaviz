@@ -9,6 +9,7 @@
 #include "carla/MsgPack.h"
 #include "carla/MsgPackAdaptors.h"
 #include "carla/geom/Transform.h"
+#include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/WalkerControl.h"
@@ -48,14 +49,17 @@ namespace rpc {
 
     struct DestroyActor : CommandBase<DestroyActor> {
       DestroyActor() = default;
-      DestroyActor(ActorId id) : actor(id) {}
+      DestroyActor(ActorId id)
+        : actor(id) {}
       ActorId actor;
       MSGPACK_DEFINE_ARRAY(actor);
     };
 
     struct ApplyVehicleControl : CommandBase<ApplyVehicleControl> {
       ApplyVehicleControl() = default;
-      ApplyVehicleControl(ActorId id, const VehicleControl &value) : actor(id), control(value) {}
+      ApplyVehicleControl(ActorId id, const VehicleControl &value)
+        : actor(id),
+          control(value) {}
       ActorId actor;
       VehicleControl control;
       MSGPACK_DEFINE_ARRAY(actor, control);
@@ -63,7 +67,9 @@ namespace rpc {
 
     struct ApplyWalkerControl : CommandBase<ApplyWalkerControl> {
       ApplyWalkerControl() = default;
-      ApplyWalkerControl(ActorId id, const WalkerControl &value) : actor(id), control(value) {}
+      ApplyWalkerControl(ActorId id, const WalkerControl &value)
+        : actor(id),
+          control(value) {}
       ActorId actor;
       WalkerControl control;
       MSGPACK_DEFINE_ARRAY(actor, control);
@@ -71,15 +77,28 @@ namespace rpc {
 
     struct ApplyTransform : CommandBase<ApplyTransform> {
       ApplyTransform() = default;
-      ApplyTransform(ActorId id, const geom::Transform &value) : actor(id), transform(value) {}
+      ApplyTransform(ActorId id, const geom::Transform &value)
+        : actor(id),
+          transform(value) {}
       ActorId actor;
       geom::Transform transform;
       MSGPACK_DEFINE_ARRAY(actor, transform);
     };
 
+    struct ApplyWalkerState : CommandBase<ApplyWalkerState> {
+      ApplyWalkerState() = default;
+      ApplyWalkerState(ActorId id, const geom::Transform &value, const float speed) : actor(id), transform(value), speed(speed) {}
+      ActorId actor;
+      geom::Transform transform;
+      float speed;
+      MSGPACK_DEFINE_ARRAY(actor, transform, speed);
+    };
+
     struct ApplyVelocity : CommandBase<ApplyVelocity> {
       ApplyVelocity() = default;
-      ApplyVelocity(ActorId id, const geom::Vector3D &value) : actor(id), velocity(value) {}
+      ApplyVelocity(ActorId id, const geom::Vector3D &value)
+        : actor(id),
+          velocity(value) {}
       ActorId actor;
       geom::Vector3D velocity;
       MSGPACK_DEFINE_ARRAY(actor, velocity);
@@ -87,7 +106,9 @@ namespace rpc {
 
     struct ApplyAngularVelocity : CommandBase<ApplyAngularVelocity> {
       ApplyAngularVelocity() = default;
-      ApplyAngularVelocity(ActorId id, const geom::Vector3D &value) : actor(id), angular_velocity(value) {}
+      ApplyAngularVelocity(ActorId id, const geom::Vector3D &value)
+        : actor(id),
+          angular_velocity(value) {}
       ActorId actor;
       geom::Vector3D angular_velocity;
       MSGPACK_DEFINE_ARRAY(actor, angular_velocity);
@@ -95,7 +116,9 @@ namespace rpc {
 
     struct ApplyImpulse : CommandBase<ApplyImpulse> {
       ApplyImpulse() = default;
-      ApplyImpulse(ActorId id, const geom::Vector3D &value) : actor(id), impulse(value) {}
+      ApplyImpulse(ActorId id, const geom::Vector3D &value)
+        : actor(id),
+          impulse(value) {}
       ActorId actor;
       geom::Vector3D impulse;
       MSGPACK_DEFINE_ARRAY(actor, impulse);
@@ -103,7 +126,9 @@ namespace rpc {
 
     struct SetSimulatePhysics : CommandBase<SetSimulatePhysics> {
       SetSimulatePhysics() = default;
-      SetSimulatePhysics(ActorId id, bool value) : actor(id), enabled(value) {}
+      SetSimulatePhysics(ActorId id, bool value)
+        : actor(id),
+          enabled(value) {}
       ActorId actor;
       bool enabled;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
@@ -111,7 +136,9 @@ namespace rpc {
 
     struct SetAutopilot : CommandBase<SetAutopilot> {
       SetAutopilot() = default;
-      SetAutopilot(ActorId id, bool value) : actor(id), enabled(value) {}
+      SetAutopilot(ActorId id, bool value)
+        : actor(id),
+          enabled(value) {}
       ActorId actor;
       bool enabled;
       MSGPACK_DEFINE_ARRAY(actor, enabled);
@@ -123,6 +150,7 @@ namespace rpc {
         ApplyVehicleControl,
         ApplyWalkerControl,
         ApplyTransform,
+        ApplyWalkerState,
         ApplyVelocity,
         ApplyAngularVelocity,
         ApplyImpulse,

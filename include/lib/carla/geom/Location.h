@@ -33,7 +33,7 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    double Distance(const Location &loc) const {
+    auto Distance(const Location &loc) const {
       return Math::Distance(*this, loc);
     }
 
@@ -59,22 +59,6 @@ namespace geom {
     friend Location operator-(Location lhs, const Location &rhs) {
       lhs -= rhs;
       return lhs;
-    }
-
-    /// @todo Do we need to multiply locations?
-    Location &operator*=(const double &rhs) {
-      static_cast<Vector3D &>(*this) *= rhs;
-      return *this;
-    }
-
-    friend Location operator*(Location lhs, double rhs) {
-      lhs *= rhs;
-      return lhs;
-    }
-
-    friend Location operator*(double lhs, Location rhs) {
-      rhs *= lhs;
-      return rhs;
     }
 
     // =========================================================================

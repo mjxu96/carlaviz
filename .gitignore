@@ -10,6 +10,7 @@
 /include/lib/boost/
 /include/lib/rpc/
 /include/lib/gtest/
+/include/lib/recast/
 
 # Build files
 /build/

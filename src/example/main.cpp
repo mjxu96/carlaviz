@@ -40,7 +40,7 @@ static void SaveSemSegImageToDisk(const csd::Image &image) {
   using namespace carla::image;
 
   char buffer[9u];
-  std::snprintf(buffer, sizeof(buffer), "%08zu", image.GetFrameNumber());
+  std::snprintf(buffer, sizeof(buffer), "%08zu", image.GetFrame());
   auto filename = "_images/"s + buffer + ".png";
 
   auto view = ImageView::MakeColorConvertedView(
@@ -74,7 +74,6 @@ int main(int argc, const char *argv[]) {
 
     // Load a random town.
     auto town_name = RandomChoice(client.GetAvailableMaps(), rng);
-    town_name = "Town01";
     std::cout << "Loading world: " << town_name << std::endl;
     auto world = client.LoadWorld(town_name);
 
@@ -103,8 +102,7 @@ int main(int argc, const char *argv[]) {
     // Apply control to vehicle.
     cc::Vehicle::Control control;
     control.throttle = 1.0f;
-    //vehicle->ApplyControl(control);
-    vehicle->SetAutopilot(true);
+    vehicle->ApplyControl(control);
 
     // Move spectator so we can see the vehicle from the simulator window.
     auto spectator = world.GetSpectator();
@@ -132,7 +130,7 @@ int main(int argc, const char *argv[]) {
       SaveSemSegImageToDisk(*image);
     });
 
-    std::this_thread::sleep_for(10min);
+    std::this_thread::sleep_for(10s);
 
     // Remove actors from the simulation.
     camera->Destroy();

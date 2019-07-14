@@ -26,6 +26,12 @@ file(GLOB libcarla_carla_image_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_image_sources}")
 # install(FILES ${libcarla_carla_image_sources} DESTINATION ${LIBCARLA_HEADER_INSTALL_PATH}/include/lib/carla/image)
 
+file(GLOB libcarla_carla_nav_sources
+    "${libcarla_source_path}/carla/nav/*.cpp")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_nav_sources}")
+# install(FILES ${libcarla_carla_nav_sources} DESTINATION include/carla/nav)
+
+
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_sources}")
@@ -36,10 +42,10 @@ file(GLOB libcarla_carla_opendrive_parser_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_sources}")
 # install(FILES ${libcarla_carla_opendrive_parser_sources} DESTINATION ${LIBCARLA_HEADER_INSTALL_PATH}/include/lib/carla/opendrive/parser)
 
-file(GLOB libcarla_carla_opendrive_parser_pugixml_sources
-    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_pugixml_sources}")
+# file(GLOB libcarla_carla_opendrive_parser_pugixml_sources
+#     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.cpp"
+#     "${libcarla_source_path}/carla/opendrive/parser/pugixml/*.hpp")
+# set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_pugixml_sources}")
 # install(FILES ${libcarla_carla_opendrive_parser_pugixml_sources} DESTINATION ${LIBCARLA_HEADER_INSTALL_PATH}/include/lib/carla/opendrive/parser/pugixml)
 
 file(GLOB libcarla_carla_pointcloud_sources
@@ -59,9 +65,9 @@ file(GLOB libcarla_carla_road_element_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_element_sources}")
 # install(FILES ${libcarla_carla_road_element_sources} DESTINATION ${LIBCARLA_HEADER_INSTALL_PATH}/include/lib/carla/road/element)
 
-file(GLOB libcarla_carla_road_element_cephes_sources
-    "${libcarla_source_path}/carla/road/element/cephes/*.cpp")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_element_cephes_sources}")
+# file(GLOB libcarla_carla_road_element_cephes_sources
+#     "${libcarla_source_path}/carla/road/element/cephes/*.cpp")
+# set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_element_cephes_sources}")
 # install(FILES ${libcarla_carla_road_element_cephes_sources} DESTINATION ${LIBCARLA_HEADER_INSTALL_PATH}/include/lib/carla/road/element/cephes)
 
 file(GLOB libcarla_carla_road_general_sources
@@ -119,6 +125,17 @@ file(GLOB libcarla_carla_streaming_low_level_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_streaming_low_level_sources}")
 # install(FILES ${libcarla_carla_streaming_low_level_sources} DESTINATION ${LIBCARLA_HEADER_INSTALL_PATH}/include/lib/carla/streaming/low_level)
 
+file(GLOB libcarla_cephes_sources
+    "${libcarla_source_thirdparty_path}/cephes/*.cpp")
+set(libcarla_sources "${libcarla_sources};${libcarla_cephes_sources}")
+# install(FILES ${libcarla_cephes_sources} DESTINATION include/cephes)
+
+
+file(GLOB libcarla_pugixml_sources
+    "${libcarla_source_thirdparty_path}/pugixml/*.cpp")
+set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
+# install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
+
 # install(FILES ${libcarla_moodycamel_sources} DESTINATION ${LIBCARLA_HEADER_INSTALL_PATH}/include/lib/moodycamel)
 
 # ==============================================================================
@@ -129,7 +146,10 @@ add_library(carla_client STATIC ${libcarla_sources})
 
 target_include_directories(carla_client SYSTEM PRIVATE
     "${BOOST_INCLUDE_PATH}"
-    "${RPCLIB_INCLUDE_PATH}")
+    "${RPCLIB_INCLUDE_PATH}"
+    "${RECAST_INCLUDE_PATH}")
+
+
 
 # install(TARGETS carla_client DESTINATION ${LIBCARLA_LIB_INSTALL_PATH}/lib)
 
@@ -137,3 +157,6 @@ if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
   set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
 endif()
 set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
+target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
+target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
+target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetourCrowd.a")
