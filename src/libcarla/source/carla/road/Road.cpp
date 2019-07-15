@@ -43,7 +43,7 @@ namespace road {
     return _is_junction;
   }
 
-  JuncId Road::GetJunction() const {
+  JuncId Road::GetJunctionId() const {
     return _junction_id;
   }
 
@@ -180,11 +180,11 @@ namespace road {
   }
 
   element::DirectedPoint Road::GetDirectedPointIn(const double s) const {
-    const auto clamped_s = geom::Math::clamp<double>(s, 0.0, _length);
+    const auto clamped_s = geom::Math::Clamp(s, 0.0, _length);
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
 
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
-    const auto offset = lane_offset->GetPolynomial().Evaluate(clamped_s);
+    const auto offset = static_cast<float>(lane_offset->GetPolynomial().Evaluate(clamped_s));
 
     // Apply road's lane offset record
     element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
@@ -193,7 +193,7 @@ namespace road {
 
     // Apply road's elevation record
     const auto elevation_info = GetElevationOn(s);
-    p.location.z = elevation_info.Evaluate(s);
+    p.location.z = static_cast<float>(elevation_info.Evaluate(s));
     p.pitch = elevation_info.Tangent(s);
 
     return p;
@@ -244,7 +244,7 @@ namespace road {
     DirectedPoint current_dp = dp_lane_zero;
     for (const auto &lane : right_lanes) {
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-      const auto half_width = lane_width_info->GetPolynomial().Evaluate(s) * 0.5;
+      const auto half_width = static_cast<float>(lane_width_info->GetPolynomial().Evaluate(s)) * 0.5f;
 
       current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);
@@ -267,7 +267,7 @@ namespace road {
     current_dp = dp_lane_zero;
     for (const auto &lane : left_lanes) {
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
-      const auto half_width = -lane_width_info->GetPolynomial().Evaluate(s) * 0.5;
+      const auto half_width = -static_cast<float>(lane_width_info->GetPolynomial().Evaluate(s)) * 0.5f;
 
       current_dp.ApplyLateralOffset(half_width);
       const auto current_dist = geom::Math::Distance(current_dp.location, loc);

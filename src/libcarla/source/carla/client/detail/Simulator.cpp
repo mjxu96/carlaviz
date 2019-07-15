@@ -6,6 +6,7 @@
 
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/Debug.h"
 #include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
@@ -13,10 +14,12 @@
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/TimeoutException.h"
+#include "carla/client/WalkerAIController.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
+#include <thread>
 
 using namespace std::string_literals;
 
@@ -37,6 +40,12 @@ namespace detail {
           "that might be incompatible with this API");
       log_warning("Client API version     =", vc);
       log_warning("Simulator API version  =", vs);
+    }
+  }
+
+  static void SynchronizeFrame(uint64_t frame, const Episode &episode) {
+    while (frame > episode.GetState()->GetTimestamp().frame) {
+      std::this_thread::yield();
     }
   }
 
@@ -61,9 +70,10 @@ namespace detail {
   EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
     const auto id = GetCurrentEpisode().GetId();
     _client.LoadEpisode(std::move(map_name));
-    for (auto i = 0u; i < 10u; ++i) { // 10 attempts (at most 20 seconds).
+    size_t number_of_attempts = _client.GetTimeout().milliseconds() / 10u;
+    for (auto i = 0u; i < number_of_attempts; ++i) {
       using namespace std::literals::chrono_literals;
-      _episode->WaitForState(2s); // Ignore time-outs.
+      _episode->WaitForState(10ms);
       auto episode = GetCurrentEpisode();
       if (episode.GetId() != id) {
         return episode;
@@ -96,13 +106,21 @@ namespace detail {
   // -- Tick -------------------------------------------------------------------
   // ===========================================================================
 
-  Timestamp Simulator::WaitForTick(time_duration timeout) {
+  WorldSnapshot Simulator::WaitForTick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
     auto result = _episode->WaitForState(timeout);
     if (!result.has_value()) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
     }
     return *result;
+  }
+
+  uint64_t Simulator::Tick() {
+    DEBUG_ASSERT(_episode != nullptr);
+    const auto frame = _client.SendTickCue();
+    SynchronizeFrame(frame, *_episode);
+    RELEASE_ASSERT(frame == _episode->GetState()->GetTimestamp().frame);
+    return frame;
   }
 
   // ===========================================================================
@@ -115,11 +133,53 @@ namespace detail {
   }
 
   SharedPtr<Actor> Simulator::GetSpectator() {
-    return ActorFactory::MakeActor(
-        GetCurrentEpisode(),
-        _client.GetSpectator(),
-        nullptr,
-        GarbageCollectionPolicy::Disabled);
+    return MakeActor(_client.GetSpectator());
+  }
+
+  uint64_t Simulator::SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+    if (settings.synchronous_mode && !settings.fixed_delta_seconds) {
+      log_warning(
+          "synchronous mode enabled with variable delta seconds. It is highly "
+          "recommended to set 'fixed_delta_seconds' when running on synchronous mode.");
+    }
+    const auto frame = _client.SetEpisodeSettings(settings);
+    SynchronizeFrame(frame, *_episode);
+    return frame;
+  }
+
+  // ===========================================================================
+  // -- AI ---------------------------------------------------------------------
+  // ===========================================================================
+
+  void Simulator::RegisterAIController(const WalkerAIController &controller) {
+    auto walker = controller.GetParent();
+    if (walker == nullptr) {
+      throw_exception(std::runtime_error(controller.GetDisplayId() + ": not attached to walker"));
+      return;
+    }
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->RegisterWalker(walker->GetId(), controller.GetId());
+  }
+
+  void Simulator::UnregisterAIController(const WalkerAIController &controller) {
+    auto walker = controller.GetParent();
+    if (walker == nullptr) {
+      throw_exception(std::runtime_error(controller.GetDisplayId() + ": not attached to walker"));
+      return;
+    }
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->UnregisterWalker(walker->GetId(), controller.GetId());
+  }
+
+  boost::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    return navigation->GetRandomLocation();
   }
 
   // ===========================================================================
@@ -130,13 +190,15 @@ namespace detail {
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
+      rpc::AttachmentType attachment_type,
       GarbageCollectionPolicy gc) {
     rpc::Actor actor;
     if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
-          parent->GetId());
+          parent->GetId(),
+          attachment_type);
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -145,8 +207,7 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     _episode->RegisterActor(actor);
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
-    auto parent_ptr = parent != nullptr ? parent->shared_from_this() : SharedPtr<Actor>();
-    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, parent_ptr, gca);
+    auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
     log_debug(
         result->GetDisplayId(),
         "created",

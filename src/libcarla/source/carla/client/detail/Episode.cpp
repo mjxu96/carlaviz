@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/detail/Client.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
 
 #include <exception>
@@ -56,8 +57,8 @@ namespace detail {
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
         auto prev = self->GetState();
         do {
-          if (prev->GetFrameCount() >= next->GetFrameCount()) {
-            self->_on_tick_callbacks.Call(next->GetTimestamp());
+          if (prev->GetFrame() >= next->GetFrame()) {
+            self->_on_tick_callbacks.Call(next);
             return;
           }
         } while (!self->_state.compare_exchange(&prev, next));
@@ -67,10 +68,42 @@ namespace detail {
         }
 
         // Notify waiting threads and do the callbacks.
-        self->_timestamp.SetValue(next->GetTimestamp());
-        self->_on_tick_callbacks.Call(next->GetTimestamp());
+        self->_snapshot.SetValue(next);
+
+        // Tick navigation.
+        auto navigation = self->_navigation.load();
+        if (navigation != nullptr) {
+          navigation->Tick(*next);
+        }
+
+        // Call user callbacks.
+        self->_on_tick_callbacks.Call(next);
       }
     });
+  }
+
+  boost::optional<rpc::Actor> Episode::GetActorById(ActorId id) {
+    auto actor = _actors.GetActorById(id);
+    if (!actor.has_value()) {
+      auto actor_list = _client.GetActorsById({id});
+      if (!actor_list.empty()) {
+        actor = std::move(actor_list.front());
+        _actors.Insert(*actor);
+      }
+    }
+    return actor;
+  }
+
+  std::shared_ptr<WalkerNavigation> Episode::CreateNavigationIfMissing() {
+    std::shared_ptr<WalkerNavigation> navigation;
+    do {
+      navigation = _navigation.load();
+      if (navigation == nullptr) {
+        auto new_navigation = std::make_shared<WalkerNavigation>(_client);
+        _navigation.compare_exchange(&navigation, new_navigation);
+      }
+    } while (navigation == nullptr);
+    return navigation;
   }
 
   std::vector<rpc::Actor> Episode::GetActorsById(const std::vector<ActorId> &actor_ids) {
@@ -84,6 +117,7 @@ namespace detail {
   void Episode::OnEpisodeStarted() {
     _actors.Clear();
     _on_tick_callbacks.Clear();
+    _navigation.reset();
   }
 
 } // namespace detail

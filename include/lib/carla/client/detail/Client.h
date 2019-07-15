@@ -12,6 +12,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
+#include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
@@ -34,6 +35,7 @@ namespace rpc {
   class DebugShape;
   class VehicleControl;
   class WalkerControl;
+  class WalkerBoneControl;
 }
 namespace sensor {
   class SensorData;
@@ -49,8 +51,6 @@ namespace detail {
 
   /// Provides communication with the rpc and streaming servers of a CARLA
   /// simulator.
-  ///
-  /// @todo Make sure this class is really thread-safe.
   class Client : private NonCopyable {
   public:
 
@@ -77,6 +77,8 @@ namespace detail {
 
     rpc::MapInfo GetMapInfo();
 
+    std::vector<uint8_t> GetNavigationMesh() const;
+
     std::vector<std::string> GetAvailableMaps();
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
@@ -85,7 +87,7 @@ namespace detail {
 
     rpc::EpisodeSettings GetEpisodeSettings();
 
-    void SetEpisodeSettings(const rpc::EpisodeSettings &settings);
+    uint64_t SetEpisodeSettings(const rpc::EpisodeSettings &settings);
 
     rpc::WeatherParameters GetWeatherParameters();
 
@@ -107,7 +109,8 @@ namespace detail {
     rpc::Actor SpawnActorWithParent(
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
-        rpc::ActorId parent);
+        rpc::ActorId parent,
+        rpc::AttachmentType attachment_type);
 
     bool DestroyActor(rpc::ActorId actor);
 
@@ -147,6 +150,10 @@ namespace detail {
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
 
+    void ApplyBoneControlToWalker(
+        rpc::ActorId walker,
+        const rpc::WalkerBoneControl &control);
+
     void SetTrafficLightState(
         rpc::ActorId traffic_light,
         const rpc::TrafficLightState trafficLightState);
@@ -174,13 +181,15 @@ namespace detail {
 
     void StopRecorder();
 
-    std::string ShowRecorderFileInfo(std::string name);
+    std::string ShowRecorderFileInfo(std::string name, bool show_all);
 
     std::string ShowRecorderCollisions(std::string name, char type1, char type2);
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
     std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
+
+    void SetReplayerTimeFactor(double time_factor);
 
     void SubscribeToStream(
         const streaming::Token &token,
@@ -198,7 +207,7 @@ namespace detail {
         std::vector<rpc::Command> commands,
         bool do_tick_cue);
 
-    void SendTickCue();
+    uint64_t SendTickCue();
 
   private:
 

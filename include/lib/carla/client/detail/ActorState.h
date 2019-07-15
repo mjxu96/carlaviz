@@ -10,6 +10,7 @@
 #include "carla/client/World.h"
 #include "carla/client/ActorAttribute.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/ActorFactory.h"
 #include "carla/rpc/Actor.h"
 
 namespace carla {
@@ -22,7 +23,7 @@ namespace detail {
   class ActorState : private MovableNonCopyable {
   public:
 
-    auto GetId() const {
+    ActorId GetId() const {
       return _description.id;
     }
 
@@ -34,13 +35,15 @@ namespace detail {
       return _display_id;
     }
 
+    ActorId GetParentId() const {
+      return _description.parent_id;
+    }
+
     const std::vector<uint8_t> &GetSemanticTags() const {
       return _description.semantic_tags;
     }
 
-    SharedPtr<Actor> GetParent() const {
-      return _parent;
-    }
+    SharedPtr<Actor> GetParent() const;
 
     World GetWorld() const {
       return World{_episode};
@@ -52,12 +55,6 @@ namespace detail {
     }
 
   protected:
-
-    ActorState(
-        rpc::Actor description,
-        EpisodeProxy episode,
-        SharedPtr<Actor> parent);
-
 
     const geom::BoundingBox &GetBoundingBox() const {
       return _description.bounding_box;
@@ -79,11 +76,13 @@ namespace detail {
 
     friend class Simulator;
 
+    friend class ActorFactory;
+
+    explicit ActorState(rpc::Actor description, EpisodeProxy episode);
+
     rpc::Actor _description;
 
     EpisodeProxy _episode;
-
-    SharedPtr<Actor> _parent;
 
     std::string _display_id;
 

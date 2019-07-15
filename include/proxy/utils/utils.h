@@ -11,45 +11,30 @@
 #include "proxy/utils/json.hpp"
 
 #include "carla/client/Map.h"
+#include "carla/client/Sensor.h"
 #include "carla/client/Waypoint.h"
-#include "carla/opendrive/OpenDriveParser.h"
-#include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
+#include "carla/opendrive/OpenDriveParser.h"
+#include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/sensor/SensorData.h"
-#include "carla/client/Sensor.h"
 
-#include <tuple>
 #include <fstream>
 #include <iostream>
+#include <tuple>
 
 #include <boost/geometry.hpp>
 #include <boost/shared_ptr.hpp>
 
-
 namespace mellocolate {
 namespace utils {
 
-/*
-class SensorDataPackage {
-public:
-  SensorDataPackage() = delete;
-  SensorDataPackage(carla::sensor::SensorData sensor_data, carla::geom::Location location,
-    carla::geom::Transform transform) :
-    sensor_data_(std::move(sensor_data)),
-    location_(std::move(location)),
-    transform_(std::move(transform)) {}
-
-private:
-  carla::sensor::SensorData sensor_data_;
-  carla::geom::Location location_;
-  carla::geom::Transform transform_;
-};
-*/
-// rotate with yaw in radian
 class Utils {
-public:
-  static point_3d_t GetOffsetAfterTransform(const point_3d_t& origin, double yaw);
+ public:
+  static point_3d_t GetOffsetAfterTransform(const point_3d_t& origin,
+                                            double yaw);
+  static bool IsStartWith(const std::string& origin,
+                          const std::string& pattern);
 };
 
 class XodrGeojsonConverter {
