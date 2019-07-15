@@ -56,13 +56,16 @@ public:
 
 private:
   void Init();
-  void Update();
+  void Update(const std::string& data_str);
 
   // Carla related
   std::string GetMetaData();
-  std::string GetUpdateData();
+  std::string GetUpdateData(const carla::client::WorldSnapshot& world_snapshots);
+  void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Actor> actor);
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr}; 
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
+
+  std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   // Carla sensor related
   std::mutex sensor_data_queue_lock_;
   //std::unordered_map<uint32_t, std::queue<carla::sensor::SensorData>> sensor_data_queues_{};
