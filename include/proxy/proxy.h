@@ -54,6 +54,9 @@ public:
   Proxy(std::string carla_host, uint16_t carla_port, uint16_t ws_port);
   void Run();
   void AddClient(boost::asio::ip::tcp::socket socket);
+  void TmpSetWorldPtr(boost::shared_ptr<carla::client::World> world_ptr) {
+    world_ptr_ = world_ptr;
+  }
 
 private:
   void Init();

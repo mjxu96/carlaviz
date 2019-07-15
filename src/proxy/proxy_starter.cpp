@@ -45,9 +45,8 @@ void ProxyStarter::Accpet() {
     for (;;) {
       tcp::socket socket{ioc};
       acceptor.accept(socket);
-      std::thread{std::bind(
-        &AddClient, this, 
-      std::move(socket))}.detach();
+      auto t = std::thread(&ProxyStarter::AddClient, this, std::move(socket));
+      t.detach();
     }
   } catch(const std::exception& e) {
     LOG_ERROR("%s", e.what());
@@ -56,6 +55,7 @@ void ProxyStarter::Accpet() {
 }
 void ProxyStarter::AddClient(tcp::socket socket) {
   Proxy proxy;
+  proxy.TmpSetWorldPtr(boost::make_shared<carla::client::World>(carla_client_ptr_->GetWorld()));
   proxy.AddClient(std::move(socket));
   proxy.Run();
 }
