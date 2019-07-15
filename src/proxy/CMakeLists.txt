@@ -20,11 +20,14 @@ add_library(proxy-utils
   utils/utils.cpp
 )
 
-add_executable(proxy proxy.cpp)
+add_library(proxy proxy.cpp)
 
+
+add_executable(proxy_starter, proxy_starter.cpp)
 
 #target_link_libraries(carla-base carla_client rpc boost_filesystem)
 target_link_libraries(proxy-utils carla_client rpc boost_filesystem)
 #target_link_libraries(connector converter connector-utils websocket-server xviz)
 target_link_libraries(proxy proxy-utils xviz)
+target_link_libraries(proxy_starter proxy)
 # target_link_libraries(converter connector-utils websocket-server)

@@ -53,6 +53,7 @@ public:
   Proxy() = default;
   Proxy(std::string carla_host, uint16_t carla_port, uint16_t ws_port);
   void Run();
+  void AddClient(boost::asio::ip::tcp::socket socket);
 
 private:
   void Init();
@@ -74,7 +75,6 @@ private:
 
   // Websocket related
   void Accept();
-  void AddClient(boost::asio::ip::tcp::socket socket);
   uint16_t ws_port_{8081u};
   std::thread ws_accept_thread_;
   std::mutex ws_lock_;

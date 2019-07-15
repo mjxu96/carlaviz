@@ -31,7 +31,7 @@ Proxy::Proxy(std::string carla_host, uint16_t carla_port, uint16_t ws_port)
       ws_port_(ws_port) {}
 
 void Proxy::Run() { 
-  Init(); 
+  //Init(); 
   while (true) {
     try {
       Update();
@@ -50,6 +50,8 @@ void Proxy::Init() {
     client.SetTimeout(10s);
     LOG_INFO("Connecting to Carla Server on %s:%u...", carla_host_.c_str(),
              carla_port_);
+
+    // TODO world ptr should not be here
     world_ptr_ = boost::make_shared<carla::client::World>(client.GetWorld());
     LOG_INFO("Connected to Carla Server");
 
@@ -242,8 +244,10 @@ std::vector<point_3d_t> Proxy::GetPointCloud(const carla::sensor::data::LidarMea
   //std::cout << "yaw: " << yaw << std::endl;
   return points;
 }
-int main() {
-  Proxy proxy;
-  proxy.Run();
-  return 0;
-}
+
+
+// int main() {
+//   Proxy proxy;
+//   proxy.Run();
+//   return 0;
+// }
