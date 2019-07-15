@@ -18,6 +18,7 @@
 #include "carla/client/ActorList.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/client/Vehicle.h"
+#include "carla/client/Walker.h"
 #include "carla/sensor/data/LidarMeasurement.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
@@ -61,7 +62,8 @@ private:
   // Carla related
   std::string GetMetaData();
   std::string GetUpdateData(const carla::client::WorldSnapshot& world_snapshots);
-  void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Actor> actor);
+  void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Vehicle> vehicle);
+  void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Walker> walker);
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr}; 
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
 

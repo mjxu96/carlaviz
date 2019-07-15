@@ -17,6 +17,17 @@ point_3d_t Utils::GetOffsetAfterTransform(const point_3d_t& origin, double yaw) 
                     origin.get<2>());
 }
 
+bool Utils::IsStartWith(const std::string& origin, const std::string& pattern) {
+  size_t o_len = origin.size();
+  size_t p_len = pattern.size();
+  if (p_len <= 0u) {
+    return true;
+  }
+  if (o_len < p_len) {
+    return false;
+  }
+  return (origin.substr(0, p_len) == pattern);
+}
 
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
   carla::client::Map map("map", xodr);

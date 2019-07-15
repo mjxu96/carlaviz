@@ -50,6 +50,7 @@ private:
 class Utils {
 public:
   static point_3d_t GetOffsetAfterTransform(const point_3d_t& origin, double yaw);
+  static bool IsStartWith(const std::string& origin, const std::string& pattern);
 };
 
 class XodrGeojsonConverter {

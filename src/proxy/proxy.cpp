@@ -7,6 +7,7 @@
 #include "proxy/proxy.h"
 
 using namespace mellocolate;
+using namespace mellocolate::utils;
 // For readable seconds
 using namespace std::chrono_literals;
 using namespace std::string_literals;
@@ -74,12 +75,20 @@ std::string Proxy::GetMetaData() {
     .SetMap(map_geojson)
     .AddStream(metadata::Stream("/vehicle_pose")
       .AddCategory("pose"))
-    .AddStream(metadata::Stream("/object/shape")
+    .AddStream(metadata::Stream("/object/vehicles")
       .AddCategory("primitive")
       .AddCoordinate("IDENTITY")
       .AddStreamStyle(metadata::StreamStyle()
         .AddExtruded(true)
         .AddFillColor("#fb0")
+        .AddHeight(2.0))
+      .AddType("polygon"))
+    .AddStream(metadata::Stream("/object/walkers")
+      .AddCategory("primitive")
+      .AddCoordinate("IDENTITY")
+      .AddStreamStyle(metadata::StreamStyle()
+        .AddExtruded(true)
+        .AddFillColor("#FF0000")
         .AddHeight(1.5))
       .AddType("polygon"))
     .AddStream(metadata::Stream("/lidar/points")
@@ -104,7 +113,8 @@ std::string Proxy::GetUpdateData(const carla::client::WorldSnapshot& world_snaps
       .AddOrientation(point_3d_t(0, 0, 0))
       .AddPosition(point_3d_t(0, 0, 0))
       .AddTimestamp(now_time));
-  XVIZPrimitiveBuider xviz_primitive_builder("/object/shape");
+  XVIZPrimitiveBuider xviz_primitive_builder("/object/vehicles");
+  XVIZPrimitiveBuider xviz_primitive_walker_builder("/object/walkers");
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> tmp_actors;
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>> tmp_sensors;
@@ -161,8 +171,11 @@ std::string Proxy::GetUpdateData(const carla::client::WorldSnapshot& world_snaps
   for (const auto& actor_pair : actors_) {
     auto actor_ptr = actor_pair.second;
 
-    if (actor_ptr->GetTypeId().substr(0, 2) == "ve") {
-      AddVehicle(xviz_primitive_builder, actor_ptr);
+    if (Utils::IsStartWith(actor_ptr->GetTypeId(), "vehicle")) {
+      AddVehicle(xviz_primitive_builder, boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr));
+    }
+    if (Utils::IsStartWith(actor_ptr->GetTypeId(), "walker")) {
+      AddWalker(xviz_primitive_walker_builder, boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
     }
 
   }
@@ -177,27 +190,48 @@ std::string Proxy::GetUpdateData(const carla::client::WorldSnapshot& world_snaps
 
   xviz_builder
     .AddPrimitive(xviz_primitive_builder)
+    .AddPrimitive(xviz_primitive_walker_builder)
     .AddPrimitive(point_cloud_builder);
   return xviz_builder.GetData();
 }
 
-void Proxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Actor> actor_ptr) {
-  auto bounding_box = (boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr))->GetBoundingBox();
+void Proxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Vehicle> vehicle_ptr) {
+  auto bounding_box = vehicle_ptr->GetBoundingBox();
   double x_off = bounding_box.extent.x;
   double y_off = bounding_box.extent.y;
-  double yaw = actor_ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
+  double yaw = vehicle_ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
   std::vector<std::pair<double, double>> offset = {AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
             AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
-  double x = actor_ptr->GetLocation().x;
-  double y = actor_ptr->GetLocation().y;
-  double z = actor_ptr->GetLocation().z;
+  double x = vehicle_ptr->GetLocation().x;
+  double y = vehicle_ptr->GetLocation().y;
+  double z = vehicle_ptr->GetLocation().z;
   std::vector<point_3d_t> vertices;
   for (int j = 0; j < offset.size(); j++) {
     vertices.emplace_back(x + offset[j].first, -(y + offset[j].second), z);
   }
   xviz_primitive_builder
       .AddPolygon(XVIZPrimitivePolygonBuilder(vertices)
-        .AddId(actor_ptr->GetTypeId() + std::to_string(actor_ptr->GetId())));
+        .AddId(vehicle_ptr->GetTypeId() + std::string(".") + std::to_string(vehicle_ptr->GetId())));
+}
+
+void Proxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Walker> walker_ptr) {
+  auto bounding_box = walker_ptr->GetBoundingBox();
+  double x_off = bounding_box.extent.x;
+  double y_off = bounding_box.extent.y;
+  double yaw = walker_ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
+  std::vector<std::pair<double, double>> offset = {AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+            AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
+  double x = walker_ptr->GetLocation().x;
+  double y = walker_ptr->GetLocation().y;
+  double z = walker_ptr->GetLocation().z;
+  std::vector<point_3d_t> vertices;
+  for (int j = 0; j < offset.size(); j++) {
+    vertices.emplace_back(x + offset[j].first, -(y + offset[j].second), z);
+  }
+  xviz_primitive_builder
+      .AddPolygon(XVIZPrimitivePolygonBuilder(vertices)
+        .AddId(walker_ptr->GetTypeId() + std::string(".") + std::to_string(walker_ptr->GetId())));
+
 }
 // std::string Proxy::GetUpdateData() {
 //   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
@@ -284,7 +318,7 @@ std::vector<point_3d_t> Proxy::GetPointCloud(const carla::sensor::data::LidarMea
   double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
   auto location = lidar_measurement.GetSensorTransform().location;
   for (const auto& point : lidar_measurement) {
-    point_3d_t offset = utils::Utils::GetOffsetAfterTransform(point_3d_t(point.x, point.y, point.z), (yaw+90.0)/180.0 * M_PI);
+    point_3d_t offset = Utils::GetOffsetAfterTransform(point_3d_t(point.x, point.y, point.z), (yaw+90.0)/180.0 * M_PI);
     points.emplace_back(location.x + offset.get<0>(),
       -(location.y + offset.get<1>()),
       location.z + offset.get<2>());
