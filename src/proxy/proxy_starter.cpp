@@ -15,29 +15,35 @@ using namespace std::string_literals;
 using tcp = boost::asio::ip::tcp;
 namespace websocket = boost::beast::websocket;
 
-ProxyStarter::ProxyStarter(std::string carla_ip, uint16_t carla_port, std::string ws_ip, uint16_t ws_port) :
-  carla_ip_(std::move(carla_ip)), carla_port_(carla_port), 
-  ws_ip_(std::move(ws_ip)), ws_port_(ws_port) {}
+ProxyStarter::ProxyStarter(std::string carla_ip, uint16_t carla_port,
+                           std::string ws_ip, uint16_t ws_port)
+    : carla_ip_(std::move(carla_ip)),
+      carla_port_(carla_port),
+      ws_ip_(std::move(ws_ip)),
+      ws_port_(ws_port) {}
 
 void ProxyStarter::Init() {
   try {
     LOG_INFO("Connecting to Carla Server on %s:%u...", carla_ip_.c_str(),
-              carla_port_);
-    carla_client_ptr_ = boost::make_shared<carla::client::Client>(carla_ip_, carla_port_);
+             carla_port_);
+    carla_client_ptr_ =
+        boost::make_shared<carla::client::Client>(carla_ip_, carla_port_);
     carla_client_ptr_->SetTimeout(10s);
     std::string server_version = carla_client_ptr_->GetServerVersion();
     if (carla_client_ptr_ == nullptr) {
       LOG_ERROR("Carla client ptr is null");
     } else {
-      LOG_INFO("Connected to Carla Server, Server version is: %s", server_version.c_str());
+      LOG_INFO("Connected to Carla Server, Server version is: %s",
+               server_version.c_str());
     }
-  } catch(const std::exception& e) {
-      LOG_ERROR("%s", e.what());
+  } catch (const std::exception& e) {
+    LOG_ERROR("%s", e.what());
   }
 }
 
 void ProxyStarter::Accpet() {
-  LOG_INFO("Waiting for a client to connect. Listening to port %u....", ws_port_);
+  LOG_INFO("Waiting for a client to connect. Listening to port %u....",
+           ws_port_);
   try {
     boost::asio::io_context ioc{1};
     // TODO change ip here
@@ -48,17 +54,19 @@ void ProxyStarter::Accpet() {
       auto t = std::thread(&ProxyStarter::AddClient, this, std::move(socket));
       t.detach();
     }
-  } catch(const std::exception& e) {
+  } catch (const std::exception& e) {
     LOG_ERROR("%s", e.what());
   }
-  
 }
 void ProxyStarter::AddClient(tcp::socket socket) {
-  try{
+  try {
     Proxy proxy(carla_client_ptr_, std::move(socket));
     proxy.Run();
   } catch (const std::exception& e) {
-    LOG_WARNING("Disconnected with frontend due to: [%s] .Please try again by refreshing browser or re-launching this proxy.", e.what());
+    LOG_WARNING(
+        "Disconnected with frontend due to: [%s] .Please try again by "
+        "refreshing browser or re-launching this proxy.",
+        e.what());
   }
 }
 

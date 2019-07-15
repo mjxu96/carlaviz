@@ -12,75 +12,82 @@
 #include "proxy/xviz/xviz_builder.h"
 #include "proxy/xviz/xviz_metadata_builder.h"
 
-#include "carla/client/Client.h"
-#include "carla/client/World.h"
 #include "carla/client/Actor.h"
 #include "carla/client/ActorList.h"
+#include "carla/client/ActorSnapshot.h"
+#include "carla/client/Client.h"
+#include "carla/client/Sensor.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
-#include "carla/sensor/data/LidarMeasurement.h"
+#include "carla/client/World.h"
+#include "carla/client/WorldSnapshot.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
-#include "carla/client/Sensor.h"
-#include "carla/client/WorldSnapshot.h"
-#include "carla/client/ActorSnapshot.h"
+#include "carla/sensor/data/LidarMeasurement.h"
 
-#include <boost/shared_ptr.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <boost/shared_ptr.hpp>
 
-
-#include <cstdlib>
-#include <functional>
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <string>
-#include <thread>
-#include <vector>
-#include <mutex>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
+#include <fstream>
+#include <functional>
+#include <iostream>
 #include <memory>
-#include <unordered_set>
+#include <mutex>
 #include <queue>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <unordered_set>
+#include <vector>
 
 namespace mellocolate {
 
 class Proxy {
-public:
+ public:
   Proxy() = delete;
-  Proxy(boost::shared_ptr<carla::client::Client> client_ptr, boost::asio::ip::tcp::socket socket);
+  Proxy(boost::shared_ptr<carla::client::Client> client_ptr,
+        boost::asio::ip::tcp::socket socket);
   void Run();
 
-private:
+ private:
   void Init();
   void Update(const std::string& data_str);
 
   // Carla related
   std::string GetMetaData();
-  std::string GetUpdateData(const carla::client::WorldSnapshot& world_snapshots);
-  void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Vehicle> vehicle);
-  void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder, boost::shared_ptr<carla::client::Walker> walker);
-  boost::shared_ptr<carla::client::World> world_ptr_{nullptr}; 
+  std::string GetUpdateData(
+      const carla::client::WorldSnapshot& world_snapshots);
+  void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
+                  boost::shared_ptr<carla::client::Vehicle> vehicle);
+  void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
+                 boost::shared_ptr<carla::client::Walker> walker);
+  boost::shared_ptr<carla::client::World> world_ptr_{nullptr};
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   // Carla sensor related
   std::mutex sensor_data_queue_lock_;
-  //std::unordered_map<uint32_t, std::queue<carla::sensor::SensorData>> sensor_data_queues_{};
+  // std::unordered_map<uint32_t, std::queue<carla::sensor::SensorData>>
+  // sensor_data_queues_{};
   std::unordered_map<uint32_t, std::vector<point_3d_t>> lidar_data_queues_{};
-  std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>> sensors_{};
+  std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
+      sensors_{};
   // Carla Lidar sensor data related
-  std::vector<point_3d_t> GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement);
+  std::vector<point_3d_t> GetPointCloud(
+      const carla::sensor::data::LidarMeasurement& lidar_measurement);
 
   // Websocket related
-  boost::shared_ptr<boost::beast::websocket::stream<boost::asio::ip::tcp::socket>> ws_ptr_{nullptr};
+  boost::shared_ptr<
+      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
+      ws_ptr_{nullptr};
 };
 
-} // namespace mellocolate
-
+}  // namespace mellocolate
 
 #endif

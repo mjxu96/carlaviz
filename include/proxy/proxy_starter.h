@@ -4,6 +4,9 @@
  * File Created: Sunday, 14th July 2019 6:42:08 pm
  */
 
+#ifndef MELLOCOLATE_PROXY_STARTER_H_
+#define MELLOCOLATE_PROXY_STARTER_H_
+
 #include "proxy/utils/def.h"
 #include "proxy/utils/utils.h"
 
@@ -11,26 +14,24 @@
 
 #include "carla/client/Client.h"
 
-#include <boost/shared_ptr.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <thread>
 
-#ifndef MELLOCOLATE_PROXY_STARTER_H_
-#define MELLOCOLATE_PROXY_STARTER_H_
-
 namespace mellocolate {
 
 class ProxyStarter {
-public:
+ public:
   ProxyStarter() = default;
-  ProxyStarter(std::string carla_ip, uint16_t carla_port, std::string ws_ip, uint16_t ws_port);
+  ProxyStarter(std::string carla_ip, uint16_t carla_port, std::string ws_ip,
+               uint16_t ws_port);
   void Run();
 
-private:
+ private:
   void Init();
   void Accpet();
   void AddClient(boost::asio::ip::tcp::socket socket);
@@ -43,9 +44,7 @@ private:
   std::string ws_ip_{"0.0.0.0"};
   uint16_t ws_port_{8081u};
 };
-  
-} // namespace mellocolate
 
-
+}  // namespace mellocolate
 
 #endif
