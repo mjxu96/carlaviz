@@ -29,10 +29,11 @@
 // === auxiliar functions
 static inline char *timenow();
 
-#define NO_LOG          0x00
+#define NO_LOGS         0x00
 #define ERROR_LEVEL     0x01
-#define INFO_LEVEL      0x02
-#define DEBUG_LEVEL     0x03
+#define WARNING_LEVEL   0x02
+#define INFO_LEVEL      0x03
+#define DEBUG_LEVEL     0x04
 
 #ifndef LOG_LEVEL
 #define LOG_LEVEL   DEBUG_LEVEL
@@ -42,14 +43,15 @@ static inline char *timenow();
 #define PRINTFUNCTION(format, ...)      fprintf(stderr, format, __VA_ARGS__)
 
 
-#define LOG_FMT             "%s %-7s "
+#define LOG_FMT             "%s %-10s "
 #define LOG_ARGS(LOG_TAG)   timenow(), LOG_TAG
 
 #define NEWLINE     "\n"
 
-#define ERROR_TAG   "[ERROR]"
-#define INFO_TAG    "[INFO]"
-#define DEBUG_TAG   "[DEBUG]"
+#define ERROR_TAG    "[ERROR]"
+#define WARNING_TAG  "[WARNING]"
+#define INFO_TAG     "[INFO]"
+#define DEBUG_TAG    "[DEBUG]"
 
 #if LOG_LEVEL >= DEBUG_LEVEL
 #define LOG_DEBUG(message, args...)     PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(DEBUG_TAG), ## args)
@@ -61,6 +63,12 @@ static inline char *timenow();
 #define LOG_INFO(message, args...)      PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(INFO_TAG), ## args)
 #else
 #define LOG_INFO(message, args...)
+#endif
+
+#if LOG_LEVEL >= WARNING_LEVEL
+#define LOG_WARNING(message, args...)      PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(WARNING_TAG), ## args)
+#else
+#define LOG_WARNING(message, args...)
 #endif
 
 #if LOG_LEVEL >= ERROR_LEVEL

@@ -50,13 +50,9 @@ namespace mellocolate {
 
 class Proxy {
 public:
-  Proxy() = default;
-  Proxy(std::string carla_host, uint16_t carla_port, uint16_t ws_port);
+  Proxy() = delete;
+  Proxy(boost::shared_ptr<carla::client::Client> client_ptr, boost::asio::ip::tcp::socket socket);
   void Run();
-  void AddClient(boost::asio::ip::tcp::socket socket);
-  void TmpSetWorldPtr(boost::shared_ptr<carla::client::World> world_ptr) {
-    world_ptr_ = world_ptr;
-  }
 
 private:
   void Init();
@@ -66,8 +62,7 @@ private:
   std::string GetMetaData();
   std::string GetUpdateData();
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr}; 
-  std::string carla_host_{"localhost"};
-  uint16_t carla_port_{2000u};
+  boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
   // Carla sensor related
   std::mutex sensor_data_queue_lock_;
   //std::unordered_map<uint32_t, std::queue<carla::sensor::SensorData>> sensor_data_queues_{};
@@ -77,11 +72,7 @@ private:
   std::vector<point_3d_t> GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement);
 
   // Websocket related
-  void Accept();
-  uint16_t ws_port_{8081u};
-  std::thread ws_accept_thread_;
-  std::mutex ws_lock_;
-  std::unordered_set<std::shared_ptr<boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>> ws_set_{};
+  boost::shared_ptr<boost::beast::websocket::stream<boost::asio::ip::tcp::socket>> ws_ptr_{nullptr};
 };
 
 } // namespace mellocolate

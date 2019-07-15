@@ -25,11 +25,11 @@ void ProxyStarter::Init() {
               carla_port_);
     carla_client_ptr_ = boost::make_shared<carla::client::Client>(carla_ip_, carla_port_);
     carla_client_ptr_->SetTimeout(10s);
-    carla_client_ptr_->GetServerVersion();
+    std::string server_version = carla_client_ptr_->GetServerVersion();
     if (carla_client_ptr_ == nullptr) {
       LOG_ERROR("Carla client ptr is null");
     } else {
-      LOG_INFO("Connected to Carla Server");
+      LOG_INFO("Connected to Carla Server, Server version is: %s", server_version.c_str());
     }
   } catch(const std::exception& e) {
       LOG_ERROR("%s", e.what());
@@ -54,10 +54,12 @@ void ProxyStarter::Accpet() {
   
 }
 void ProxyStarter::AddClient(tcp::socket socket) {
-  Proxy proxy;
-  proxy.TmpSetWorldPtr(boost::make_shared<carla::client::World>(carla_client_ptr_->GetWorld()));
-  proxy.AddClient(std::move(socket));
-  proxy.Run();
+  try{
+    Proxy proxy(carla_client_ptr_, std::move(socket));
+    proxy.Run();
+  } catch (const std::exception& e) {
+    LOG_WARNING("Disconnected with frontend due to: [%s] .Please try again by refreshing browser or re-launching this proxy.", e.what());
+  }
 }
 
 void ProxyStarter::Run() {

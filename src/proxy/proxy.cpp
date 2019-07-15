@@ -19,71 +19,50 @@ std::pair<double, double> AfterRotate(double x, double y, double yaw) {
   return {std::cos(yaw)*x - std::sin(yaw)*y, std::sin(yaw)*x + std::cos(yaw)*y};
 }
 
-void SnapShotsTest(const carla::client::WorldSnapshot& snapshots) {
-  for (const auto& snapshot : snapshots) {
-    std::cout << snapshot.id << std::endl;
-  }
+Proxy::Proxy(boost::shared_ptr<carla::client::Client> client_ptr, boost::asio::ip::tcp::socket socket) 
+  : client_ptr_(std::move(client_ptr)), 
+    ws_ptr_(boost::make_shared<websocket::stream<tcp::socket>>(std::move(socket))) {
+  world_ptr_ = boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 }
 
-Proxy::Proxy(std::string carla_host, uint16_t carla_port, uint16_t ws_port)
-    : carla_host_(std::move(carla_host)),
-      carla_port_(carla_port),
-      ws_port_(ws_port) {}
-
 void Proxy::Run() { 
-  //Init(); 
+  Init(); 
   while (true) {
-    try {
-      Update();
-      auto snapshots = world_ptr_->WaitForTick(200ms);
-      //SnapShotsTest(snapshots);
-    } catch (const std::exception& e) {
-      LOG_ERROR("%s", e.what());
-    }
+    Update();
+    auto snapshots = world_ptr_->WaitForTick(2s);
   }
 }
 
 void Proxy::Init() {
   try {
-    // Connect to Carla server
-    carla::client::Client client(carla_host_, carla_port_);
-    client.SetTimeout(10s);
-    LOG_INFO("Connecting to Carla Server on %s:%u...", carla_host_.c_str(),
-             carla_port_);
-
-    // TODO world ptr should not be here
-    world_ptr_ = boost::make_shared<carla::client::World>(client.GetWorld());
-    LOG_INFO("Connected to Carla Server");
-
-    ws_accept_thread_ = std::thread(&Proxy::Accept, this);
-    ws_accept_thread_.detach();
-
-  } catch (const std::exception& e) {
-    LOG_ERROR("%s", e.what());
+    ws_ptr_->accept();
+    LOG_INFO("Frontend connected");
+    boost::beast::multi_buffer buffer;
+    boost::beast::ostream(buffer) << GetMetaData();
+    ws_ptr_->write(buffer.data());
+  } catch(boost::system::system_error const& se) {
+    if(se.code() != websocket::error::closed) {
+      throw se;
+    } else {
+      LOG_INFO("Frontend connection closed");
+    }
   }
+  
 }
 
 void Proxy::Update() {
 
   boost::beast::multi_buffer buffer;
   
-  //std::string update_data = "Hello";
   boost::beast::ostream(buffer) << GetUpdateData();
 
-  // Update to all clients
-  std::vector<std::shared_ptr<websocket::stream<tcp::socket>>> to_delete_ws;
-  std::lock_guard<std::mutex> lock_gurad(ws_lock_);
-  for (const auto& ws_ptr : ws_set_) {
-    try {
-      ws_ptr->write(buffer.data());
-    } catch (const std::exception& e) {
-      LOG_ERROR("%s", e.what());
-      to_delete_ws.push_back(ws_ptr);
-    }
-  }
-  for (const auto& ws_ptr : to_delete_ws) {
-    if (ws_set_.find(ws_ptr) != ws_set_.end()) {
-      ws_set_.erase(ws_ptr);
+  try {
+    ws_ptr_->write(buffer.data());
+  } catch(boost::system::system_error const& se) {
+    if(se.code() != websocket::error::closed) {
+      throw se;
+    } else {
+      LOG_INFO("Frontend connection closed");
     }
   }
 }
@@ -192,43 +171,6 @@ std::string Proxy::GetUpdateData() {
   return xviz_builder.GetData();
 }
 
-void Proxy::Accept() {
-  LOG_INFO("Connecting to frontend client. Listening to port %u....", ws_port_);
-  try {
-    boost::asio::io_context ioc{1};
-
-    tcp::acceptor acceptor{ioc, tcp::endpoint(tcp::v4(), ws_port_)};
-    for (;;) {
-      tcp::socket socket{ioc};
-
-      acceptor.accept(socket);
-
-      AddClient(std::move(socket));
-    }
-  } catch (const std::exception& e) {
-    LOG_ERROR("%s", e.what());
-  }
-}
-
-void Proxy::AddClient(tcp::socket socket) {
-  std::shared_ptr<websocket::stream<tcp::socket>> ws_ptr =
-      std::make_shared<websocket::stream<tcp::socket>>(std::move(socket));
-  try {
-    std::lock_guard<std::mutex> lock_gurad(ws_lock_);
-    ws_ptr->accept();
-    LOG_INFO("Client connected.");
-    boost::beast::multi_buffer buffer;
-    boost::beast::ostream(buffer) << GetMetaData();
-    ws_ptr->write(buffer.data());
-    ws_set_.insert(ws_ptr);
-  } catch (std::exception const& e) {
-    std::lock_guard<std::mutex> lock_gurad(ws_lock_);
-    if (ws_set_.find(ws_ptr) != ws_set_.end()) {
-      ws_set_.erase(ws_ptr);
-    }
-    LOG_ERROR("%s", e.what());
-  }
-}
 
 std::vector<point_3d_t> Proxy::GetPointCloud(const carla::sensor::data::LidarMeasurement& lidar_measurement) {
   std::vector<point_3d_t> points;
