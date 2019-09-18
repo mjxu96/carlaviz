@@ -31,11 +31,14 @@ void ProxyStarter::Init() {
     carla_client_ptr_->SetTimeout(10s);
     std::string server_version = carla_client_ptr_->GetServerVersion();
     if (carla_client_ptr_ == nullptr) {
-      LOG_ERROR("Carla client ptr is null");
+      LOG_ERROR("Carla client ptr is null. Exiting");
+      return;
     } else {
       LOG_INFO("Connected to Carla Server, Server version is: %s",
                server_version.c_str());
     }
+
+    proxy_ptr_ = std::make_shared<Proxy>(carla_client_ptr_);
   } catch (const std::exception& e) {
     LOG_ERROR("%s", e.what());
   }
@@ -51,28 +54,19 @@ void ProxyStarter::Accpet() {
     for (;;) {
       tcp::socket socket{ioc};
       acceptor.accept(socket);
-      auto t = std::thread(&ProxyStarter::AddClient, this, std::move(socket));
-      t.detach();
+      proxy_ptr_->AddClient(std::move(socket));
     }
   } catch (const std::exception& e) {
     LOG_ERROR("%s", e.what());
   }
 }
-void ProxyStarter::AddClient(tcp::socket socket) {
-  try {
-    Proxy proxy(carla_client_ptr_, std::move(socket));
-    proxy.Run();
-  } catch (const std::exception& e) {
-    LOG_WARNING(
-        "Disconnected with frontend due to: [%s] .Please try again by "
-        "refreshing browser or re-launching this proxy.",
-        e.what());
-  }
-}
 
 void ProxyStarter::Run() {
   Init();
-  Accpet();
+  auto t = std::thread(&ProxyStarter::Accpet, this);
+  t.detach();
+  proxy_ptr_->Run();
+  // Accpet();
 }
 
 int main() {

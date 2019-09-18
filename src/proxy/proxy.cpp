@@ -21,11 +21,8 @@ std::pair<double, double> AfterRotate(double x, double y, double yaw) {
           std::sin(yaw) * x + std::cos(yaw) * y};
 }
 
-Proxy::Proxy(boost::shared_ptr<carla::client::Client> client_ptr,
-             boost::asio::ip::tcp::socket socket)
-    : client_ptr_(std::move(client_ptr)),
-      ws_ptr_(boost::make_shared<websocket::stream<tcp::socket>>(
-          std::move(socket))) {
+Proxy::Proxy(boost::shared_ptr<carla::client::Client> client_ptr)
+    : client_ptr_(std::move(client_ptr)) {
   world_ptr_ =
       boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 }
@@ -38,13 +35,18 @@ void Proxy::Run() {
   }
 }
 
-void Proxy::Init() {
+void Proxy::AddClient(boost::asio::ip::tcp::socket socket) {
+  auto ws_ptr =
+      boost::make_shared<websocket::stream<tcp::socket>>(std::move(socket));
   try {
-    ws_ptr_->accept();
+    ws_ptr->accept();
     LOG_INFO("Frontend connected");
     boost::beast::multi_buffer buffer;
     boost::beast::ostream(buffer) << GetMetaData();
-    ws_ptr_->write(buffer.data());
+    ws_ptr->write(buffer.data());
+
+    std::lock_guard<std::mutex> lock_guard(clients_addition_lock_);
+    ws_ptrs_.insert(ws_ptr);
   } catch (boost::system::system_error const& se) {
     if (se.code() != websocket::error::closed) {
       throw se;
@@ -54,19 +56,50 @@ void Proxy::Init() {
   }
 }
 
+void Proxy::Init() {
+  // try {
+  //   ws_ptr_->accept();
+  //   LOG_INFO("Frontend connected");
+  //   boost::beast::multi_buffer buffer;
+  //   boost::beast::ostream(buffer) << GetMetaData();
+  //   ws_ptr_->write(buffer.data());
+  // } catch (boost::system::system_error const& se) {
+  //   if (se.code() != websocket::error::closed) {
+  //     throw se;
+  //   } else {
+  //     LOG_INFO("Frontend connection closed");
+  //   }
+  // }
+}
+
 void Proxy::Update(const std::string& data_str) {
   boost::beast::multi_buffer buffer;
 
   boost::beast::ostream(buffer) << data_str;  // GetUpdateData();
+  auto data = buffer.data();
 
-  try {
-    ws_ptr_->write(buffer.data());
-  } catch (boost::system::system_error const& se) {
-    if (se.code() != websocket::error::closed) {
-      throw se;
-    } else {
-      LOG_INFO("Frontend connection closed");
+  boost::unordered_set<boost::shared_ptr<
+      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>>
+      to_delete_ws_ptrs;
+
+  std::lock_guard<std::mutex> lock_guard(clients_addition_lock_);
+  for (auto ws_ptr : ws_ptrs_) {
+    try {
+      ws_ptr->write(data);
+    } catch (boost::system::system_error const& se) {
+      to_delete_ws_ptrs.insert(ws_ptr);
+      if (se.code() != websocket::error::closed &&
+          std::strcmp(se.what(), "Broken pipe") != 0 &&
+          std::strcmp(se.what(), "Connection reset by peer")) {
+        LOG_ERROR("ERROR WHEN SENDDING UPDATE %s", se.what());
+      } else {
+        LOG_INFO("Frontend connection closed");
+      }
     }
+  }
+
+  for (auto to_delete_ws_ptr : to_delete_ws_ptrs) {
+    ws_ptrs_.erase(to_delete_ws_ptr);
   }
 }
 
@@ -171,7 +204,9 @@ std::string Proxy::GetUpdateData(
   }
   for (const auto& id : to_delete_sensor_ids) {
     LOG_INFO("Stop listening sensor: %u", id);
-    sensors_[id]->Stop();
+    if (sensors_[id]->IsListening()) {
+      sensors_[id]->Stop();
+    }
     std::lock_guard<std::mutex> lock_guard(this->sensor_data_queue_lock_);
     lidar_data_queues_.erase(id);
   }
