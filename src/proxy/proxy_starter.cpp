@@ -60,17 +60,6 @@ void ProxyStarter::Accpet() {
     LOG_ERROR("%s", e.what());
   }
 }
-// void ProxyStarter::AddClient(tcp::socket socket) {
-//   try {
-//     Proxy proxy(carla_client_ptr_, std::move(socket));
-//     proxy.Run();
-//   } catch (const std::exception& e) {
-//     LOG_WARNING(
-//         "Disconnected with frontend due to: [%s] .Please try again by "
-//         "refreshing browser or re-launching this proxy.",
-//         e.what());
-//   }
-// }
 
 void ProxyStarter::Run() {
   Init();

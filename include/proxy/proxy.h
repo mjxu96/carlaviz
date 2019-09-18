@@ -74,8 +74,7 @@ class Proxy {
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   // Carla sensor related
   std::mutex sensor_data_queue_lock_;
-  // std::unordered_map<uint32_t, std::queue<carla::sensor::SensorData>>
-  // sensor_data_queues_{};
+
   std::unordered_map<uint32_t, std::vector<point_3d_t>> lidar_data_queues_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
       sensors_{};
@@ -84,12 +83,10 @@ class Proxy {
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
 
   // Websocket related
-  // boost::shared_ptr<
-  //     boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
-  //     ws_ptr_{nullptr};
   std::mutex clients_addition_lock_;
   boost::unordered_set<boost::shared_ptr<
-      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>> ws_ptrs_;
+      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>>
+      ws_ptrs_;
 };
 
 }  // namespace mellocolate

@@ -19,9 +19,9 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <memory>
 #include <string>
 #include <thread>
-#include <memory>
 
 namespace mellocolate {
 

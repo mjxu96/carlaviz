@@ -21,7 +21,7 @@ std::pair<double, double> AfterRotate(double x, double y, double yaw) {
           std::sin(yaw) * x + std::cos(yaw) * y};
 }
 
-Proxy::Proxy(boost::shared_ptr<carla::client::Client> client_ptr) 
+Proxy::Proxy(boost::shared_ptr<carla::client::Client> client_ptr)
     : client_ptr_(std::move(client_ptr)) {
   world_ptr_ =
       boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
@@ -36,8 +36,8 @@ void Proxy::Run() {
 }
 
 void Proxy::AddClient(boost::asio::ip::tcp::socket socket) {
-  auto ws_ptr = boost::make_shared<websocket::stream<tcp::socket>>(
-          std::move(socket));
+  auto ws_ptr =
+      boost::make_shared<websocket::stream<tcp::socket>>(std::move(socket));
   try {
     ws_ptr->accept();
     LOG_INFO("Frontend connected");
@@ -79,7 +79,8 @@ void Proxy::Update(const std::string& data_str) {
   auto data = buffer.data();
 
   boost::unordered_set<boost::shared_ptr<
-      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>> to_delete_ws_ptrs;
+      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>>
+      to_delete_ws_ptrs;
 
   std::lock_guard<std::mutex> lock_guard(clients_addition_lock_);
   for (auto ws_ptr : ws_ptrs_) {
@@ -87,7 +88,9 @@ void Proxy::Update(const std::string& data_str) {
       ws_ptr->write(data);
     } catch (boost::system::system_error const& se) {
       to_delete_ws_ptrs.insert(ws_ptr);
-      if (se.code() != websocket::error::closed && std::strcmp(se.what(), "Broken pipe") != 0) {
+      if (se.code() != websocket::error::closed &&
+          std::strcmp(se.what(), "Broken pipe") != 0 &&
+          std::strcmp(se.what(), "Connection reset by peer")) {
         LOG_ERROR("ERROR WHEN SENDDING UPDATE %s", se.what());
       } else {
         LOG_INFO("Frontend connection closed");
@@ -98,7 +101,6 @@ void Proxy::Update(const std::string& data_str) {
   for (auto to_delete_ws_ptr : to_delete_ws_ptrs) {
     ws_ptrs_.erase(to_delete_ws_ptr);
   }
-
 }
 
 std::string Proxy::GetMetaData() {
