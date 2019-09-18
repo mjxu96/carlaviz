@@ -30,6 +30,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_set.hpp>
 
 #include <chrono>
 #include <cmath>
@@ -51,9 +52,9 @@ namespace mellocolate {
 class Proxy {
  public:
   Proxy() = delete;
-  Proxy(boost::shared_ptr<carla::client::Client> client_ptr,
-        boost::asio::ip::tcp::socket socket);
+  Proxy(boost::shared_ptr<carla::client::Client> client_ptr);
   void Run();
+  void AddClient(boost::asio::ip::tcp::socket socket);
 
  private:
   void Init();
@@ -83,9 +84,12 @@ class Proxy {
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
 
   // Websocket related
-  boost::shared_ptr<
-      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
-      ws_ptr_{nullptr};
+  // boost::shared_ptr<
+  //     boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
+  //     ws_ptr_{nullptr};
+  std::mutex clients_addition_lock_;
+  boost::unordered_set<boost::shared_ptr<
+      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>> ws_ptrs_;
 };
 
 }  // namespace mellocolate
