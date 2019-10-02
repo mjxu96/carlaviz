@@ -52,12 +52,21 @@ private:
   boost::optional<std::string> id_ = boost::none;
 };
 
+class XVIZPrimitiveImageBuilder {
+public:
+  XVIZPrimitiveImageBuilder(std::string encoded_str);
+  nlohmann::json GetData() const;
+private:
+  std::string encoded_str_;
+};
+
 class XVIZPrimitiveBuider {
 public:
   XVIZPrimitiveBuider(std::string name);
   XVIZPrimitiveBuider& AddPolygon(XVIZPrimitivePolygonBuilder polygon);
   XVIZPrimitiveBuider& AddCircle(XVIZPrimitiveCircleBuilder circle);
   XVIZPrimitiveBuider& AddPoints(XVIZPrimitivePointBuilder points);
+  XVIZPrimitiveBuider& AddImages(XVIZPrimitiveImageBuilder image);
 
   std::string GetName() const;
   nlohmann::json GetData() const;
@@ -66,6 +75,7 @@ private:
   std::vector<XVIZPrimitivePolygonBuilder> polygons_;
   std::vector<XVIZPrimitiveCircleBuilder> circles_;
   std::vector<XVIZPrimitivePointBuilder> points_;
+  std::vector<XVIZPrimitiveImageBuilder> images_;
 };
   
 } // namespace mellocolate

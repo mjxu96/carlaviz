@@ -68,6 +68,8 @@ class Proxy {
                   boost::shared_ptr<carla::client::Vehicle> vehicle);
   void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
                  boost::shared_ptr<carla::client::Walker> walker);
+
+  void TmpAddImage(XVIZPrimitiveBuider& xviz_primitive_builder);
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr};
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
 

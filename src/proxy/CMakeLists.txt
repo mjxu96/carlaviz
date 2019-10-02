@@ -8,6 +8,7 @@ link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
 add_library(xviz
   xviz/utils/metadata_stream.cpp
+  xviz/utils/ui_config.cpp
   xviz/xviz_metadata_builder.cpp
   xviz/xviz_builder.cpp
   xviz/xviz_pose_builder.cpp
