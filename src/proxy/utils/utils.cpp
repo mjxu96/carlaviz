@@ -30,6 +30,13 @@ bool Utils::IsStartWith(const std::string& origin, const std::string& pattern) {
   return (origin.substr(0, p_len) == pattern);
 }
 
+Image::Image(std::string encoded_str, size_t width, size_t height)
+    : encoded_str_(std::move(encoded_str)), width_(width), height_(height) {}
+
+std::string Image::GetData() const { return encoded_str_; }
+size_t Image::GetWidth() const { return width_; }
+size_t Image::GetHeight() const { return height_; }
+
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
   carla::client::Map map("map", xodr);
 

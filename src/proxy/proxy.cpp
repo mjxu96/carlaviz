@@ -132,7 +132,13 @@ std::string Proxy::GetMetaData() {
               .AddType("points")
               .AddStreamStyle(metadata::StreamStyle()
                                   .AddPointCloudMode("distance_to_vehicle")
-                                  .AddRadiusPixels(2.0)));
+                                  .AddRadiusPixels(2.0)))
+      .AddStream(metadata::Stream("/camera/images")
+              .AddCategory("primitive")
+              .AddType("image"));
+  metadata::UIConfig ui_config;
+  ui_config.AddCamera("/camera/images");
+  xviz_metadata_builder.AddUIConfig(ui_config);
   return xviz_metadata_builder.GetMetaData();
 }
 
@@ -183,10 +189,23 @@ std::string Proxy::GetUpdateData(
           if (data == nullptr) {
             return;
           }
-          std::lock_guard<std::mutex> lock_guard(this->sensor_data_queue_lock_);
-          lidar_data_queues_[id] = this->GetPointCloud(*(
-              boost::static_pointer_cast<carla::sensor::data::LidarMeasurement>(
-                  data)));
+          auto image_data = boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
+          if (image_data != nullptr) {
+            auto encoded_image = this->GetEncodedImage(*image_data);
+            image_data_lock_.lock();
+            image_data_queues_[id] = encoded_image;
+            image_data_lock_.unlock();
+            return;
+          }
+          auto lidar_data = boost::dynamic_pointer_cast<carla::sensor::data::LidarMeasurement>(data);
+          if (lidar_data != nullptr) {
+            auto point_cloud = this->GetPointCloud(*(
+                    lidar_data));
+            lidar_data_lock_.lock();
+            lidar_data_queues_[id] = point_cloud;
+            lidar_data_lock_.unlock();
+            return;
+          }
         });
       }
       tmp_sensors.insert({id, sensor_ptr});
@@ -207,8 +226,13 @@ std::string Proxy::GetUpdateData(
     if (sensors_[id]->IsListening()) {
       sensors_[id]->Stop();
     }
-    std::lock_guard<std::mutex> lock_guard(this->sensor_data_queue_lock_);
+    image_data_lock_.lock();
+    image_data_queues_.erase(id);
+    image_data_lock_.unlock();
+
+    lidar_data_lock_.lock();
     lidar_data_queues_.erase(id);
+    lidar_data_lock_.unlock();
   }
   sensors_ = std::move(tmp_sensors);
 
@@ -224,18 +248,26 @@ std::string Proxy::GetUpdateData(
                 boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
     }
   }
+  xviz_builder.AddPrimitive(xviz_primitive_builder)
+      .AddPrimitive(xviz_primitive_walker_builder);
 
-  sensor_data_queue_lock_.lock();
+  image_data_lock_.lock();
+  XVIZPrimitiveBuider image_builder("/camera/images");
+  for (const auto& image_pair : image_data_queues_) {
+    image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
+  }
+  image_data_lock_.unlock();
+
+  lidar_data_lock_.lock();
   XVIZPrimitiveBuider point_cloud_builder("/lidar/points");
   for (const auto& point_cloud_pair : lidar_data_queues_) {
     point_cloud_builder.AddPoints(
         XVIZPrimitivePointBuilder(point_cloud_pair.second));
   }
-  sensor_data_queue_lock_.unlock();
+  lidar_data_lock_.unlock();
 
-  xviz_builder.AddPrimitive(xviz_primitive_builder)
-      .AddPrimitive(xviz_primitive_walker_builder)
-      .AddPrimitive(point_cloud_builder);
+  xviz_builder.AddPrimitive(point_cloud_builder)
+      .AddPrimitive(image_builder);
   return xviz_builder.GetData();
 }
 
@@ -297,4 +329,23 @@ std::vector<point_3d_t> Proxy::GetPointCloud(
   // " << lidar_measurement.GetSensorTransform().location.y << "]" << std::endl;
   // std::cout << "yaw: " << yaw << std::endl;
   return points;
+}
+
+utils::Image Proxy::GetEncodedImage(const carla::sensor::data::Image& image) {
+
+  std::vector<unsigned char> pixel_data;
+  for (const auto& p : image) {
+    pixel_data.emplace_back(p.r);
+    pixel_data.emplace_back(p.g);
+    pixel_data.emplace_back(p.b);
+    pixel_data.emplace_back(p.a);
+  }
+  std::vector<unsigned char> image_data;
+  unsigned int error = lodepng::encode(image_data, pixel_data, image.GetWidth(), image.GetHeight());
+  if (error) {
+    LOG_ERROR("Encoding png error");
+  }
+  std::string data_str = base64_encode(image_data.data(), image_data.size());
+  utils::Image encoded_image(data_str, image.GetWidth(), image.GetHeight());
+  return encoded_image;
 }

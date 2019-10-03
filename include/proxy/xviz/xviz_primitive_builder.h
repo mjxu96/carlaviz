@@ -9,6 +9,7 @@
 
 #include "proxy/utils/json.hpp"
 #include "proxy/utils/def.h"
+#include "proxy/utils/utils.h"
 
 #include <boost/optional.hpp>
 
@@ -52,12 +53,21 @@ private:
   boost::optional<std::string> id_ = boost::none;
 };
 
+class XVIZPrimitiveImageBuilder {
+public:
+  XVIZPrimitiveImageBuilder(utils::Image encoded_image);
+  nlohmann::json GetData() const;
+private:
+  utils::Image image_;
+};
+
 class XVIZPrimitiveBuider {
 public:
   XVIZPrimitiveBuider(std::string name);
   XVIZPrimitiveBuider& AddPolygon(XVIZPrimitivePolygonBuilder polygon);
   XVIZPrimitiveBuider& AddCircle(XVIZPrimitiveCircleBuilder circle);
   XVIZPrimitiveBuider& AddPoints(XVIZPrimitivePointBuilder points);
+  XVIZPrimitiveBuider& AddImages(XVIZPrimitiveImageBuilder image);
 
   std::string GetName() const;
   nlohmann::json GetData() const;
@@ -66,6 +76,7 @@ private:
   std::vector<XVIZPrimitivePolygonBuilder> polygons_;
   std::vector<XVIZPrimitiveCircleBuilder> circles_;
   std::vector<XVIZPrimitivePointBuilder> points_;
+  std::vector<XVIZPrimitiveImageBuilder> images_;
 };
   
 } // namespace mellocolate

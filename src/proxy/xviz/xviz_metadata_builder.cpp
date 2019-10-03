@@ -15,12 +15,19 @@ XVIZMetaDataBuilder& XVIZMetaDataBuilder::AddStream(metadata::Stream stream) {
   return *this;
 }
 
+XVIZMetaDataBuilder& XVIZMetaDataBuilder::AddUIConfig(metadata::UIConfig ui_config) {
+  ui_config_ = std::move(ui_config);
+}
+
 std::string XVIZMetaDataBuilder::GetMetaData() {
   Json json;
   json["type"] = "xviz/metadata";
   json["data"]["version"] = version_;
   if (map_ != boost::none) {
     json["data"]["map"] = map_.value();
+  }
+  if (ui_config_ != boost::none) {
+    json["data"]["ui_config"] = ui_config_.value().GetMetaData();
   }
   for (const auto& stream : streams_) {
     //std::string stream_name = stream.GetName();

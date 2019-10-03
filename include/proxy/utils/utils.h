@@ -37,6 +37,19 @@ class Utils {
                           const std::string& pattern);
 };
 
+class Image {
+public:
+  Image() = default;
+  Image(std::string encoded_str, size_t width, size_t height);
+  std::string GetData() const;
+  size_t GetWidth() const;
+  size_t GetHeight() const;
+private:
+  std::string encoded_str_{};
+  int width_ = 0;
+  int height_ = 0;
+};
+
 class XodrGeojsonConverter {
  public:
   static std::string Convert(std::string xodr);
