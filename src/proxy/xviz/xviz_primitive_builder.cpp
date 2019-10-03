@@ -79,22 +79,14 @@ Json XVIZPrimitivePointBuilder::GetData() const {
   return json;
 }
 
-XVIZPrimitiveImageBuilder::XVIZPrimitiveImageBuilder(std::string encoded_str)
-    : encoded_str_(std::move(encoded_str)) {}
+XVIZPrimitiveImageBuilder::XVIZPrimitiveImageBuilder(utils::Image encoded_image)
+    : image_(std::move(encoded_image)) {}
 
 Json XVIZPrimitiveImageBuilder::GetData() const {
-  //   {
-  //     "position": [9, 15, 3],
-  //     "data":
-  //     "/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=",
-  //     "width_px": 1280,
-  //     "height_px": 720
-  // }
   Json json;
-  json["data"] = encoded_str_;
-  // json["position"] = {9, 15, 3};
-  json["width_px"] = 352;
-  json["height_px"] = 356;
+  json["data"] = image_.GetData();
+  json["width_px"] = image_.GetWidth();
+  json["height_px"] = image_.GetHeight();
   return json;
 }
 

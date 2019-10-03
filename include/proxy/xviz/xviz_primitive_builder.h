@@ -9,6 +9,7 @@
 
 #include "proxy/utils/json.hpp"
 #include "proxy/utils/def.h"
+#include "proxy/utils/utils.h"
 
 #include <boost/optional.hpp>
 
@@ -54,10 +55,10 @@ private:
 
 class XVIZPrimitiveImageBuilder {
 public:
-  XVIZPrimitiveImageBuilder(std::string encoded_str);
+  XVIZPrimitiveImageBuilder(utils::Image encoded_image);
   nlohmann::json GetData() const;
 private:
-  std::string encoded_str_;
+  utils::Image image_;
 };
 
 class XVIZPrimitiveBuider {

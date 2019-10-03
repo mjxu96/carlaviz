@@ -9,6 +9,8 @@
 
 #include "proxy/utils/def.h"
 #include "proxy/utils/utils.h"
+#include "proxy/utils/base64.h"
+#include "proxy/utils/lodepng.h"
 #include "proxy/xviz/xviz_builder.h"
 #include "proxy/xviz/xviz_metadata_builder.h"
 
@@ -25,6 +27,8 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
 #include "carla/sensor/data/LidarMeasurement.h"
+#include "carla/sensor/data/Image.h"
+#include "carla/image/ImageView.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -32,6 +36,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_set.hpp>
 
+#include <ios>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -69,18 +74,20 @@ class Proxy {
   void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
                  boost::shared_ptr<carla::client::Walker> walker);
 
-  void TmpAddImage(XVIZPrimitiveBuider& xviz_primitive_builder);
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr};
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   // Carla sensor related
-  std::mutex sensor_data_queue_lock_;
 
+  std::mutex image_data_lock_;
+  std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
+  std::mutex lidar_data_lock_;
   std::unordered_map<uint32_t, std::vector<point_3d_t>> lidar_data_queues_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
       sensors_{};
   // Carla Lidar sensor data related
+  utils::Image GetEncodedImage(const carla::sensor::data::Image& image);
   std::vector<point_3d_t> GetPointCloud(
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
 

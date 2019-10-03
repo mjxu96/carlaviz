@@ -19,6 +19,8 @@ add_library(xviz
 
 add_library(proxy-utils 
   utils/utils.cpp
+  utils/base64.cpp
+  utils/lodepng.cpp
 )
 
 add_library(proxy-lib proxy.cpp)
