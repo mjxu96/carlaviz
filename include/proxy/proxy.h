@@ -83,12 +83,12 @@ class Proxy {
   std::mutex image_data_lock_;
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
   std::mutex lidar_data_lock_;
-  std::unordered_map<uint32_t, std::vector<point_3d_t>> lidar_data_queues_{};
+  std::unordered_map<uint32_t, std::unordered_map<uint32_t, std::vector<point_3d_t>>> lidar_data_queues_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
       sensors_{};
   // Carla Lidar sensor data related
   utils::Image GetEncodedImage(const carla::sensor::data::Image& image);
-  std::vector<point_3d_t> GetPointCloud(
+  std::pair<uint32_t, std::vector<point_3d_t>> GetPointCloud(
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
 
   // Websocket related
