@@ -199,10 +199,13 @@ std::string Proxy::GetUpdateData(
           }
           auto lidar_data = boost::dynamic_pointer_cast<carla::sensor::data::LidarMeasurement>(data);
           if (lidar_data != nullptr) {
-            auto point_cloud = this->GetPointCloud(*(
+            auto point_cloud_pair = this->GetPointCloud(*(
                     lidar_data));
             lidar_data_lock_.lock();
-            lidar_data_queues_[id] = point_cloud;
+            if (lidar_data_queues_.find(id) == lidar_data_queues_.end()) {
+              lidar_data_queues_[id] = std::unordered_map<uint32_t, std::vector<point_3d_t>>();
+            }
+            lidar_data_queues_[id][point_cloud_pair.first] = point_cloud_pair.second;
             lidar_data_lock_.unlock();
             return;
           }
@@ -261,8 +264,11 @@ std::string Proxy::GetUpdateData(
   lidar_data_lock_.lock();
   XVIZPrimitiveBuider point_cloud_builder("/lidar/points");
   for (const auto& point_cloud_pair : lidar_data_queues_) {
-    point_cloud_builder.AddPoints(
-        XVIZPrimitivePointBuilder(point_cloud_pair.second));
+    for (const auto& point_cloud : point_cloud_pair.second) {
+      point_cloud_builder.AddPoints(
+          XVIZPrimitivePointBuilder(point_cloud.second));
+
+    }
   }
   lidar_data_lock_.unlock();
 
@@ -313,22 +319,44 @@ void Proxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
       std::to_string(walker_ptr->GetId())));
 }
 
-std::vector<point_3d_t> Proxy::GetPointCloud(
+void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
+  double min_deg = 10000;
+  double max_deg = -11111;
+  for (const auto& point : points) {
+    double x = point.get<0>();
+    double y = point.get<1>();
+    double deg = std::atan2(y, x) / M_PI * 180.0;
+    if (x < 0) {
+      deg += 180.0;
+    }
+    min_deg = std::min(min_deg, deg);
+    max_deg = std::max(max_deg, deg);
+  }
+  LOG_INFO("MIN: %.2f, MAX: %.2f", min_deg, max_deg);
+}
+
+std::pair<uint32_t, std::vector<point_3d_t>> Proxy::GetPointCloud(
     const carla::sensor::data::LidarMeasurement& lidar_measurement) {
   std::vector<point_3d_t> points;
+  std::vector<point_3d_t> dbg_points;
   double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
   auto location = lidar_measurement.GetSensorTransform().location;
   for (const auto& point : lidar_measurement) {
+    dbg_points.emplace_back(point.x, point.y, point.z);
     point_3d_t offset = Utils::GetOffsetAfterTransform(
         point_3d_t(point.x, point.y, point.z), (yaw + 90.0) / 180.0 * M_PI);
     points.emplace_back(location.x + offset.get<0>(),
                         -(location.y + offset.get<1>()),
-                        location.z + offset.get<2>());
+                        location.z - offset.get<2>());
   }
+  uint32_t partition = (uint32_t) ((int) lidar_measurement.GetHorizontalAngle()) / 120;
+  // LOG_INFO("current partition %d, %.2f", partition, lidar_measurement.GetHorizontalAngle());
+  // LOG_INFO("CURRENT MIDDLE DEG: %.2f", lidar_measurement.GetHorizontalAngle());
+  // dbgPrintMaxMinDeg(dbg_points);
   // std::cout << "[" << lidar_measurement.GetSensorTransform().location.x << ",
   // " << lidar_measurement.GetSensorTransform().location.y << "]" << std::endl;
   // std::cout << "yaw: " << yaw << std::endl;
-  return points;
+  return {partition, points};
 }
 
 utils::Image Proxy::GetEncodedImage(const carla::sensor::data::Image& image) {
