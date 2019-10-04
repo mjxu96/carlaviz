@@ -189,8 +189,16 @@ std::string Proxy::GetUpdateData(
         }
         auto dummy_id = dummy_sensor->GetId();
         dummy_sensors_.insert({dummy_id, dummy_sensor});
+        double rotation_frequency = 10.0;
+        if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(), "sensor.lidar")) {
+          for (const auto& attribute : sensor_ptr->GetAttributes()) {
+            if (attribute.GetId() == "rotation_frequency") {
+              rotation_frequency = std::stod(attribute.GetValue());
+            }
+          }
+        }
         dummy_sensor->Listen(
-            [this, id](carla::SharedPtr<carla::sensor::SensorData> data) {
+            [this, id, rotation_frequency](carla::SharedPtr<carla::sensor::SensorData> data) {
               if (data == nullptr) {
                 return;
               }
@@ -207,14 +215,16 @@ std::string Proxy::GetUpdateData(
               auto lidar_data = boost::dynamic_pointer_cast<
                   carla::sensor::data::LidarMeasurement>(data);
               if (lidar_data != nullptr) {
-                auto point_cloud_pair = this->GetPointCloud(*(lidar_data));
+                auto point_cloud = this->GetPointCloud(*(lidar_data));
                 lidar_data_lock_.lock();
                 if (lidar_data_queues_.find(id) == lidar_data_queues_.end()) {
                   lidar_data_queues_[id] =
-                      std::unordered_map<uint32_t, std::vector<point_3d_t>>();
+                      std::deque<utils::PointCloud>();
                 }
-                lidar_data_queues_[id][point_cloud_pair.first] =
-                    point_cloud_pair.second;
+                if (!lidar_data_queues_[id].empty() && point_cloud.GetTimestamp() - lidar_data_queues_[id].front().GetTimestamp() > 1.0 / rotation_frequency) {
+                  lidar_data_queues_[id].pop_front();
+                }
+                lidar_data_queues_[id].push_back(point_cloud);
                 lidar_data_lock_.unlock();
                 return;
               }
@@ -296,7 +306,7 @@ std::string Proxy::GetUpdateData(
   for (const auto& point_cloud_pair : lidar_data_queues_) {
     for (const auto& point_cloud : point_cloud_pair.second) {
       point_cloud_builder.AddPoints(
-          XVIZPrimitivePointBuilder(point_cloud.second));
+          XVIZPrimitivePointBuilder(point_cloud.GetPoints()));
     }
   }
   lidar_data_lock_.unlock();
@@ -409,23 +419,23 @@ boost::shared_ptr<carla::client::Sensor> Proxy::CreateDummySensor(
   return dummy_sensor;
 }
 
-std::pair<uint32_t, std::vector<point_3d_t>> Proxy::GetPointCloud(
+utils::PointCloud Proxy::GetPointCloud(
     const carla::sensor::data::LidarMeasurement& lidar_measurement) {
   std::vector<point_3d_t> points;
-  std::vector<point_3d_t> dbg_points;
+  // std::vector<point_3d_t> dbg_points;
   double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
   auto location = lidar_measurement.GetSensorTransform().location;
   for (const auto& point : lidar_measurement) {
-    dbg_points.emplace_back(point.x, point.y, point.z);
+    // dbg_points.emplace_back(point.x, point.y, point.z);
     point_3d_t offset = Utils::GetOffsetAfterTransform(
         point_3d_t(point.x, point.y, point.z), (yaw + 90.0) / 180.0 * M_PI);
     points.emplace_back(location.x + offset.get<0>(),
                         -(location.y + offset.get<1>()),
                         location.z - offset.get<2>());
   }
-  uint32_t partition =
-      (uint32_t)((int)lidar_measurement.GetHorizontalAngle()) / 120;
-  return {partition, points};
+  // uint32_t partition =
+      // (uint32_t)((int)lidar_measurement.GetHorizontalAngle()) / 120;
+  return utils::PointCloud(lidar_measurement.GetTimestamp(), points);
 }
 
 utils::Image Proxy::GetEncodedImage(const carla::sensor::data::Image& image) {

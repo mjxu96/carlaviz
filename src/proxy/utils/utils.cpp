@@ -30,6 +30,17 @@ bool Utils::IsStartWith(const std::string& origin, const std::string& pattern) {
   return (origin.substr(0, p_len) == pattern);
 }
 
+PointCloud::PointCloud(double timestamp, std::vector<point_3d_t> points) :
+  timestamp_(timestamp), points_(std::move(points)) {}
+
+double PointCloud::GetTimestamp() const {
+  return timestamp_;
+}
+
+std::vector<point_3d_t> PointCloud::GetPoints() const {
+  return points_;
+}
+
 Image::Image(std::string encoded_str, size_t width, size_t height)
     : encoded_str_(std::move(encoded_str)), width_(width), height_(height) {}
 
