@@ -24,6 +24,8 @@
 #include "carla/client/Walker.h"
 #include "carla/client/World.h"
 #include "carla/client/WorldSnapshot.h"
+#include "carla/client/BlueprintLibrary.h"
+#include "carla/client/ActorBlueprint.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
 #include "carla/sensor/data/LidarMeasurement.h"
@@ -78,15 +80,23 @@ class Proxy {
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
-  // Carla sensor related
 
+  // Carla sensor related
+  // std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
+  //     sensors_{};
   std::mutex image_data_lock_;
+  bool is_image_received_{false};
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
   std::mutex lidar_data_lock_;
   std::unordered_map<uint32_t, std::unordered_map<uint32_t, std::vector<point_3d_t>>> lidar_data_queues_{};
+  std::unordered_map<uint32_t, uint32_t> real_dummy_sensors_relation_{};
+  std::unordered_set<uint32_t> real_sensors_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
-      sensors_{};
-  // Carla Lidar sensor data related
+      dummy_sensors_{};
+
+  // Carla sensor data related
+  boost::shared_ptr<carla::client::Sensor> CreateDummySensor(boost::shared_ptr<carla::client::Sensor> real_sensor);
+  carla::geom::Transform GetRelativeTransform(const carla::geom::Transform& child, const carla::geom::Transform& parent);
   utils::Image GetEncodedImage(const carla::sensor::data::Image& image);
   std::pair<uint32_t, std::vector<point_3d_t>> GetPointCloud(
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
