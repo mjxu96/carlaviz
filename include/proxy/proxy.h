@@ -47,7 +47,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <queue>
+#include <deque>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -87,7 +87,7 @@ class Proxy {
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
   std::mutex lidar_data_lock_;
   std::unordered_map<uint32_t,
-                     std::unordered_map<uint32_t, std::vector<point_3d_t>>>
+                     std::deque<utils::PointCloud>>
       lidar_data_queues_{};
   std::unordered_map<uint32_t, uint32_t> real_dummy_sensors_relation_{};
   std::unordered_set<uint32_t> real_sensors_{};
@@ -101,7 +101,7 @@ class Proxy {
       const carla::geom::Transform& child,
       const carla::geom::Transform& parent);
   utils::Image GetEncodedImage(const carla::sensor::data::Image& image);
-  std::pair<uint32_t, std::vector<point_3d_t>> GetPointCloud(
+  utils::PointCloud GetPointCloud(
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
 
   // Websocket related

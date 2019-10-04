@@ -37,6 +37,17 @@ class Utils {
                           const std::string& pattern);
 };
 
+class PointCloud {
+public:
+  PointCloud() = default;
+  PointCloud(double timestamp, std::vector<point_3d_t> points);
+  double GetTimestamp() const;
+  std::vector<point_3d_t> GetPoints() const;
+private:
+  std::vector<point_3d_t> points_;
+  double timestamp_;
+};
+
 class Image {
 public:
   Image() = default;
