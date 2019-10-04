@@ -160,8 +160,7 @@ std::string Proxy::GetUpdateData(
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
       tmp_actors;
-  std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
-      tmp_sensors;
+  std::unordered_set<uint32_t> tmp_real_sensors;
 
   for (const auto& world_snapshot : world_snapshots) {
     uint32_t id = world_snapshot.id;
@@ -180,10 +179,15 @@ std::string Proxy::GetUpdateData(
     if (actor_ptr->GetTypeId().substr(0, 6) == "sensor") {
       auto sensor_ptr =
           boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
-      auto sensor_it = sensors_.find(id);
-      if (sensor_it == sensors_.end()) {
-        LOG_INFO("Listen sensor: %u", id);
-        sensor_ptr->Listen([this,
+      if (real_sensors_.find(id) == real_sensors_.end() && dummy_sensors_.find(id) == dummy_sensors_.end()) {
+        LOG_INFO("Listen sensor: %u, type is: %s", id, actor_ptr->GetTypeId().c_str());
+        auto dummy_sensor = CreateDummySensor(sensor_ptr);
+        if (dummy_sensor == nullptr) {
+          continue;
+        }
+        auto dummy_id = dummy_sensor->GetId();
+        dummy_sensors_.insert({dummy_id, dummy_sensor});
+        dummy_sensor->Listen([this,
                             id](carla::SharedPtr<carla::sensor::SensorData>
                                     data) {
           if (data == nullptr) {
@@ -193,6 +197,7 @@ std::string Proxy::GetUpdateData(
           if (image_data != nullptr) {
             auto encoded_image = this->GetEncodedImage(*image_data);
             image_data_lock_.lock();
+            is_image_received_ = true;
             image_data_queues_[id] = encoded_image;
             image_data_lock_.unlock();
             return;
@@ -210,25 +215,30 @@ std::string Proxy::GetUpdateData(
             return;
           }
         });
+        real_dummy_sensors_relation_.insert({id, dummy_id});
       }
-      tmp_sensors.insert({id, sensor_ptr});
+      if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
+        tmp_real_sensors.insert(id);
+      }
     }
   }
 
   actors_ = std::move(tmp_actors);
 
   std::vector<uint32_t> to_delete_sensor_ids;
-  for (const auto& sensor_pair : sensors_) {
-    auto id = sensor_pair.first;
-    if (tmp_sensors.find(id) == tmp_sensors.end()) {
-      to_delete_sensor_ids.push_back(id);
+  for (const auto& real_sensor_id : real_sensors_) {
+    if (tmp_real_sensors.find(real_sensor_id) == tmp_real_sensors.end()) {
+      to_delete_sensor_ids.push_back(real_sensor_id);
     }
   }
   for (const auto& id : to_delete_sensor_ids) {
     LOG_INFO("Stop listening sensor: %u", id);
-    if (sensors_[id]->IsListening()) {
-      sensors_[id]->Stop();
-    }
+    auto dummy_id = real_dummy_sensors_relation_[id];
+    dummy_sensors_[dummy_id]->Stop();
+    dummy_sensors_[dummy_id]->Destroy();
+    real_dummy_sensors_relation_.erase(id);
+    real_sensors_.erase(id);
+
     image_data_lock_.lock();
     image_data_queues_.erase(id);
     image_data_lock_.unlock();
@@ -237,7 +247,7 @@ std::string Proxy::GetUpdateData(
     lidar_data_queues_.erase(id);
     lidar_data_lock_.unlock();
   }
-  sensors_ = std::move(tmp_sensors);
+  real_sensors_ = std::move(tmp_real_sensors);
 
   for (const auto& actor_pair : actors_) {
     auto actor_ptr = actor_pair.second;
@@ -254,12 +264,27 @@ std::string Proxy::GetUpdateData(
   xviz_builder.AddPrimitive(xviz_primitive_builder)
       .AddPrimitive(xviz_primitive_walker_builder);
 
-  image_data_lock_.lock();
+  bool should_add = false;
   XVIZPrimitiveBuider image_builder("/camera/images");
-  for (const auto& image_pair : image_data_queues_) {
-    image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
+  image_data_lock_.lock();
+  if (is_image_received_) {
+    std::vector<uint32_t> to_delete_image_ids;
+    for (const auto& image_pair : image_data_queues_) {
+      if (real_dummy_sensors_relation_.find(image_pair.first) != real_dummy_sensors_relation_.end()) {
+        should_add = true;
+        image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
+      } else {
+        to_delete_sensor_ids.push_back(image_pair.first);
+      }
+    }
+    for (auto image_id : to_delete_image_ids) {
+      image_data_queues_.erase(image_id);
+    }
   }
   image_data_lock_.unlock();
+  if (should_add) {
+    xviz_builder.AddPrimitive(image_builder);
+  }
 
   lidar_data_lock_.lock();
   XVIZPrimitiveBuider point_cloud_builder("/lidar/points");
@@ -272,8 +297,7 @@ std::string Proxy::GetUpdateData(
   }
   lidar_data_lock_.unlock();
 
-  xviz_builder.AddPrimitive(point_cloud_builder)
-      .AddPrimitive(image_builder);
+  xviz_builder.AddPrimitive(point_cloud_builder);
   return xviz_builder.GetData();
 }
 
@@ -333,6 +357,42 @@ void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
     max_deg = std::max(max_deg, deg);
   }
   LOG_INFO("MIN: %.2f, MAX: %.2f", min_deg, max_deg);
+}
+
+carla::geom::Transform Proxy::GetRelativeTransform(const carla::geom::Transform& child, const carla::geom::Transform& parent) {
+  auto child_location = child.location;
+  auto parent_location = parent.location;
+  auto relative_location = carla::geom::Location(child_location.x - parent_location.x, child_location.y - parent_location.y, child_location.z - parent_location.z);
+
+  auto child_rotation = child.rotation;
+  auto parent_rotation = parent.rotation;
+  auto relative_rotation = carla::geom::Rotation(child_rotation.pitch - parent_rotation.pitch, child_rotation.yaw - parent_rotation.yaw, child_rotation.roll - parent_rotation.roll);
+  return carla::geom::Transform(relative_location, relative_rotation);
+}
+
+boost::shared_ptr<carla::client::Sensor> Proxy::CreateDummySensor(boost::shared_ptr<carla::client::Sensor> real_sensor) {
+  auto real_sensor_attribute = real_sensor->GetAttributes();
+  auto type_id = real_sensor->GetTypeId();
+  auto blueprint_lib = world_ptr_->GetBlueprintLibrary();
+  auto blueprint = (*(blueprint_lib->Filter(type_id)))[0];
+
+  for (const auto& attribute : real_sensor_attribute) {
+    blueprint.SetAttribute(attribute.GetId(), attribute.GetValue());
+  }
+  
+  auto parent = real_sensor->GetParent();
+  auto parent_transform = carla::geom::Transform();
+  if (parent == nullptr) {
+    LOG_WARNING("Real sensor with id %ud has no attached actor", real_sensor->GetId());
+    return nullptr;
+  } else {
+    parent_transform = parent->GetTransform();
+  }
+  auto sensor_transform = real_sensor->GetTransform();
+  auto relative_transform = GetRelativeTransform(sensor_transform, parent_transform);
+
+  auto dummy_sensor = boost::static_pointer_cast<carla::client::Sensor>(world_ptr_->SpawnActor(blueprint, relative_transform, parent.get()));
+  return dummy_sensor;
 }
 
 std::pair<uint32_t, std::vector<point_3d_t>> Proxy::GetPointCloud(
