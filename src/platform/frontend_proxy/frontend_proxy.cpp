@@ -134,6 +134,7 @@ void FrontendProxy::SendMetadata(const boost::shared_ptr<FrontendClient>& client
     }
     boost::beast::ostream(buffer) << updated_metadata_;
     update_metadata_lock_.unlock();
+    LOG_INFO("send metadata");
     client->Write(buffer);
     client->ChangeMetadataSendStatus(true);
 }

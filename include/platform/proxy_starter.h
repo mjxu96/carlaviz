@@ -10,7 +10,7 @@
 #include "platform/utils/def.h"
 #include "platform/utils/utils.h"
 
-#include "platform/carla_proxy/proxy.h"
+#include "platform/carla_proxy/carla_proxy.h"
 
 #include "carla/client/Client.h"
 
@@ -38,7 +38,7 @@ class ProxyStarter {
   void AddClient(boost::asio::ip::tcp::socket socket);
 
   boost::shared_ptr<carla::client::Client> carla_client_ptr_{nullptr};
-  std::shared_ptr<Proxy> proxy_ptr_ = nullptr;
+  std::shared_ptr<CarlaProxy> proxy_ptr_ = nullptr;
 
   std::string carla_ip_{"localhost"};
   uint16_t carla_port_{2000u};

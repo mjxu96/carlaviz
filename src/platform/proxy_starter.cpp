@@ -38,7 +38,7 @@ void ProxyStarter::Init() {
                server_version.c_str());
     }
 
-    proxy_ptr_ = std::make_shared<Proxy>(carla_client_ptr_);
+    proxy_ptr_ = std::make_shared<CarlaProxy>(carla_client_ptr_);
   } catch (const std::exception& e) {
     LOG_ERROR("%s", e.what());
   }

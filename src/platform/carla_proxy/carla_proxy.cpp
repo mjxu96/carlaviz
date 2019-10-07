@@ -4,7 +4,8 @@
  * File Created: Saturday, 6th July 2019 10:11:52 pm
  */
 
-#include "platform/carla_proxy/proxy.h"
+
+#include "platform/carla_proxy/carla_proxy.h"
 
 using namespace mellocolate;
 using namespace mellocolate::utils;
@@ -26,12 +27,14 @@ CarlaProxy::CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr)
   world_ptr_ =
       boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 }
+CarlaProxy::CarlaProxy(const std::string& carla_host, uint16_t carla_port) :
+  carla_host_(carla_host), carla_port_(carla_port) {}
 
 void CarlaProxy::Run() {
-  Init();
   while (true) {
     auto world_snapshots = world_ptr_->WaitForTick(2s);
-    Update(GetUpdateData(world_snapshots));
+    auto xviz_builder = GetUpdateData(world_snapshots);
+    Update(xviz_builder.GetData());//GetUpdateData(world_snapshots));
   }
 }
 
@@ -57,6 +60,27 @@ void CarlaProxy::AddClient(boost::asio::ip::tcp::socket socket) {
 }
 
 void CarlaProxy::Init() {
+  try {
+    LOG_INFO("Connecting to Carla Server on %s:%u...", carla_host_.c_str(),
+             carla_port_);
+    client_ptr_ =
+        boost::make_shared<carla::client::Client>(carla_host_, carla_port_);
+    if (client_ptr_ == nullptr) {
+      LOG_ERROR("Carla client ptr is null. Exiting");
+      return;
+    } else {
+      client_ptr_->SetTimeout(10s);
+      std::string server_version = client_ptr_->GetServerVersion();
+      LOG_INFO("Connected to Carla Server, Server version is: %s",
+               server_version.c_str());
+    }
+
+    world_ptr_ =
+      boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
+  } catch (const std::exception& e) {
+    LOG_ERROR("%s", e.what());
+    exit(1);
+  }
   // try {
   //   ws_ptr_->accept();
   //   LOG_INFO("Frontend connected");
@@ -141,8 +165,12 @@ std::string CarlaProxy::GetMetaData() {
   xviz_metadata_builder.AddUIConfig(ui_config);
   return xviz_metadata_builder.GetMetaData();
 }
+XVIZBuilder CarlaProxy::GetUpdateData() {
+  auto world_snapshots = world_ptr_->WaitForTick(2s);
+  return GetUpdateData(world_snapshots);
+}
 
-std::string CarlaProxy::GetUpdateData(
+XVIZBuilder CarlaProxy::GetUpdateData(
     const carla::client::WorldSnapshot& world_snapshots) {
   std::chrono::time_point<std::chrono::system_clock> now =
       std::chrono::system_clock::now();
@@ -312,7 +340,7 @@ std::string CarlaProxy::GetUpdateData(
   lidar_data_lock_.unlock();
 
   xviz_builder.AddPrimitive(point_cloud_builder);
-  return xviz_builder.GetData();
+  return xviz_builder;//.GetData();
 }
 
 void CarlaProxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,

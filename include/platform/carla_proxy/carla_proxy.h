@@ -58,24 +58,30 @@ namespace mellocolate {
 
 class CarlaProxy {
  public:
-  CarlaProxy() = delete;
+  CarlaProxy() = default;
+  CarlaProxy(const std::string& carla_host, uint16_t carla_port);
   CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr);
+  void Init();
+  std::string GetMetaData();
+  XVIZBuilder GetUpdateData(
+      const carla::client::WorldSnapshot& world_snapshots);
+  XVIZBuilder GetUpdateData();
   void Run();
   void AddClient(boost::asio::ip::tcp::socket socket);
 
  private:
-  void Init();
   void Update(const std::string& data_str);
 
   // Carla related
-  std::string GetMetaData();
-  std::string GetUpdateData(
-      const carla::client::WorldSnapshot& world_snapshots);
+  // std::string GetUpdateData(
+      // const carla::client::WorldSnapshot& world_snapshots);
   void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
                   boost::shared_ptr<carla::client::Vehicle> vehicle);
   void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
                  boost::shared_ptr<carla::client::Walker> walker);
 
+  std::string carla_host_{"localhost"};
+  uint16_t carla_port_{2000u};
   boost::shared_ptr<carla::client::World> world_ptr_{nullptr};
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
 
