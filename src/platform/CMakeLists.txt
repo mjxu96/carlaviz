@@ -23,7 +23,7 @@ add_library(proxy-utils
   utils/lodepng.cpp
 )
 
-add_library(proxy-lib proxy.cpp)
+add_library(proxy-lib carla_proxy/proxy.cpp)
 
 
 add_executable(proxy proxy_starter.cpp)

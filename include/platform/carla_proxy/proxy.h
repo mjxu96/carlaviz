@@ -56,10 +56,10 @@
 
 namespace mellocolate {
 
-class Proxy {
+class CarlaProxy {
  public:
-  Proxy() = delete;
-  Proxy(boost::shared_ptr<carla::client::Client> client_ptr);
+  CarlaProxy() = delete;
+  CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr);
   void Run();
   void AddClient(boost::asio::ip::tcp::socket socket);
 

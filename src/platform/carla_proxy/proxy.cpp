@@ -4,7 +4,7 @@
  * File Created: Saturday, 6th July 2019 10:11:52 pm
  */
 
-#include "platform/proxy.h"
+#include "platform/carla_proxy/proxy.h"
 
 using namespace mellocolate;
 using namespace mellocolate::utils;
@@ -21,13 +21,13 @@ std::pair<double, double> AfterRotate(double x, double y, double yaw) {
           std::sin(yaw) * x + std::cos(yaw) * y};
 }
 
-Proxy::Proxy(boost::shared_ptr<carla::client::Client> client_ptr)
+CarlaProxy::CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr)
     : client_ptr_(std::move(client_ptr)) {
   world_ptr_ =
       boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 }
 
-void Proxy::Run() {
+void CarlaProxy::Run() {
   Init();
   while (true) {
     auto world_snapshots = world_ptr_->WaitForTick(2s);
@@ -35,7 +35,7 @@ void Proxy::Run() {
   }
 }
 
-void Proxy::AddClient(boost::asio::ip::tcp::socket socket) {
+void CarlaProxy::AddClient(boost::asio::ip::tcp::socket socket) {
   auto ws_ptr =
       boost::make_shared<websocket::stream<tcp::socket>>(std::move(socket));
   try {
@@ -56,7 +56,7 @@ void Proxy::AddClient(boost::asio::ip::tcp::socket socket) {
   }
 }
 
-void Proxy::Init() {
+void CarlaProxy::Init() {
   // try {
   //   ws_ptr_->accept();
   //   LOG_INFO("Frontend connected");
@@ -72,7 +72,7 @@ void Proxy::Init() {
   // }
 }
 
-void Proxy::Update(const std::string& data_str) {
+void CarlaProxy::Update(const std::string& data_str) {
   boost::beast::multi_buffer buffer;
 
   boost::beast::ostream(buffer) << data_str;  // GetUpdateData();
@@ -103,7 +103,7 @@ void Proxy::Update(const std::string& data_str) {
   }
 }
 
-std::string Proxy::GetMetaData() {
+std::string CarlaProxy::GetMetaData() {
   std::string map_geojson =
       utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(world_ptr_->GetMap());
   XVIZMetaDataBuilder xviz_metadata_builder;
@@ -142,7 +142,7 @@ std::string Proxy::GetMetaData() {
   return xviz_metadata_builder.GetMetaData();
 }
 
-std::string Proxy::GetUpdateData(
+std::string CarlaProxy::GetUpdateData(
     const carla::client::WorldSnapshot& world_snapshots) {
   std::chrono::time_point<std::chrono::system_clock> now =
       std::chrono::system_clock::now();
@@ -315,7 +315,7 @@ std::string Proxy::GetUpdateData(
   return xviz_builder.GetData();
 }
 
-void Proxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
+void CarlaProxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
                        boost::shared_ptr<carla::client::Vehicle> vehicle_ptr) {
   auto bounding_box = vehicle_ptr->GetBoundingBox();
   double x_off = bounding_box.extent.x;
@@ -336,7 +336,7 @@ void Proxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
       std::to_string(vehicle_ptr->GetId())));
 }
 
-void Proxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
+void CarlaProxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
                       boost::shared_ptr<carla::client::Walker> walker_ptr) {
   auto bounding_box = walker_ptr->GetBoundingBox();
   double x_off = bounding_box.extent.x;
@@ -373,7 +373,7 @@ void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
   LOG_INFO("MIN: %.2f, MAX: %.2f", min_deg, max_deg);
 }
 
-carla::geom::Transform Proxy::GetRelativeTransform(
+carla::geom::Transform CarlaProxy::GetRelativeTransform(
     const carla::geom::Transform& child, const carla::geom::Transform& parent) {
   auto child_location = child.location;
   auto parent_location = parent.location;
@@ -391,7 +391,7 @@ carla::geom::Transform Proxy::GetRelativeTransform(
   return carla::geom::Transform(relative_location, relative_rotation);
 }
 
-boost::shared_ptr<carla::client::Sensor> Proxy::CreateDummySensor(
+boost::shared_ptr<carla::client::Sensor> CarlaProxy::CreateDummySensor(
     boost::shared_ptr<carla::client::Sensor> real_sensor) {
   auto real_sensor_attribute = real_sensor->GetAttributes();
   auto type_id = real_sensor->GetTypeId();
@@ -419,7 +419,7 @@ boost::shared_ptr<carla::client::Sensor> Proxy::CreateDummySensor(
   return dummy_sensor;
 }
 
-utils::PointCloud Proxy::GetPointCloud(
+utils::PointCloud CarlaProxy::GetPointCloud(
     const carla::sensor::data::LidarMeasurement& lidar_measurement) {
   std::vector<point_3d_t> points;
   // std::vector<point_3d_t> dbg_points;
@@ -438,7 +438,7 @@ utils::PointCloud Proxy::GetPointCloud(
   return utils::PointCloud(lidar_measurement.GetTimestamp(), points);
 }
 
-utils::Image Proxy::GetEncodedImage(const carla::sensor::data::Image& image) {
+utils::Image CarlaProxy::GetEncodedImage(const carla::sensor::data::Image& image) {
   std::vector<unsigned char> pixel_data;
   for (const auto& p : image) {
     pixel_data.emplace_back(p.r);
