@@ -13,4 +13,4 @@ SET(CLIENT_ROOT_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory("src/libcarla/cmake")
 add_subdirectory("src/example")
-add_subdirectory("src/proxy")
+add_subdirectory("src/platform")
