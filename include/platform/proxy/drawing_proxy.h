@@ -11,6 +11,8 @@
 #include "platform/utils/json.hpp"
 #include "platform/utils/macrologger.h"
 
+#include "platform/xviz/xviz_primitive_builder.h"
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
@@ -25,10 +27,16 @@
 
 namespace mellocolate {
 
+struct polyline {
+  std::string color{"#00FF00"};
+  double width{2.5};
+  std::vector<point_3d_t> points{};
+};
+
 class DrawingProxy {
  public:
   DrawingProxy(uint16_t listen_port);
-  std::vector<std::pair<uint32_t, std::vector<point_3d_t>>> GetPolyLines();
+  XVIZPrimitiveBuider GetPolyLines();
   void StartListen();
 
  private:
@@ -37,10 +45,10 @@ class DrawingProxy {
   void AddClient(
       boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
-  std::vector<point_3d_t> DecodeToPoints(const std::string& str);
+  polyline DecodeToPoints(const std::string& str);
 
   std::mutex polyline_update_lock_{};
-  std::unordered_map<uint32_t, std::vector<point_3d_t>> polylines_{};
+  std::unordered_map<uint32_t, polyline> polylines_{};
 
   std::mutex add_client_lock_{};
   uint32_t client_max_id_{0u};

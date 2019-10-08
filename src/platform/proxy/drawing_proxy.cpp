@@ -18,15 +18,18 @@ void DrawingProxy::StartListen() {
   auto t = std::thread(&DrawingProxy::Accept, this);
   t.detach();
 }
-std::vector<std::pair<uint32_t, std::vector<point_3d_t>>>
-DrawingProxy::GetPolyLines() {
-  std::vector<std::pair<uint32_t, std::vector<point_3d_t>>> res;
+
+XVIZPrimitiveBuider DrawingProxy::GetPolyLines() {
+  XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
   polyline_update_lock_.lock();
-  for (const auto& points_pair : polylines_) {
-    res.push_back(points_pair);
+  for (const auto& polyline_pair : polylines_) {
+    auto polyline = polyline_pair.second;
+    polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.points)
+                                        .AddColor(polyline.color)
+                                        .AddWidth(polyline.width));
   }
   polyline_update_lock_.unlock();
-  return res;
+  return polyline_builder;
 }
 
 void DrawingProxy::Accept() {
@@ -73,9 +76,9 @@ void DrawingProxy::AddClient(
       std::ostringstream os;
       os << boost::beast::buffers(buffer.data());
 
-      auto points = DecodeToPoints(os.str());
+      auto polyline = DecodeToPoints(os.str());
       polyline_update_lock_.lock();
-      polylines_[id] = points;
+      polylines_[id] = polyline;
       polyline_update_lock_.unlock();
     }
 
@@ -91,8 +94,8 @@ void DrawingProxy::AddClient(
   }
 }
 
-std::vector<point_3d_t> DrawingProxy::DecodeToPoints(const std::string& str) {
-  std::vector<point_3d_t> points;
+polyline DrawingProxy::DecodeToPoints(const std::string& str) {
+  polyline polyline;
   Json decoded_json;
   try {
     decoded_json = Json::parse(str);
@@ -101,7 +104,7 @@ std::vector<point_3d_t> DrawingProxy::DecodeToPoints(const std::string& str) {
         "Receive bad json data from drawing client, ignore this data message, "
         "the message is %s",
         str.c_str());
-    return points;
+    return polyline;
   }
 
   for (auto itr = decoded_json.begin(); itr != decoded_json.end(); itr++) {
@@ -112,7 +115,7 @@ std::vector<point_3d_t> DrawingProxy::DecodeToPoints(const std::string& str) {
           if (point.is_array()) {
             auto point_vertices = point.get<std::vector<double>>();
             if (point_vertices.size() == 3) {
-              points.emplace_back(point_vertices[0], -point_vertices[1],
+              polyline.points.emplace_back(point_vertices[0], -point_vertices[1],
                                   point_vertices[2]);
             } else {
               LOG_ERROR("Point should have 3 coordinates");
@@ -129,6 +132,12 @@ std::vector<point_3d_t> DrawingProxy::DecodeToPoints(const std::string& str) {
         break;
       }
     }
+    if (key == "color") {
+      polyline.color = itr.value().get<std::string>();
+    }
+    if (key == "width") {
+      polyline.width = itr.value().get<double>();
+    }
   }
-  return points;
+  return polyline;
 }
