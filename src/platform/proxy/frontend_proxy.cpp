@@ -86,7 +86,6 @@ void FrontendProxy::Accept() {
            frontend_listen_port_);
   try {
     boost::asio::io_context ioc{1};
-    // TODO change ip here
     tcp::acceptor acceptor{ioc,
                            tcp::endpoint(tcp::v4(), frontend_listen_port_)};
     for (;;) {

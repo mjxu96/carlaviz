@@ -43,6 +43,15 @@ XVIZPrimitivePolyLineBuilder& XVIZPrimitivePolyLineBuilder::AddId(
   id_ = std::move(id);
   return *this;
 }
+XVIZPrimitivePolyLineBuilder& XVIZPrimitivePolyLineBuilder::AddColor(std::string color) {
+  color_ = std::move(color);
+  return *this;
+}
+
+XVIZPrimitivePolyLineBuilder& XVIZPrimitivePolyLineBuilder::AddWidth(double width) {
+  width_ = width;
+  return *this;
+}
 
 Json XVIZPrimitivePolyLineBuilder::GetData() const {
   Json json;
@@ -55,6 +64,12 @@ Json XVIZPrimitivePolyLineBuilder::GetData() const {
   }
   if (id_ != boost::none) {
     json["base"]["object_id"] = id_.value();
+  }
+  if (color_ != boost::none) {
+    json["base"]["style"]["stroke_color"] = color_.value();
+  }
+  if (width_ != boost::none) {
+    json["base"]["style"]["stroke_width"] = width_.value();
   }
   return json;
 }

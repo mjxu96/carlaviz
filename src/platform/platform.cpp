@@ -13,12 +13,12 @@ void Platform::Run() {
   while (true) {
     auto xviz = carla_proxy_->GetUpdateData();
     auto polylines = drawing_proxy_->GetPolyLines();
-    XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
-    for (const auto& polyline : polylines) {
-      polyline_builder.AddPolyLine(
-          XVIZPrimitivePolyLineBuilder(polyline.second));
-    }
-    xviz.AddPrimitive(polyline_builder);
+    // XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
+    // for (const auto& polyline : polylines) {
+    //   polyline_builder.AddPolyLine(
+    //       XVIZPrimitivePolyLineBuilder(polyline.second));
+    // }
+    xviz.AddPrimitive(polylines);
     frontend_proxy_->SendToAllClients(xviz.GetData());
   }
 }

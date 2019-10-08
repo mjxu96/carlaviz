@@ -34,11 +34,15 @@ class XVIZPrimitivePolyLineBuilder {
 public:
   XVIZPrimitivePolyLineBuilder(std::vector<point_3d_t> vertices);
   XVIZPrimitivePolyLineBuilder& AddId(std::string id);
+  XVIZPrimitivePolyLineBuilder& AddColor(std::string color);
+  XVIZPrimitivePolyLineBuilder& AddWidth(double width);
 
   nlohmann::json GetData() const;
 private:
   std::vector<point_3d_t> vertices_;
   boost::optional<std::string> id_ = boost::none;
+  boost::optional<std::string> color_ = boost::none;
+  boost::optional<double> width_ = boost::none;
 };
 
 class XVIZPrimitiveCircleBuilder {
