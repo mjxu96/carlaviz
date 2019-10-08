@@ -1,5 +1,7 @@
 # Carla Display on Browser - Backend
 
+![](https://github.com/mellocolate/carla-display/blob/master/images/example.gif)
+
 Please refer this [repo](https://github.com/mellocolate/carla-display) for building instructions.
 
 # install nodejs 10.x
