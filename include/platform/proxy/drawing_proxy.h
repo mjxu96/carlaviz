@@ -7,9 +7,9 @@
 #ifndef MELLOCOLATE_DRAWING_PROXY_H_
 #define MELLOCOLATE_DRAWING_PROXY_H_
 
-#include "platform/utils/macrologger.h"
 #include "platform/utils/def.h"
 #include "platform/utils/json.hpp"
+#include "platform/utils/macrologger.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -18,23 +18,24 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 
-#include <vector>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 namespace mellocolate {
 
 class DrawingProxy {
-public:
+ public:
   DrawingProxy(uint16_t listen_port);
   std::vector<std::pair<uint32_t, std::vector<point_3d_t>>> GetPolyLines();
   void StartListen();
 
-private:
+ private:
   uint16_t listen_port_{8089u};
   void Accept();
-  void AddClient(boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
+  void AddClient(
+      boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
   std::vector<point_3d_t> DecodeToPoints(const std::string& str);
 

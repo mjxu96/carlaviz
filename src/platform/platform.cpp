@@ -15,7 +15,8 @@ void Platform::Run() {
     auto polylines = drawing_proxy_->GetPolyLines();
     XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
     for (const auto& polyline : polylines) {
-      polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.second));
+      polyline_builder.AddPolyLine(
+          XVIZPrimitivePolyLineBuilder(polyline.second));
     }
     xviz.AddPrimitive(polyline_builder);
     frontend_proxy_->SendToAllClients(xviz.GetData());
@@ -23,7 +24,6 @@ void Platform::Run() {
 }
 
 void Platform::Init() {
-
   drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
   drawing_proxy_->StartListen();
 
@@ -32,7 +32,6 @@ void Platform::Init() {
 
   carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u);
   carla_proxy_->Init();
-
 
   frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetaData());
 }

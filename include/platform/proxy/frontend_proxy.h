@@ -58,7 +58,8 @@ class FrontendProxy {
 
   std::mutex add_client_lock_{};
   uint32_t frontend_max_id_ = 0u;
-  boost::unordered_map<uint32_t, boost::shared_ptr<FrontendClient>> frontend_clients_{};
+  boost::unordered_map<uint32_t, boost::shared_ptr<FrontendClient>>
+      frontend_clients_{};
 };
 
 }  // namespace mellocolate
