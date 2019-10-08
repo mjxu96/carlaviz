@@ -5,7 +5,7 @@
  */
 
 
-#include "platform/carla_proxy/carla_proxy.h"
+#include "platform/proxy/carla_proxy.h"
 
 using namespace mellocolate;
 using namespace mellocolate::utils;
@@ -141,6 +141,13 @@ std::string CarlaProxy::GetMetaData() {
                                          .AddFillColor("#fb0")
                                          .AddHeight(2.0))
                      .AddType("polygon"))
+      .AddStream(metadata::Stream("/planning/trajectory")
+                     .AddCategory("primitive")
+                     .AddCoordinate("IDENTITY")
+                     .AddStreamStyle(metadata::StreamStyle()
+                                         .AddStrokeWidth(2.0)
+                                         .AddStrokeColor("#00FF00"))
+                     .AddType("polyline"))
       .AddStream(metadata::Stream("/object/walkers")
                      .AddCategory("primitive")
                      .AddCoordinate("IDENTITY")

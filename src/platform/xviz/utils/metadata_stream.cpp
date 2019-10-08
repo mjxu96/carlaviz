@@ -24,6 +24,16 @@ StreamStyle& StreamStyle::AddFillColor(std::string fill_color) {
   return *this;
 }
 
+StreamStyle& StreamStyle::AddStrokeColor(std::string stroke_color) {
+  stroke_color_ = std::move(stroke_color);
+  return *this;
+}
+
+StreamStyle& StreamStyle::AddStrokeWidth(double width) {
+  stroke_width_ = width;
+  return *this;
+}
+
 StreamStyle& StreamStyle::AddHeight(double height) {
   height_ = height;
   return *this;
@@ -44,6 +54,12 @@ Json StreamStyle::GetMetaData() const {
   Json json;
   if (fill_color_ != boost::none) {
     json["fill_color"] = fill_color_.value();
+  }
+  if (stroke_color_ != boost::none) {
+    json["stroke_color"] = stroke_color_.value();
+  }
+  if (stroke_width_ != boost::none) {
+    json["stroke_width"] = stroke_width_.value();
   }
   if (height_ != boost::none) {
     json["height"] = height_.value();

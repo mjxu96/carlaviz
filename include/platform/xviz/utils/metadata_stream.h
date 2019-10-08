@@ -62,6 +62,8 @@ public:
   StreamStyle& AddExtruded(bool is_extruded);
   StreamStyle& AddStroked(bool is_stroked);
   StreamStyle& AddFillColor(std::string fill_color);
+  StreamStyle& AddStrokeColor(std::string stroke_color);
+  StreamStyle& AddStrokeWidth(double width);
   StreamStyle& AddHeight(double height);
 
   nlohmann::json GetMetaData() const;
@@ -69,6 +71,8 @@ public:
   boost::optional<bool> stroked_ = boost::none;
   boost::optional<bool> extruded_ = boost::none;
   boost::optional<std::string> fill_color_ = boost::none;
+  boost::optional<std::string> stroke_color_ = boost::none;
+  boost::optional<double> stroke_width_ = boost::none;
   boost::optional<double> height_ = boost::none;
   
   // Stream style for point cloud

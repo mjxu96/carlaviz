@@ -34,6 +34,31 @@ Json XVIZPrimitivePolygonBuilder::GetData() const {
   return json;
 }
 
+XVIZPrimitivePolyLineBuilder::XVIZPrimitivePolyLineBuilder(
+    std::vector<point_3d_t> vertices)
+    : vertices_(std::move(vertices)) {}
+
+XVIZPrimitivePolyLineBuilder& XVIZPrimitivePolyLineBuilder::AddId(
+    std::string id) {
+  id_ = std::move(id);
+  return *this;
+}
+
+Json XVIZPrimitivePolyLineBuilder::GetData() const {
+  Json json;
+  size_t i = 0u;
+  for (const auto& point : vertices_) {
+    json["vertices"][i][0] = point.get<0>();
+    json["vertices"][i][1] = point.get<1>();
+    json["vertices"][i][2] = point.get<2>();
+    i++;
+  }
+  if (id_ != boost::none) {
+    json["base"]["object_id"] = id_.value();
+  }
+  return json;
+}
+
 XVIZPrimitiveCircleBuilder::XVIZPrimitiveCircleBuilder(point_3d_t center,
                                                        double radius)
     : center_(std::move(center)), radius_(radius) {}
@@ -99,6 +124,12 @@ XVIZPrimitiveBuider& XVIZPrimitiveBuider::AddPolygon(
   return *this;
 }
 
+XVIZPrimitiveBuider& XVIZPrimitiveBuider::AddPolyLine(
+    XVIZPrimitivePolyLineBuilder polyline) {
+  polylines_.push_back(std::move(polyline));
+  return *this;
+}
+
 XVIZPrimitiveBuider& XVIZPrimitiveBuider::AddCircle(
     XVIZPrimitiveCircleBuilder circle) {
   circles_.push_back(std::move(circle));
@@ -125,6 +156,12 @@ Json XVIZPrimitiveBuider::GetData() const {
   size_t i = 0u;
   for (const auto& circle : circles_) {
     json["circles"][i] = circle.GetData();
+    i++;
+  }
+
+  i = 0u;
+  for (const auto& polyline : polylines_) {
+    json["polylines"][i] = polyline.GetData();
     i++;
   }
 

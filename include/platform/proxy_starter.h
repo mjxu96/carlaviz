@@ -10,7 +10,7 @@
 #include "platform/utils/def.h"
 #include "platform/utils/utils.h"
 
-#include "platform/carla_proxy/carla_proxy.h"
+#include "platform/proxy/carla_proxy.h"
 
 #include "carla/client/Client.h"
 

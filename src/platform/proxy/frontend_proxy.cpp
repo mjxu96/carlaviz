@@ -4,7 +4,7 @@
  * File Created: Monday, 7th October 2019 3:22:45 pm
  */
 
-#include "platform/frontend_proxy/frontend_proxy.h"
+#include "platform/proxy/frontend_proxy.h"
 
 using namespace mellocolate;
 using tcp = boost::asio::ip::tcp;
@@ -134,7 +134,6 @@ void FrontendProxy::SendMetadata(const boost::shared_ptr<FrontendClient>& client
     }
     boost::beast::ostream(buffer) << updated_metadata_;
     update_metadata_lock_.unlock();
-    LOG_INFO("send metadata");
     client->Write(buffer);
     client->ChangeMetadataSendStatus(true);
 }

@@ -7,8 +7,9 @@
 #ifndef MELLOCOLATE_PLATFORM_H_
 #define MELLOCOLATE_PLATFORM_H_
 
-#include "platform/frontend_proxy/frontend_proxy.h"
-#include "platform/carla_proxy/carla_proxy.h"
+#include "platform/proxy/drawing_proxy.h"
+#include "platform/proxy/frontend_proxy.h"
+#include "platform/proxy/carla_proxy.h"
 
 namespace mellocolate {
 
@@ -18,6 +19,7 @@ public:
   void Run();
 private:
   void Init();
+  std::shared_ptr<DrawingProxy> drawing_proxy_{nullptr};
   std::shared_ptr<FrontendProxy> frontend_proxy_{nullptr};
   std::shared_ptr<CarlaProxy> carla_proxy_{nullptr};
 };

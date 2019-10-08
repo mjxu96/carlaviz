@@ -30,6 +30,17 @@ private:
   boost::optional<std::string> id_ = boost::none;
 };
 
+class XVIZPrimitivePolyLineBuilder {
+public:
+  XVIZPrimitivePolyLineBuilder(std::vector<point_3d_t> vertices);
+  XVIZPrimitivePolyLineBuilder& AddId(std::string id);
+
+  nlohmann::json GetData() const;
+private:
+  std::vector<point_3d_t> vertices_;
+  boost::optional<std::string> id_ = boost::none;
+};
+
 class XVIZPrimitiveCircleBuilder {
 public:
   XVIZPrimitiveCircleBuilder(point_3d_t center, double radius);
@@ -65,6 +76,7 @@ class XVIZPrimitiveBuider {
 public:
   XVIZPrimitiveBuider(std::string name);
   XVIZPrimitiveBuider& AddPolygon(XVIZPrimitivePolygonBuilder polygon);
+  XVIZPrimitiveBuider& AddPolyLine(XVIZPrimitivePolyLineBuilder polyline);
   XVIZPrimitiveBuider& AddCircle(XVIZPrimitiveCircleBuilder circle);
   XVIZPrimitiveBuider& AddPoints(XVIZPrimitivePointBuilder points);
   XVIZPrimitiveBuider& AddImages(XVIZPrimitiveImageBuilder image);
@@ -74,6 +86,7 @@ public:
 private:
   std::string name_;
   std::vector<XVIZPrimitivePolygonBuilder> polygons_;
+  std::vector<XVIZPrimitivePolyLineBuilder> polylines_;
   std::vector<XVIZPrimitiveCircleBuilder> circles_;
   std::vector<XVIZPrimitivePointBuilder> points_;
   std::vector<XVIZPrimitiveImageBuilder> images_;
