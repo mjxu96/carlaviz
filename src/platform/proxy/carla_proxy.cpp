@@ -184,18 +184,14 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   double now_time = now.time_since_epoch().count() / 1e9;
 
   XVIZBuilder xviz_builder;
-  xviz_builder.AddTimestamp(now_time).AddPose(
-      XVIZPoseBuilder("/vehicle_pose")
-          .AddMapOrigin(point_3d_t(0, 0, 0))
-          .AddOrientation(point_3d_t(0, 0, 0))
-          .AddPosition(point_3d_t(0, 0, 0))
-          .AddTimestamp(now_time));
   XVIZPrimitiveBuider xviz_primitive_builder("/object/vehicles");
   XVIZPrimitiveBuider xviz_primitive_walker_builder("/object/walkers");
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
       tmp_actors;
   std::unordered_set<uint32_t> tmp_real_sensors;
+
+  ego_actor_ = nullptr;
 
   for (const auto& world_snapshot : world_snapshots) {
     uint32_t id = world_snapshot.id;
@@ -208,6 +204,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
     if (actor_ptr == nullptr) {
       LOG_WARNING("Actor pointer is null, actor id: %u", id);
+      continue;
+    }
+    bool need_continue = false;
+    for (const auto& attribute : actor_ptr->GetAttributes()) {
+      if (attribute.GetId() == "role_name" && attribute.GetValue() == "ego") {
+        ego_actor_ = actor_ptr;
+        need_continue = true;
+      }
+    }
+    if (need_continue) {
       continue;
     }
     tmp_actors.insert({id, actor_ptr});
@@ -297,6 +303,27 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     lidar_data_lock_.unlock();
   }
   real_sensors_ = std::move(tmp_real_sensors);
+
+  point_3d_t ego_position(0, 0, 0);
+  point_3d_t ego_orientation(0, 0, 0);
+
+  if (ego_actor_ != nullptr) {
+    auto location = ego_actor_->GetLocation();
+    auto orientation = ego_actor_->GetTransform().rotation;
+    ego_position.set<0>(location.x);
+    ego_position.set<1>(-location.y);
+    ego_position.set<2>(location.z);
+    ego_orientation.set<0>(orientation.roll / 180.0 * M_PI);
+    ego_orientation.set<1>(orientation.pitch / 180.0 * M_PI);
+    ego_orientation.set<2>(-(orientation.yaw) / 180.0 * M_PI);
+  }
+
+  xviz_builder.AddTimestamp(now_time).AddPose(
+      XVIZPoseBuilder("/vehicle_pose")
+          .AddMapOrigin(point_3d_t(0, 0, 0))
+          .AddOrientation(ego_orientation)
+          .AddPosition(ego_position)
+          .AddTimestamp(now_time));
 
   for (const auto& actor_pair : actors_) {
     auto actor_ptr = actor_pair.second;

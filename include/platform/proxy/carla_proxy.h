@@ -86,6 +86,7 @@ class CarlaProxy {
   boost::shared_ptr<carla::client::Client> client_ptr_{nullptr};
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
+  boost::shared_ptr<carla::client::Actor> ego_actor_{nullptr};
 
   // Carla sensor related
   std::mutex image_data_lock_;
