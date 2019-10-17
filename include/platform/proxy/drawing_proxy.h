@@ -45,10 +45,10 @@ class DrawingProxy {
   void AddClient(
       boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
-  polyline DecodeToPoints(const std::string& str);
+  std::vector<polyline> DecodeToPoints(const std::string& str);
 
   std::mutex polyline_update_lock_{};
-  std::unordered_map<uint32_t, polyline> polylines_{};
+  std::unordered_map<uint32_t, std::vector<polyline>> polylines_{};
 
   std::mutex add_client_lock_{};
   uint32_t client_max_id_{0u};

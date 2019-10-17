@@ -22,11 +22,12 @@ void DrawingProxy::StartListen() {
 XVIZPrimitiveBuider DrawingProxy::GetPolyLines() {
   XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
   polyline_update_lock_.lock();
-  for (const auto& polyline_pair : polylines_) {
-    auto polyline = polyline_pair.second;
-    polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.points)
+  for (const auto& polylines_pair : polylines_) {
+    for (const auto& polyline : polylines_[polylines_pair.first]) {
+      polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.points)
                                         .AddColor(polyline.color)
                                         .AddWidth(polyline.width));
+    }
   }
   polyline_update_lock_.unlock();
   return polyline_builder;
@@ -94,8 +95,10 @@ void DrawingProxy::AddClient(
   }
 }
 
-polyline DrawingProxy::DecodeToPoints(const std::string& str) {
-  polyline polyline;
+std::vector<polyline> DrawingProxy::DecodeToPoints(const std::string& str) {
+  std::vector<polyline> polylines;
+  std::string color = "#FF0000";
+  double width = 1.0;
   Json decoded_json;
   try {
     decoded_json = Json::parse(str);
@@ -104,28 +107,37 @@ polyline DrawingProxy::DecodeToPoints(const std::string& str) {
         "Receive bad json data from drawing client, ignore this data message, "
         "the message is %s",
         str.c_str());
-    return polyline;
+    return polylines;
   }
 
   for (auto itr = decoded_json.begin(); itr != decoded_json.end(); itr++) {
     std::string key = itr.key();
     if (key == "vertices") {
       if (itr.value().is_array()) {
-        for (const auto& point : itr.value()) {
-          if (point.is_array()) {
-            auto point_vertices = point.get<std::vector<double>>();
-            if (point_vertices.size() == 3) {
-              polyline.points.emplace_back(point_vertices[0], -point_vertices[1],
-                                  point_vertices[2]);
-            } else {
-              LOG_ERROR("Point should have 3 coordinates");
-              break;
+        for (const auto& line : itr.value()) {
+          if (line.is_array()) {
+            polyline polyline;
+            for (const auto& point : line) {
+              if (point.is_array()) {
+                auto point_vertices = point.get<std::vector<double>>();
+                if (point_vertices.size() == 3) {
+                  polyline.points.emplace_back(point_vertices[0], -point_vertices[1],
+                                      point_vertices[2]);
+                } else {
+                  LOG_ERROR("Point should have 3 coordinates");
+                  break;
+                }
+              } else {
+                LOG_ERROR(
+                    "Point in vertices entry in drawing message is not array");
+                break;
+              }
             }
+            polylines.push_back(polyline);
           } else {
-            LOG_ERROR(
-                "Point in vertices entry in drawing message is not array");
-            break;
+            LOG_ERROR("One client should send multiple lines");
           }
+          
         }
       } else {
         LOG_ERROR("Vertices entry in drawing message is not array");
@@ -133,11 +145,15 @@ polyline DrawingProxy::DecodeToPoints(const std::string& str) {
       }
     }
     if (key == "color") {
-      polyline.color = itr.value().get<std::string>();
+      color = itr.value().get<std::string>();
     }
     if (key == "width") {
-      polyline.width = itr.value().get<double>();
+      width = itr.value().get<double>();
     }
   }
-  return polyline;
+  for (auto& polyline : polylines) {
+    polyline.color = color;
+    polyline.width = width;
+  }
+  return polylines;
 }
