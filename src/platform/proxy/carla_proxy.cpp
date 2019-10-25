@@ -156,6 +156,27 @@ std::string CarlaProxy::GetMetaData() {
                                          .AddFillColor("#FF0000")
                                          .AddHeight(1.5))
                      .AddType("polygon"))
+      .AddStream(metadata::Stream("/traffic_lights/red")
+                    .AddCategory("primitive")
+                    .AddCoordinate("IDENTITY")
+                    .AddStreamStyle(metadata::StreamStyle()
+                                         .AddExtruded(true)
+                                         .AddFillColor("#ff0000")
+                                         .AddHeight(2.0)))
+      .AddStream(metadata::Stream("/traffic_lights/yellow")
+                    .AddCategory("primitive")
+                    .AddCoordinate("IDENTITY")
+                    .AddStreamStyle(metadata::StreamStyle()
+                                         .AddExtruded(true)
+                                         .AddFillColor("#ffff00")
+                                         .AddHeight(2.0)))
+      .AddStream(metadata::Stream("/traffic_lights/green")
+                    .AddCategory("primitive")
+                    .AddCoordinate("IDENTITY")
+                    .AddStreamStyle(metadata::StreamStyle()
+                                         .AddExtruded(true)
+                                         .AddFillColor("#00ff00")
+                                         .AddHeight(2.0)))
       .AddStream(
           metadata::Stream("/lidar/points")
               .AddCategory("primitive")
@@ -186,6 +207,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   XVIZBuilder xviz_builder;
   XVIZPrimitiveBuider xviz_primitive_builder("/object/vehicles");
   XVIZPrimitiveBuider xviz_primitive_walker_builder("/object/walkers");
+  XVIZPrimitiveBuider xviz_primitive_traffic_light_red_builder("/traffic_lights/red");
+  XVIZPrimitiveBuider xviz_primitive_traffic_light_yellow_builder("/traffic_lights/yellow");
+  XVIZPrimitiveBuider xviz_primitive_traffic_light_green_builder("/traffic_lights/green");
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
       tmp_actors;
@@ -336,9 +360,29 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       AddWalker(xviz_primitive_walker_builder,
                 boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
     }
+    if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
+      auto traffic_light = boost::static_pointer_cast<carla::client::TrafficLight>(actor_ptr);
+      auto state = traffic_light->GetState();
+      switch (state) {
+        case carla::rpc::TrafficLightState::Red:
+          AddTrafficLights(xviz_primitive_traffic_light_red_builder, traffic_light);
+          break;
+        case carla::rpc::TrafficLightState::Yellow:
+          AddTrafficLights(xviz_primitive_traffic_light_yellow_builder, traffic_light);
+          break;
+        case carla::rpc::TrafficLightState::Green:
+          AddTrafficLights(xviz_primitive_traffic_light_green_builder, traffic_light);
+          break;
+        default:
+          LOG_WARNING("unknown traffic light state");
+      }
+    }
   }
   xviz_builder.AddPrimitive(xviz_primitive_builder)
-      .AddPrimitive(xviz_primitive_walker_builder);
+      .AddPrimitive(xviz_primitive_walker_builder)
+      .AddPrimitive(xviz_primitive_traffic_light_red_builder)
+      .AddPrimitive(xviz_primitive_traffic_light_yellow_builder)
+      .AddPrimitive(xviz_primitive_traffic_light_green_builder);
 
   bool should_add = false;
   XVIZPrimitiveBuider image_builder("/camera/images");
@@ -417,6 +461,33 @@ void CarlaProxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
   xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices).AddId(
       walker_ptr->GetTypeId() + std::string(".") +
       std::to_string(walker_ptr->GetId())));
+}
+
+void CarlaProxy::AddTrafficLights(XVIZPrimitiveBuider& xviz_primitive_builder,
+                   boost::shared_ptr<carla::client::TrafficLight> traffic_light) {
+  auto trigger = traffic_light->GetTriggerVolume();
+  double x_off = trigger.extent.x;
+  double y_off = trigger.extent.y;
+  auto transform = traffic_light->GetTransform();
+  transform.TransformPoint(trigger.location);
+  auto location = trigger.location;
+  // transform.location += trigger.location;
+  std::vector<point_3d_t> vertices;
+  // std::vector<std::pair<double, double>> offset = {
+  //   {-extent, -extent}, {-extent, extent}, {extent, extent}, {extent, -extent}
+  // };
+  double yaw = transform.rotation.yaw / 180.0 * M_PI;
+  std::vector<std::pair<double, double>> offset = {
+      AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+      AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
+
+  // for (int j = 0; j < offset.size(); j++) {
+  //   vertices.emplace_back(location.x + offset[j].first, -(location.y + offset[j].second), location.z);
+  // }
+  for (int j = 0; j < offset.size(); j++) {
+    vertices.emplace_back(location.x + offset[j].first, -(location.y + offset[j].second), location.z);
+  }
+  xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices));
 }
 
 void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
