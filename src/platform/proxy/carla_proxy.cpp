@@ -4,7 +4,6 @@
  * File Created: Saturday, 6th July 2019 10:11:52 pm
  */
 
-
 #include "platform/proxy/carla_proxy.h"
 
 using namespace mellocolate;
@@ -27,14 +26,14 @@ CarlaProxy::CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr)
   world_ptr_ =
       boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 }
-CarlaProxy::CarlaProxy(const std::string& carla_host, uint16_t carla_port) :
-  carla_host_(carla_host), carla_port_(carla_port) {}
+CarlaProxy::CarlaProxy(const std::string& carla_host, uint16_t carla_port)
+    : carla_host_(carla_host), carla_port_(carla_port) {}
 
 void CarlaProxy::Run() {
   while (true) {
     auto world_snapshots = world_ptr_->WaitForTick(2s);
     auto xviz_builder = GetUpdateData(world_snapshots);
-    Update(xviz_builder.GetData());//GetUpdateData(world_snapshots));
+    Update(xviz_builder.GetData());  // GetUpdateData(world_snapshots));
   }
 }
 
@@ -76,7 +75,7 @@ void CarlaProxy::Init() {
     }
 
     world_ptr_ =
-      boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
+        boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 
     AddTrafficLightAreas();
   } catch (const std::exception& e) {
@@ -143,13 +142,14 @@ std::string CarlaProxy::GetMetaData() {
                                          .AddFillColor("#fb0")
                                          .AddHeight(2.0))
                      .AddType("polygon"))
-      .AddStream(metadata::Stream("/planning/trajectory")
-                     .AddCategory("primitive")
-                     .AddCoordinate("IDENTITY")
-                     .AddStreamStyle(metadata::StreamStyle()
-                                         .AddStrokeWidth(2.0)
-                                         .AddStrokeColor("#00FF00"))
-                     .AddType("polyline"))
+      .AddStream(
+          metadata::Stream("/planning/trajectory")
+              .AddCategory("primitive")
+              .AddCoordinate("IDENTITY")
+              .AddStreamStyle(
+                  metadata::StreamStyle().AddStrokeWidth(2.0).AddStrokeColor(
+                      "#00FF00"))
+              .AddType("polyline"))
       .AddStream(metadata::Stream("/object/walkers")
                      .AddCategory("primitive")
                      .AddCoordinate("IDENTITY")
@@ -159,23 +159,23 @@ std::string CarlaProxy::GetMetaData() {
                                          .AddHeight(1.5))
                      .AddType("polygon"))
       .AddStream(metadata::Stream("/traffic_lights/red")
-                    .AddCategory("primitive")
-                    .AddCoordinate("IDENTITY")
-                    .AddStreamStyle(metadata::StreamStyle()
+                     .AddCategory("primitive")
+                     .AddCoordinate("IDENTITY")
+                     .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
                                          .AddFillColor("#ff0000")
                                          .AddHeight(0.1)))
       .AddStream(metadata::Stream("/traffic_lights/yellow")
-                    .AddCategory("primitive")
-                    .AddCoordinate("IDENTITY")
-                    .AddStreamStyle(metadata::StreamStyle()
+                     .AddCategory("primitive")
+                     .AddCoordinate("IDENTITY")
+                     .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
                                          .AddFillColor("#ffff00")
                                          .AddHeight(0.1)))
       .AddStream(metadata::Stream("/traffic_lights/green")
-                    .AddCategory("primitive")
-                    .AddCoordinate("IDENTITY")
-                    .AddStreamStyle(metadata::StreamStyle()
+                     .AddCategory("primitive")
+                     .AddCoordinate("IDENTITY")
+                     .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
                                          .AddFillColor("#00ff00")
                                          .AddHeight(0.1)))
@@ -209,9 +209,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   XVIZBuilder xviz_builder;
   XVIZPrimitiveBuider xviz_primitive_builder("/object/vehicles");
   XVIZPrimitiveBuider xviz_primitive_walker_builder("/object/walkers");
-  XVIZPrimitiveBuider xviz_primitive_traffic_light_red_builder("/traffic_lights/red");
-  XVIZPrimitiveBuider xviz_primitive_traffic_light_yellow_builder("/traffic_lights/yellow");
-  XVIZPrimitiveBuider xviz_primitive_traffic_light_green_builder("/traffic_lights/green");
+  XVIZPrimitiveBuider xviz_primitive_traffic_light_red_builder(
+      "/traffic_lights/red");
+  XVIZPrimitiveBuider xviz_primitive_traffic_light_yellow_builder(
+      "/traffic_lights/yellow");
+  XVIZPrimitiveBuider xviz_primitive_traffic_light_green_builder(
+      "/traffic_lights/green");
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
       tmp_actors;
@@ -257,7 +260,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         auto dummy_id = dummy_sensor->GetId();
         dummy_sensors_.insert({dummy_id, dummy_sensor});
         double rotation_frequency = 10.0;
-        if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(), "sensor.lidar")) {
+        if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
+                                      "sensor.lidar")) {
           for (const auto& attribute : sensor_ptr->GetAttributes()) {
             if (attribute.GetId() == "rotation_frequency") {
               rotation_frequency = std::stod(attribute.GetValue());
@@ -265,7 +269,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           }
         }
         dummy_sensor->Listen(
-            [this, id, rotation_frequency](carla::SharedPtr<carla::sensor::SensorData> data) {
+            [this, id, rotation_frequency](
+                carla::SharedPtr<carla::sensor::SensorData> data) {
               if (data == nullptr) {
                 return;
               }
@@ -285,10 +290,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
                 auto point_cloud = this->GetPointCloud(*(lidar_data));
                 lidar_data_lock_.lock();
                 if (lidar_data_queues_.find(id) == lidar_data_queues_.end()) {
-                  lidar_data_queues_[id] =
-                      std::deque<utils::PointCloud>();
+                  lidar_data_queues_[id] = std::deque<utils::PointCloud>();
                 }
-                if (!lidar_data_queues_[id].empty() && point_cloud.GetTimestamp() - lidar_data_queues_[id].front().GetTimestamp() > 1.0 / rotation_frequency) {
+                if (!lidar_data_queues_[id].empty() &&
+                    point_cloud.GetTimestamp() -
+                            lidar_data_queues_[id].front().GetTimestamp() >
+                        1.0 / rotation_frequency) {
                   lidar_data_queues_[id].pop_front();
                 }
                 lidar_data_queues_[id].push_back(point_cloud);
@@ -363,17 +370,21 @@ XVIZBuilder CarlaProxy::GetUpdateData(
                 boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
     }
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
-      auto traffic_light = boost::static_pointer_cast<carla::client::TrafficLight>(actor_ptr);
+      auto traffic_light =
+          boost::static_pointer_cast<carla::client::TrafficLight>(actor_ptr);
       auto state = traffic_light->GetState();
       switch (state) {
         case carla::rpc::TrafficLightState::Red:
-          AddTrafficLights(xviz_primitive_traffic_light_red_builder, traffic_light);
+          AddTrafficLights(xviz_primitive_traffic_light_red_builder,
+                           traffic_light);
           break;
         case carla::rpc::TrafficLightState::Yellow:
-          AddTrafficLights(xviz_primitive_traffic_light_yellow_builder, traffic_light);
+          AddTrafficLights(xviz_primitive_traffic_light_yellow_builder,
+                           traffic_light);
           break;
         case carla::rpc::TrafficLightState::Green:
-          AddTrafficLights(xviz_primitive_traffic_light_green_builder, traffic_light);
+          AddTrafficLights(xviz_primitive_traffic_light_green_builder,
+                           traffic_light);
           break;
         default:
           LOG_WARNING("unknown traffic light state");
@@ -420,11 +431,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   lidar_data_lock_.unlock();
 
   xviz_builder.AddPrimitive(point_cloud_builder);
-  return xviz_builder;//.GetData();
+  return xviz_builder;  //.GetData();
 }
 
-void CarlaProxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
-                       boost::shared_ptr<carla::client::Vehicle> vehicle_ptr) {
+void CarlaProxy::AddVehicle(
+    XVIZPrimitiveBuider& xviz_primitive_builder,
+    boost::shared_ptr<carla::client::Vehicle> vehicle_ptr) {
   auto bounding_box = vehicle_ptr->GetBoundingBox();
   double x_off = bounding_box.extent.x;
   double y_off = bounding_box.extent.y;
@@ -444,8 +456,9 @@ void CarlaProxy::AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
       std::to_string(vehicle_ptr->GetId())));
 }
 
-void CarlaProxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
-                      boost::shared_ptr<carla::client::Walker> walker_ptr) {
+void CarlaProxy::AddWalker(
+    XVIZPrimitiveBuider& xviz_primitive_builder,
+    boost::shared_ptr<carla::client::Walker> walker_ptr) {
   auto bounding_box = walker_ptr->GetBoundingBox();
   double x_off = bounding_box.extent.x;
   double y_off = bounding_box.extent.y;
@@ -465,8 +478,9 @@ void CarlaProxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
       std::to_string(walker_ptr->GetId())));
 }
 
-void CarlaProxy::AddTrafficLights(XVIZPrimitiveBuider& xviz_primitive_builder,
-                   boost::shared_ptr<carla::client::TrafficLight> traffic_light) {
+void CarlaProxy::AddTrafficLights(
+    XVIZPrimitiveBuider& xviz_primitive_builder,
+    boost::shared_ptr<carla::client::TrafficLight> traffic_light) {
   auto id = traffic_light->GetId();
   if (traffic_lights_.find(id) == traffic_lights_.end()) {
     LOG_WARNING("all traffic lights should be inserted first");
@@ -490,7 +504,8 @@ void CarlaProxy::AddTrafficLights(XVIZPrimitiveBuider& xviz_primitive_builder,
   //     AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
 
   // for (int j = 0; j < offset.size(); j++) {
-  //   vertices.emplace_back(location.x + offset[j].first, -(location.y + offset[j].second), location.z);
+  //   vertices.emplace_back(location.x + offset[j].first, -(location.y +
+  //   offset[j].second), location.z);
   // }
   // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices));
 }
@@ -512,7 +527,8 @@ void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
 }
 
 std::string dbgPointString(const point_3d_t& p) {
-  std::string str = "[" + std::to_string(p.get<0>()) + ", " + std::to_string(p.get<1>()) + "]";
+  std::string str = "[" + std::to_string(p.get<0>()) + ", " +
+                    std::to_string(p.get<1>()) + "]";
   return str;
 }
 
@@ -548,7 +564,8 @@ void CarlaProxy::AddTrafficLightAreas() {
           AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
 
       for (int j = 0; j < offset.size(); j++) {
-        vertices.emplace_back(location.x + offset[j].first, (location.y + offset[j].second), location.z);
+        vertices.emplace_back(location.x + offset[j].first,
+                              (location.y + offset[j].second), location.z);
       }
 
       auto central_waypoint = map->GetWaypoint(location);
@@ -572,15 +589,21 @@ void CarlaProxy::AddTrafficLightAreas() {
         }
         auto tmp_waypoints = now_waypoint->GetNext(area_length);
         if (tmp_waypoints.empty()) {
-          LOG_WARNING("the waypoint of the trigger volume of a traffic light is too close to the intersection, the map does not show the volumn");
+          LOG_WARNING(
+              "the waypoint of the trigger volume of a traffic light is too "
+              "close to the intersection, the map does not show the volumn");
         } else {
           std::vector<point_3d_t> area;
           auto width = now_waypoint->GetLaneWidth();
           auto tmp_waypoint = tmp_waypoints[0];
-          auto right_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), width / 2.0);
-          auto left_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), -width / 2.0);
-          auto right_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), width / 2.0);
-          auto left_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), -width / 2.0);
+          auto right_top_p = XodrGeojsonConverter::LateralShift(
+              tmp_waypoint->GetTransform(), width / 2.0);
+          auto left_top_p = XodrGeojsonConverter::LateralShift(
+              tmp_waypoint->GetTransform(), -width / 2.0);
+          auto right_down_p = XodrGeojsonConverter::LateralShift(
+              now_waypoint->GetTransform(), width / 2.0);
+          auto left_down_p = XodrGeojsonConverter::LateralShift(
+              now_waypoint->GetTransform(), -width / 2.0);
           area.push_back(right_top_p);
           area.push_back(right_down_p);
           area.push_back(left_down_p);
@@ -615,15 +638,21 @@ void CarlaProxy::AddTrafficLightAreas() {
         }
         auto tmp_waypoints = now_waypoint->GetNext(area_length);
         if (tmp_waypoints.empty()) {
-          LOG_WARNING("the waypoint of the trigger volume of a traffic light is too close to the intersection, the map does not show the volumn");
+          LOG_WARNING(
+              "the waypoint of the trigger volume of a traffic light is too "
+              "close to the intersection, the map does not show the volumn");
         } else {
           std::vector<point_3d_t> area;
           auto width = now_waypoint->GetLaneWidth();
           auto tmp_waypoint = tmp_waypoints[0];
-          auto right_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), width / 2.0);
-          auto left_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), -width / 2.0);
-          auto right_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), width / 2.0);
-          auto left_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), -width / 2.0);
+          auto right_top_p = XodrGeojsonConverter::LateralShift(
+              tmp_waypoint->GetTransform(), width / 2.0);
+          auto left_top_p = XodrGeojsonConverter::LateralShift(
+              tmp_waypoint->GetTransform(), -width / 2.0);
+          auto right_down_p = XodrGeojsonConverter::LateralShift(
+              now_waypoint->GetTransform(), width / 2.0);
+          auto left_down_p = XodrGeojsonConverter::LateralShift(
+              now_waypoint->GetTransform(), -width / 2.0);
           area.push_back(right_top_p);
           area.push_back(right_down_p);
           area.push_back(left_down_p);
@@ -700,11 +729,12 @@ utils::PointCloud CarlaProxy::GetPointCloud(
                         location.z - offset.get<2>());
   }
   // uint32_t partition =
-      // (uint32_t)((int)lidar_measurement.GetHorizontalAngle()) / 120;
+  // (uint32_t)((int)lidar_measurement.GetHorizontalAngle()) / 120;
   return utils::PointCloud(lidar_measurement.GetTimestamp(), points);
 }
 
-utils::Image CarlaProxy::GetEncodedImage(const carla::sensor::data::Image& image) {
+utils::Image CarlaProxy::GetEncodedImage(
+    const carla::sensor::data::Image& image) {
   std::vector<unsigned char> pixel_data;
   for (const auto& p : image) {
     pixel_data.emplace_back(p.r);

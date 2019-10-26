@@ -30,7 +30,8 @@ bool Utils::IsStartWith(const std::string& origin, const std::string& pattern) {
   return (origin.substr(0, p_len) == pattern);
 }
 
-bool Utils::IsWithin(const point_3d_t& point, const std::vector<point_3d_t>& polygon) {
+bool Utils::IsWithin(const point_3d_t& point,
+                     const std::vector<point_3d_t>& polygon) {
   typedef boost::geometry::model::d2::point_xy<double> point_type;
   typedef boost::geometry::model::polygon<point_type> polygon_type;
   point_type poi(point.get<0>(), point.get<1>());
@@ -44,16 +45,12 @@ bool Utils::IsWithin(const point_3d_t& point, const std::vector<point_3d_t>& pol
   return boost::geometry::within(poi, p);
 }
 
-PointCloud::PointCloud(double timestamp, std::vector<point_3d_t> points) :
-  timestamp_(timestamp), points_(std::move(points)) {}
+PointCloud::PointCloud(double timestamp, std::vector<point_3d_t> points)
+    : timestamp_(timestamp), points_(std::move(points)) {}
 
-double PointCloud::GetTimestamp() const {
-  return timestamp_;
-}
+double PointCloud::GetTimestamp() const { return timestamp_; }
 
-std::vector<point_3d_t> PointCloud::GetPoints() const {
-  return points_;
-}
+std::vector<point_3d_t> PointCloud::GetPoints() const { return points_; }
 
 Image::Image(std::string encoded_str, size_t width, size_t height)
     : encoded_str_(std::move(encoded_str)), width_(width), height_(height) {}
