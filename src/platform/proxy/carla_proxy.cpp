@@ -77,6 +77,8 @@ void CarlaProxy::Init() {
 
     world_ptr_ =
       boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
+
+    AddTrafficLightAreas();
   } catch (const std::exception& e) {
     LOG_ERROR("%s", e.what());
     exit(1);
@@ -162,21 +164,21 @@ std::string CarlaProxy::GetMetaData() {
                     .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
                                          .AddFillColor("#ff0000")
-                                         .AddHeight(2.0)))
+                                         .AddHeight(0.1)))
       .AddStream(metadata::Stream("/traffic_lights/yellow")
                     .AddCategory("primitive")
                     .AddCoordinate("IDENTITY")
                     .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
                                          .AddFillColor("#ffff00")
-                                         .AddHeight(2.0)))
+                                         .AddHeight(0.1)))
       .AddStream(metadata::Stream("/traffic_lights/green")
                     .AddCategory("primitive")
                     .AddCoordinate("IDENTITY")
                     .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
                                          .AddFillColor("#00ff00")
-                                         .AddHeight(2.0)))
+                                         .AddHeight(0.1)))
       .AddStream(
           metadata::Stream("/lidar/points")
               .AddCategory("primitive")
@@ -465,29 +467,32 @@ void CarlaProxy::AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
 
 void CarlaProxy::AddTrafficLights(XVIZPrimitiveBuider& xviz_primitive_builder,
                    boost::shared_ptr<carla::client::TrafficLight> traffic_light) {
-  auto trigger = traffic_light->GetTriggerVolume();
-  double x_off = trigger.extent.x;
-  double y_off = trigger.extent.y;
-  auto transform = traffic_light->GetTransform();
-  transform.TransformPoint(trigger.location);
-  auto location = trigger.location;
-  // transform.location += trigger.location;
-  std::vector<point_3d_t> vertices;
+  auto id = traffic_light->GetId();
+  if (traffic_lights_.find(id) == traffic_lights_.end()) {
+    LOG_WARNING("all traffic lights should be inserted first");
+    return;
+  }
+
+  for (const auto& polygon : traffic_lights_[id]) {
+    xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(polygon));
+  }
+  // auto trigger = traffic_light->GetTriggerVolume();
+  // double x_off = trigger.extent.x;
+  // double y_off = trigger.extent.y;
+  // auto transform = traffic_light->GetTransform();
+  // transform.TransformPoint(trigger.location);
+  // auto location = trigger.location;
+  // std::vector<point_3d_t> vertices;
+
+  // double yaw = transform.rotation.yaw / 180.0 * M_PI;
   // std::vector<std::pair<double, double>> offset = {
-  //   {-extent, -extent}, {-extent, extent}, {extent, extent}, {extent, -extent}
-  // };
-  double yaw = transform.rotation.yaw / 180.0 * M_PI;
-  std::vector<std::pair<double, double>> offset = {
-      AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
-      AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
+  //     AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+  //     AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
 
   // for (int j = 0; j < offset.size(); j++) {
   //   vertices.emplace_back(location.x + offset[j].first, -(location.y + offset[j].second), location.z);
   // }
-  for (int j = 0; j < offset.size(); j++) {
-    vertices.emplace_back(location.x + offset[j].first, -(location.y + offset[j].second), location.z);
-  }
-  xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices));
+  // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices));
 }
 
 void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
@@ -504,6 +509,134 @@ void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
     max_deg = std::max(max_deg, deg);
   }
   LOG_INFO("MIN: %.2f, MAX: %.2f", min_deg, max_deg);
+}
+
+std::string dbgPointString(const point_3d_t& p) {
+  std::string str = "[" + std::to_string(p.get<0>()) + ", " + std::to_string(p.get<1>()) + "]";
+  return str;
+}
+
+std::string dbgPolygonString(const std::vector<point_3d_t>& pol) {
+  std::string str;
+  for (const auto& p : pol) {
+    str += dbgPointString(p) + ", ";
+  }
+  return str;
+}
+
+void CarlaProxy::AddTrafficLightAreas() {
+  auto actors = world_ptr_->GetActors();
+  auto map = world_ptr_->GetMap();
+  const double area_length = 2.0;
+  for (const auto& actor : *actors) {
+    if (Utils::IsStartWith(actor->GetTypeId(), "traffic.traffic_light")) {
+      auto id = actor->GetId();
+      if (traffic_lights_.find(id) == traffic_lights_.end()) {
+        traffic_lights_.insert({id, std::vector<std::vector<point_3d_t>>()});
+      }
+      auto tl = boost::static_pointer_cast<carla::client::TrafficLight>(actor);
+      auto trigger_volume = tl->GetTriggerVolume();
+      auto transform = tl->GetTransform();
+      transform.TransformPoint(trigger_volume.location);
+      double x_off = trigger_volume.extent.x;
+      double y_off = trigger_volume.extent.y;
+      std::vector<point_3d_t> vertices;
+      double yaw = transform.rotation.yaw / 180.0 * M_PI;
+      auto location = trigger_volume.location;
+      std::vector<std::pair<double, double>> offset = {
+          AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+          AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
+
+      for (int j = 0; j < offset.size(); j++) {
+        vertices.emplace_back(location.x + offset[j].first, (location.y + offset[j].second), location.z);
+      }
+
+      auto central_waypoint = map->GetWaypoint(location);
+      auto now_waypoint = central_waypoint;
+      std::unordered_set<uint32_t> visited_points;
+      while (now_waypoint != nullptr) {
+        auto now_id = now_waypoint->GetId();
+        auto lane_type = now_waypoint->GetType();
+        if (visited_points.find(now_id) != visited_points.end()) {
+          break;
+        }
+        visited_points.insert(now_id);
+        if (lane_type != carla::road::Lane::LaneType::Driving) {
+          now_waypoint = now_waypoint->GetLeft();
+          continue;
+        }
+        auto loc = now_waypoint->GetTransform().location;
+        point_3d_t p(loc.x, loc.y, loc.z);
+        if (!Utils::IsWithin(p, vertices)) {
+          break;
+        }
+        auto tmp_waypoints = now_waypoint->GetNext(area_length);
+        if (tmp_waypoints.empty()) {
+          LOG_WARNING("the waypoint of the trigger volume of a traffic light is too close to the intersection, the map does not show the volumn");
+        } else {
+          std::vector<point_3d_t> area;
+          auto width = now_waypoint->GetLaneWidth();
+          auto tmp_waypoint = tmp_waypoints[0];
+          auto right_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), width / 2.0);
+          auto left_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), -width / 2.0);
+          auto right_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), width / 2.0);
+          auto left_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), -width / 2.0);
+          area.push_back(right_top_p);
+          area.push_back(right_down_p);
+          area.push_back(left_down_p);
+          area.push_back(left_top_p);
+          for (auto& p : area) {
+            p.set<1>(-p.get<1>());
+          }
+          traffic_lights_[id].push_back(area);
+        }
+        now_waypoint = now_waypoint->GetLeft();
+      }
+
+      // now go through right points
+      now_waypoint = central_waypoint->GetRight();
+      visited_points.clear();
+      while (now_waypoint != nullptr) {
+        auto now_id = now_waypoint->GetId();
+        auto lane_type = now_waypoint->GetType();
+        if (visited_points.find(now_id) != visited_points.end()) {
+          std::cout << "alread searched" << std::endl;
+          break;
+        }
+        visited_points.insert(now_id);
+        if (lane_type != carla::road::Lane::LaneType::Driving) {
+          now_waypoint = now_waypoint->GetRight();
+          continue;
+        }
+        auto loc = now_waypoint->GetTransform().location;
+        point_3d_t p(loc.x, loc.y, loc.z);
+        if (!Utils::IsWithin(p, vertices)) {
+          break;
+        }
+        auto tmp_waypoints = now_waypoint->GetNext(area_length);
+        if (tmp_waypoints.empty()) {
+          LOG_WARNING("the waypoint of the trigger volume of a traffic light is too close to the intersection, the map does not show the volumn");
+        } else {
+          std::vector<point_3d_t> area;
+          auto width = now_waypoint->GetLaneWidth();
+          auto tmp_waypoint = tmp_waypoints[0];
+          auto right_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), width / 2.0);
+          auto left_top_p = XodrGeojsonConverter::LateralShift(tmp_waypoint->GetTransform(), -width / 2.0);
+          auto right_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), width / 2.0);
+          auto left_down_p = XodrGeojsonConverter::LateralShift(now_waypoint->GetTransform(), -width / 2.0);
+          area.push_back(right_top_p);
+          area.push_back(right_down_p);
+          area.push_back(left_down_p);
+          area.push_back(left_top_p);
+          for (auto& p : area) {
+            p.set<1>(-p.get<1>());
+          }
+          traffic_lights_[id].push_back(area);
+        }
+        now_waypoint = now_waypoint->GetRight();
+      }
+    }
+  }
 }
 
 carla::geom::Transform CarlaProxy::GetRelativeTransform(

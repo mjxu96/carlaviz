@@ -25,6 +25,7 @@
 
 #include <boost/geometry.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
 
 namespace mellocolate {
 namespace utils {
@@ -35,6 +36,7 @@ class Utils {
                                             double yaw);
   static bool IsStartWith(const std::string& origin,
                           const std::string& pattern);
+  static bool IsWithin(const point_3d_t& point, const std::vector<point_3d_t>& polygon);
 };
 
 class PointCloud {
@@ -66,6 +68,9 @@ class XodrGeojsonConverter {
   static std::string Convert(std::string xodr);
   static std::string GetGeoJsonFromCarlaMap(
       boost::shared_ptr<carla::client::Map> map_ptr);
+  static boost::geometry::model::point<double, 3,
+                                       boost::geometry::cs::cartesian>
+  LateralShift(carla::geom::Transform transform, double shift);
 
  private:
   static nlohmann::json InitGeoJson();
@@ -77,9 +82,6 @@ class XodrGeojsonConverter {
       const carla::SharedPtr<carla::client::Waypoint>& waypoint,
       nlohmann::json& json, const uint32_t& index);
 
-  static boost::geometry::model::point<double, 3,
-                                       boost::geometry::cs::cartesian>
-  LateralShift(carla::geom::Transform transform, double shift);
 
   constexpr static const double precision_{0.5};
 };
