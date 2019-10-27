@@ -15,11 +15,13 @@ class UIConfig {
 public:
   UIConfig() = default;
   void AddCamera(std::string camera_stream_name);
+  void AddMetric(std::string metric_stream_name);
   nlohmann::json GetMetaData() const;
 
 
 private:
   std::vector<std::string> camera_stream_names_;
+  std::vector<std::string> metric_stream_names_;
 
 };
 

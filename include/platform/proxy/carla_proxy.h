@@ -95,6 +95,9 @@ class CarlaProxy {
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   boost::shared_ptr<carla::client::Actor> ego_actor_{nullptr};
 
+  // Ego vehicle related
+  boost::optional<double> ego_prev_velo_{boost::none};
+
   // Carla sensor related
   std::mutex image_data_lock_;
   bool is_image_received_{false};

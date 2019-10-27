@@ -158,6 +158,14 @@ std::string CarlaProxy::GetMetaData() {
                                          .AddFillColor("#FF0000")
                                          .AddHeight(1.5))
                      .AddType("polygon"))
+      .AddStream(metadata::Stream("/vehicle/acceleration")
+                     .AddCategory("time_series")
+                     .AddUnits("m/s^2")
+                     .AddScalarType("float"))
+      .AddStream(metadata::Stream("/vehicle/velocity")
+                     .AddCategory("time_series")
+                     .AddUnits("m/s")
+                     .AddScalarType("float"))
       .AddStream(metadata::Stream("/traffic_lights/red")
                      .AddCategory("primitive")
                      .AddCoordinate("IDENTITY")
@@ -339,6 +347,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   point_3d_t ego_position(0, 0, 0);
   point_3d_t ego_orientation(0, 0, 0);
+  double display_velocity = 0;
+  double display_acceleration = 0;
 
   if (ego_actor_ != nullptr) {
     auto location = ego_actor_->GetLocation();
@@ -349,6 +359,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     ego_orientation.set<0>(orientation.roll / 180.0 * M_PI);
     ego_orientation.set<1>(orientation.pitch / 180.0 * M_PI);
     ego_orientation.set<2>(-(orientation.yaw) / 180.0 * M_PI);
+
+    display_velocity = Utils::ComputeSpeed(ego_actor_->GetVelocity());
+    if (ego_prev_velo_ != boost::none) {
+      auto settings = world_ptr_->GetSettings();
+      double delta = (settings.fixed_delta_seconds == boost::none ? 1.0/30.0 : settings.fixed_delta_seconds.value());
+      display_acceleration = (display_velocity - ego_prev_velo_.value()) / delta;
+    }
+    ego_prev_velo_ = display_velocity;
+  } else {
+    ego_prev_velo_ = boost::none;
   }
 
   xviz_builder.AddTimestamp(now_time).AddPose(
@@ -356,7 +376,13 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           .AddMapOrigin(point_3d_t(0, 0, 0))
           .AddOrientation(ego_orientation)
           .AddPosition(ego_position)
-          .AddTimestamp(now_time));
+          .AddTimestamp(now_time))
+      .AddTimeSeries(XVIZTimeSeriesBuider("/vehicle/acceleration")
+          .AddTimestamp(now_time)
+          .AddValue(display_acceleration))
+      .AddTimeSeries(XVIZTimeSeriesBuider("/vehicle/velocity")
+          .AddTimestamp(now_time)
+          .AddValue(display_velocity));
 
   for (const auto& actor_pair : actors_) {
     auto actor_ptr = actor_pair.second;

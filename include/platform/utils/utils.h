@@ -38,6 +38,7 @@ class Utils {
                           const std::string& pattern);
   static bool IsWithin(const point_3d_t& point,
                        const std::vector<point_3d_t>& polygon);
+  static double ComputeSpeed(const carla::geom::Vector3D& velo);
 };
 
 class PointCloud {

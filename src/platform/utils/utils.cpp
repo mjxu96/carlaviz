@@ -45,6 +45,11 @@ bool Utils::IsWithin(const point_3d_t& point,
   return boost::geometry::within(poi, p);
 }
 
+double Utils::ComputeSpeed(const carla::geom::Vector3D& velo) {
+  double res = velo.x * velo.x + velo.y * velo.y + velo.z * velo.z;
+  return std::sqrt(res);
+}
+
 PointCloud::PointCloud(double timestamp, std::vector<point_3d_t> points)
     : timestamp_(timestamp), points_(std::move(points)) {}
 

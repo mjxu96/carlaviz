@@ -21,9 +21,20 @@ Json UIConfig::GetMetaData() const {
       json["Camera"]["children"][0]["cameras"][id] = camera_stream_name;
     }
   }
+  if (!metric_stream_names_.empty()) {
+    json["Metrics"]["type"] = "panel";
+    json["Metrics"]["name"] = "Metrics";
+    json["Metrics"]["children"][0]["layout"] = "vertical";
+    json["Metrics"]["children"][0]["name"] = "Metrics Panel";
+    // not finish
+  }
   return json;
 }
 
 void UIConfig::AddCamera(std::string camera_stream_name) {
   camera_stream_names_.emplace_back(std::move(camera_stream_name));
+}
+
+void UIConfig::AddMetric(std::string metric_stream_name) {
+  metric_stream_names_.emplace_back(std::move(metric_stream_name));
 }
