@@ -22,6 +22,7 @@
 #include "carla/client/Client.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/TimeoutException.h"
+#include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
 #include "carla/client/World.h"
@@ -41,13 +42,13 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <deque>
 #include <fstream>
 #include <functional>
 #include <ios>
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <deque>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -74,11 +75,17 @@ class CarlaProxy {
 
   // Carla related
   // std::string GetUpdateData(
-      // const carla::client::WorldSnapshot& world_snapshots);
+  // const carla::client::WorldSnapshot& world_snapshots);
   void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
                   boost::shared_ptr<carla::client::Vehicle> vehicle);
   void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
                  boost::shared_ptr<carla::client::Walker> walker);
+  void AddTrafficLights(
+      XVIZPrimitiveBuider& xviz_primitive_builder,
+      boost::shared_ptr<carla::client::TrafficLight> traffic_light);
+  void AddTrafficLightAreas();
+
+  std::unordered_map<uint32_t, std::vector<std::vector<point_3d_t>>> traffic_lights_{};
 
   std::string carla_host_{"localhost"};
   uint16_t carla_port_{2000u};
@@ -88,13 +95,15 @@ class CarlaProxy {
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   boost::shared_ptr<carla::client::Actor> ego_actor_{nullptr};
 
+  // Ego vehicle related
+  boost::optional<double> ego_prev_velo_{boost::none};
+
   // Carla sensor related
   std::mutex image_data_lock_;
   bool is_image_received_{false};
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
   std::mutex lidar_data_lock_;
-  std::unordered_map<uint32_t,
-                     std::deque<utils::PointCloud>>
+  std::unordered_map<uint32_t, std::deque<utils::PointCloud>>
       lidar_data_queues_{};
   std::unordered_map<uint32_t, uint32_t> real_dummy_sensors_relation_{};
   std::unordered_set<uint32_t> real_sensors_{};

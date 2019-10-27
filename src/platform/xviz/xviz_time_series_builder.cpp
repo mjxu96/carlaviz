@@ -44,13 +44,13 @@ Json XVIZTimeSeriesBuider::GetData() const {
     json["timestamp"] = timestamp_.value();
   }
   if (value_bool_ != boost::none) {
-    json["values"]["bools"] = (value_bool_.value() ? "true" : "false");
+    json["values"]["bools"][0] = (value_bool_.value() ? "true" : "false");
   }
   if (value_number_ != boost::none) {
-    json["values"]["doubles"] = value_number_.value();
+    json["values"]["doubles"][0] = value_number_.value();
   }
   if (value_string_ != boost::none) {
-    json["values"]["strings"] = value_string_.value();
+    json["values"]["strings"][0] = value_string_.value();
   }
 
   return json;

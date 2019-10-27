@@ -90,6 +90,8 @@ public:
   Stream& AddCoordinate(std::string coordinate);
   Stream& AddType(std::string type);
   Stream& AddStreamStyle(StreamStyle stream_style);
+  Stream& AddUnits(std::string units);
+  Stream& AddScalarType(std::string scalar_type);
 
   std::string GetName() const;
   nlohmann::json GetMetaData() const;
@@ -99,6 +101,8 @@ public:
   boost::optional<std::string> coordinate_ = boost::none;
   boost::optional<std::string> type_ = boost::none;
   boost::optional<StreamStyle> stream_style_ = boost::none;
+  boost::optional<std::string> units_ = boost::none;
+  boost::optional<std::string> scalar_type_ = boost::none;
   //metadata::stream::Category categroy_ = metadata::stream::Category::NONE;
 };
   

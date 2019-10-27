@@ -30,16 +30,32 @@ bool Utils::IsStartWith(const std::string& origin, const std::string& pattern) {
   return (origin.substr(0, p_len) == pattern);
 }
 
-PointCloud::PointCloud(double timestamp, std::vector<point_3d_t> points) :
-  timestamp_(timestamp), points_(std::move(points)) {}
-
-double PointCloud::GetTimestamp() const {
-  return timestamp_;
+bool Utils::IsWithin(const point_3d_t& point,
+                     const std::vector<point_3d_t>& polygon) {
+  typedef boost::geometry::model::d2::point_xy<double> point_type;
+  typedef boost::geometry::model::polygon<point_type> polygon_type;
+  point_type poi(point.get<0>(), point.get<1>());
+  std::vector<point_type> points;
+  for (const auto& point : polygon) {
+    points.emplace_back(point.get<0>(), point.get<1>());
+  }
+  points.emplace_back(polygon[0].get<0>(), polygon[0].get<1>());
+  polygon_type p;
+  boost::geometry::assign_points(p, points);
+  return boost::geometry::within(poi, p);
 }
 
-std::vector<point_3d_t> PointCloud::GetPoints() const {
-  return points_;
+double Utils::ComputeSpeed(const carla::geom::Vector3D& velo) {
+  double res = velo.x * velo.x + velo.y * velo.y + velo.z * velo.z;
+  return std::sqrt(res);
 }
+
+PointCloud::PointCloud(double timestamp, std::vector<point_3d_t> points)
+    : timestamp_(timestamp), points_(std::move(points)) {}
+
+double PointCloud::GetTimestamp() const { return timestamp_; }
+
+std::vector<point_3d_t> PointCloud::GetPoints() const { return points_; }
 
 Image::Image(std::string encoded_str, size_t width, size_t height)
     : encoded_str_(std::move(encoded_str)), width_(width), height_(height) {}

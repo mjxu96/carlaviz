@@ -103,6 +103,16 @@ Stream& Stream::AddStreamStyle(StreamStyle stream_style) {
   return *this;
 }
 
+Stream& Stream::AddUnits(std::string units) {
+  units_ = std::move(units);
+  return *this;
+}
+
+Stream& Stream::AddScalarType(std::string scalar_type) {
+  scalar_type_ = std::move(scalar_type);
+  return *this;
+}
+
 std::string Stream::GetName() const {
   return stream_name_;
 }
@@ -129,6 +139,12 @@ Json Stream::GetMetaData() const {
   }
   if (stream_style_ != boost::none) {
     json["stream_style"] = stream_style_.value().GetMetaData();
+  }
+  if (units_ != boost::none) {
+    json["units"] = units_.value();
+  }
+  if (scalar_type_ != boost::none) {
+    json["scalar_type"] = scalar_type_.value();
   }
   return json;
 }
