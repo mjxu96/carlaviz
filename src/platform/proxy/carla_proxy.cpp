@@ -139,7 +139,7 @@ std::string CarlaProxy::GetMetaData() {
                      .AddCoordinate("IDENTITY")
                      .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
-                                         .AddFillColor("#fb0")
+                                         .AddFillColor("#40E0D0")
                                          .AddHeight(2.0))
                      .AddType("polygon"))
       .AddStream(
@@ -148,14 +148,14 @@ std::string CarlaProxy::GetMetaData() {
               .AddCoordinate("IDENTITY")
               .AddStreamStyle(
                   metadata::StreamStyle().AddStrokeWidth(2.0).AddStrokeColor(
-                      "#00FF00"))
+                      "#FFD700"))
               .AddType("polyline"))
       .AddStream(metadata::Stream("/object/walkers")
                      .AddCategory("primitive")
                      .AddCoordinate("IDENTITY")
                      .AddStreamStyle(metadata::StreamStyle()
                                          .AddExtruded(true)
-                                         .AddFillColor("#FF0000")
+                                         .AddFillColor("#FF69B4")
                                          .AddHeight(1.5))
                      .AddType("polygon"))
       .AddStream(metadata::Stream("/vehicle/acceleration")
