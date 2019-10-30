@@ -1,5 +1,7 @@
 # Carla Display on Browser - Backend
 
+Demo use case from [Wenhao Ding](https://github.com/GilgameshD)
+![](https://github.com/mellocolate/carla-display/blob/master/images/example_2.gif)
 ![](https://github.com/mellocolate/carla-display/blob/master/images/example.gif)
 
 # Maintainer
