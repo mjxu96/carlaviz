@@ -11,8 +11,8 @@
 #include "platform/utils/def.h"
 #include "platform/utils/lodepng.h"
 #include "platform/utils/utils.h"
-#include "platform/xviz/xviz_builder.h"
-#include "platform/xviz/xviz_metadata_builder.h"
+#include "platform/xviz/builder/xviz_builder.h"
+#include "platform/xviz/builder/metadata.h"
 
 #include "carla/client/Actor.h"
 #include "carla/client/ActorBlueprint.h"
@@ -64,9 +64,9 @@ class CarlaProxy {
   CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr);
   void Init();
   std::string GetMetaData();
-  XVIZBuilder GetUpdateData(
+  xviz::XVIZBuilder GetUpdateData(
       const carla::client::WorldSnapshot& world_snapshots);
-  XVIZBuilder GetUpdateData();
+  xviz::XVIZBuilder GetUpdateData();
   void Run();
   void AddClient(boost::asio::ip::tcp::socket socket);
 
@@ -76,12 +76,12 @@ class CarlaProxy {
   // Carla related
   // std::string GetUpdateData(
   // const carla::client::WorldSnapshot& world_snapshots);
-  void AddVehicle(XVIZPrimitiveBuider& xviz_primitive_builder,
+  void AddVehicle(xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
                   boost::shared_ptr<carla::client::Vehicle> vehicle);
-  void AddWalker(XVIZPrimitiveBuider& xviz_primitive_builder,
+  void AddWalker(xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
                  boost::shared_ptr<carla::client::Walker> walker);
   void AddTrafficLights(
-      XVIZPrimitiveBuider& xviz_primitive_builder,
+      xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
       boost::shared_ptr<carla::client::TrafficLight> traffic_light);
   void AddTrafficLightAreas();
 
@@ -94,6 +94,8 @@ class CarlaProxy {
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   boost::shared_ptr<carla::client::Actor> ego_actor_{nullptr};
+
+  std::shared_ptr<xviz::Metadata> metadata_ptr_{nullptr};
 
   // Ego vehicle related
   boost::optional<double> ego_prev_velo_{boost::none};

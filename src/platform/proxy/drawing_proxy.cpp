@@ -7,6 +7,7 @@
 #include "platform/proxy/drawing_proxy.h"
 
 using namespace mellocolate;
+using namespace xviz;
 using tcp = boost::asio::ip::tcp;
 namespace websocket = boost::beast::websocket;
 
@@ -19,19 +20,22 @@ void DrawingProxy::StartListen() {
   t.detach();
 }
 
-XVIZPrimitiveBuider DrawingProxy::GetPolyLines() {
-  XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
-  polyline_update_lock_.lock();
-  for (const auto& polylines_pair : polylines_) {
-    for (const auto& polyline : polylines_[polylines_pair.first]) {
-      polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.points)
-                                        .AddColor(polyline.color)
-                                        .AddWidth(polyline.width));
-    }
-  }
-  polyline_update_lock_.unlock();
-  return polyline_builder;
-}
+// XVIZBuilder DrawingProxy::GetPolyLines() {
+//   XVIZBuilder polyline_builder(nullptr);
+//   XVIZPrimitiveBuilder& polyline_primitive_builder = polyline_builder.Primitive("/planning/trajectory");
+//   // XVIZBuilder polyline_builder("/planning/trajectory");
+//   polyline_update_lock_.lock();
+//   for (const auto& polylines_pair : polylines_) {
+//     for (const auto& polyline : polylines_[polylines_pair.first]) {
+//       polyline_primitive_builder.Polyline()
+//       polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.points)
+//                                         .AddColor(polyline.color)
+//                                         .AddWidth(polyline.width));
+//     }
+//   }
+//   polyline_update_lock_.unlock();
+//   return polyline_builder;
+// }
 
 void DrawingProxy::Accept() {
   LOG_INFO("Waiting for a drawing client to connect. Listening to port %u....",

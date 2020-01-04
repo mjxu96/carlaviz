@@ -11,7 +11,7 @@
 #include "platform/utils/json.hpp"
 #include "platform/utils/macrologger.h"
 
-#include "platform/xviz/xviz_primitive_builder.h"
+#include "platform/xviz/builder/xviz_builder.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -36,7 +36,7 @@ struct polyline {
 class DrawingProxy {
  public:
   DrawingProxy(uint16_t listen_port);
-  XVIZPrimitiveBuider GetPolyLines();
+  // xviz::XVIZBuilder GetPolyLines();
   void StartListen();
 
  private:
