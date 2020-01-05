@@ -8,7 +8,7 @@
 
 using namespace xviz;
 
-XVIZBaseBuilder::XVIZBaseBuilder(Category category, std::shared_ptr<xviz::Metadata> metadata) {
+XVIZBaseBuilder::XVIZBaseBuilder(Category category, const std::shared_ptr<xviz::Metadata>& metadata) {
   category_ = category;
   metadata_ = metadata;
 }

@@ -8,8 +8,7 @@ else()
 endif()
 
 
-# include_directories(${XVIZ_ROOT_FOLDER}/include)
-include_directories(${XVIZ_ROOT_FOLDER}/include/platform/xviz)
+include_directories(${XVIZ_ROOT_FOLDER}/include)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 add_library(xviz-pb
@@ -36,6 +35,7 @@ add_library(xviz-builder
   builder/base_builder.cpp
   builder/pose.cpp
   builder/primitive.cpp
+  builder/time_series.cpp
   builder/xviz_builder.cpp
 )
 

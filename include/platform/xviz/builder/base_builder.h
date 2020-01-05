@@ -20,7 +20,7 @@ namespace xviz {
 
 class XVIZBaseBuilder {
 public:
-  XVIZBaseBuilder(Category category, std::shared_ptr<xviz::Metadata> metadata);
+  XVIZBaseBuilder(Category category, const std::shared_ptr<xviz::Metadata>& metadata);
   // std::shared_ptr<XVIZBaseBuilder> Stream(std::string stream_id);
 
 protected:

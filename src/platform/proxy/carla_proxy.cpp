@@ -22,6 +22,27 @@ std::pair<double, double> AfterRotate(double x, double y, double yaw) {
           std::sin(yaw) * x + std::cos(yaw) * y};
 }
 
+template<typename T>
+void AddVerticesToVector(std::vector<std::vector<double>>& v, const boost::shared_ptr<T>& ptr) {
+  auto bounding_box = ptr->GetBoundingBox();
+  double x_off = bounding_box.extent.x;
+  double y_off = bounding_box.extent.y;
+  double yaw = ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
+  std::vector<std::pair<double, double>> offset = {
+      AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+      AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
+  double x = ptr->GetLocation().x;
+  double y = ptr->GetLocation().y;
+  double z = ptr->GetLocation().z;
+  std::vector<double> vv;
+  for (int j = 0; j < offset.size(); j++) {
+    vv.push_back(x + offset[j].first);
+    vv.push_back(-(y + offset[j].second));
+    vv.push_back(z);
+  }
+  v.push_back(std::move(vv));
+}
+
 void AddMap(nlohmann::json& json, std::string& map) {
   json["map"] = std::move(map);
 }
@@ -147,19 +168,29 @@ std::string CarlaProxy::GetMetaData() {
               "\"extruded\": true,"
               "\"fill_color\": \"#40E0D0\","
               "\"height\": 2.0"
-            "}");
+            "}")
+        .Stream("/object/walkers")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .StreamStyle(
+            "{"
+              "\"extruded\": true,"
+              "\"fill_color\": \"#FF69B4\","
+              "\"height\": 1.5"
+            "}")
+        .Stream("/vehicle/acceleration")
+          .Category(Category::StreamMetadata_Category_TIME_SERIES)
+          .Unit("m/s^2")
+          .Type(ScalarType::StreamMetadata_ScalarType_FLOAT)
+        .Stream("/vehicle/velocity")
+          .Category(Category::StreamMetadata_Category_TIME_SERIES)
+          .Unit("m/s")
+          .Type(ScalarType::StreamMetadata_ScalarType_FLOAT);
+        
           
   // XVIZMetaDataBuilder xviz_metadata_builder;
   // xviz_metadata_builder.SetMap(map_geojson)
-  //     .AddStream(metadata::Stream("/vehicle_pose").AddCategory("pose"))
-  //     .AddStream(metadata::Stream("/object/vehicles")
-  //                    .AddCategory("primitive")
-  //                    .AddCoordinate("IDENTITY")
-  //                    .AddStreamStyle(metadata::StreamStyle()
-  //                                        .AddExtruded(true)
-  //                                        .AddFillColor("#40E0D0")
-  //                                        .AddHeight(2.0))
-  //                    .AddType("polygon"))
   //     .AddStream(
   //         metadata::Stream("/planning/trajectory")
   //             .AddCategory("primitive")
@@ -168,22 +199,6 @@ std::string CarlaProxy::GetMetaData() {
   //                 metadata::StreamStyle().AddStrokeWidth(2.0).AddStrokeColor(
   //                     "#FFD700"))
   //             .AddType("polyline"))
-  //     .AddStream(metadata::Stream("/object/walkers")
-  //                    .AddCategory("primitive")
-  //                    .AddCoordinate("IDENTITY")
-  //                    .AddStreamStyle(metadata::StreamStyle()
-  //                                        .AddExtruded(true)
-  //                                        .AddFillColor("#FF69B4")
-  //                                        .AddHeight(1.5))
-  //                    .AddType("polygon"))
-  //     .AddStream(metadata::Stream("/vehicle/acceleration")
-  //                    .AddCategory("time_series")
-  //                    .AddUnits("m/s^2")
-  //                    .AddScalarType("float"))
-  //     .AddStream(metadata::Stream("/vehicle/velocity")
-  //                    .AddCategory("time_series")
-  //                    .AddUnits("m/s")
-  //                    .AddScalarType("float"))
   //     .AddStream(metadata::Stream("/traffic_lights/red")
   //                    .AddCategory("primitive")
   //                    .AddCoordinate("IDENTITY")
@@ -416,18 +431,35 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   //         .AddTimestamp(now_time)
   //         .AddValue(display_velocity));
 
-  XVIZPrimitiveBuilder& xviz_vehicle_builder = xviz_builder.Primitive("/object/vehicles");
+  xviz_builder.TimeSeries("/vehicle/acceleration")
+    .Timestamp(now_time)
+    .Value(display_acceleration)
+    .Id("acceleration");
+
+  xviz_builder.TimeSeries("/vehicle/velocity")
+    .Timestamp(now_time)
+    .Value(display_velocity)
+    .Id("velocity");
+
+  // XVIZPrimitiveBuilder& xviz_vehicle_builder = ;
+  // XVIZPrimitiveBuilder& xviz_walker_builder = ;
+  std::vector<std::vector<double>> vehicle_vector;
+  std::vector<std::vector<double>> walker_vector;
   for (const auto& actor_pair : actors_) {
     auto actor_ptr = actor_pair.second;
 
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "vehicle")) {
-      AddVehicle(xviz_vehicle_builder,
-                 boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr));
+      AddVerticesToVector<carla::client::Vehicle>(vehicle_vector, boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr));
+      // AddVehicle(xviz_builder.Primitive("/object/vehicles"),
+      //            boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr));
+      continue;
     }
-    // if (Utils::IsStartWith(actor_ptr->GetTypeId(), "walker")) {
-    //   AddWalker(xviz_primitive_walker_builder,
-    //             boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
-    // }
+    if (Utils::IsStartWith(actor_ptr->GetTypeId(), "walker")) {
+      AddVerticesToVector<carla::client::Walker>(walker_vector, boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
+      // AddWalker(xviz_builder.Primitive("/object/walkers"),
+      //           boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
+      continue;
+    }
     // if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
     //   auto traffic_light =
     //       boost::static_pointer_cast<carla::client::TrafficLight>(actor_ptr);
@@ -449,6 +481,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     //       LOG_WARNING("unknown traffic light state");
     //   }
     // }
+  }
+
+  for (auto& v : vehicle_vector) {
+    xviz_builder.Primitive("/object/vehicles")
+      .Polygon(std::move(v));
+  }
+
+  for (auto& v : walker_vector) {
+    xviz_builder.Primitive("/object/walkers")
+      .Polygon(std::move(v));
   }
   // LOG_INFO("HERE2");
   // xviz_builder.AddPrimitive(xviz_primitive_builder)
@@ -535,10 +577,14 @@ void CarlaProxy::AddWalker(
   double x = walker_ptr->GetLocation().x;
   double y = walker_ptr->GetLocation().y;
   double z = walker_ptr->GetLocation().z;
-  std::vector<point_3d_t> vertices;
+  std::vector<double> vertices;
   for (int j = 0; j < offset.size(); j++) {
-    vertices.emplace_back(x + offset[j].first, -(y + offset[j].second), z);
+    vertices.push_back(x + offset[j].first);
+    vertices.push_back(-(y + offset[j].second));
+    vertices.push_back(z);
   }
+  xviz_primitive_builder
+    .Polygon(std::move(vertices));
   // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices).AddId(
   //     walker_ptr->GetTypeId() + std::string(".") +
   //     std::to_string(walker_ptr->GetId())));

@@ -18,11 +18,12 @@ void ConvertFromStdMapToProtoBufMap(google::protobuf::Map<K, V>* map, std::unord
   }
 }
 
-XVIZBuilder::XVIZBuilder(const std::shared_ptr<Metadata>& metadata) :
+XVIZBuilder::XVIZBuilder(std::shared_ptr<Metadata> metadata) :
   metadata_(metadata) {
 
   pose_builder_ = std::make_shared<XVIZPoseBuilder>(metadata_);
   primitive_builder_ = std::make_shared<XVIZPrimitiveBuilder>(metadata_);
+  time_series_builder_ = std::make_shared<XVIZTimeSeriesBuilder>(metadata_);
 }
 
 XVIZPoseBuilder& XVIZBuilder::Pose(const std::string& stream_id) {
@@ -30,6 +31,10 @@ XVIZPoseBuilder& XVIZBuilder::Pose(const std::string& stream_id) {
 }
 XVIZPrimitiveBuilder& XVIZBuilder::Primitive(const std::string& stream_id) {
   return primitive_builder_->Stream(stream_id);
+}
+
+XVIZTimeSeriesBuilder& XVIZBuilder::TimeSeries(const std::string& stream_id) {
+  return time_series_builder_->Stream(stream_id);
 }
 
 XVIZFrame XVIZBuilder::GetData() {
@@ -48,6 +53,13 @@ XVIZFrame XVIZBuilder::GetData() {
   auto primitives_map = data->mutable_primitives();
   if (primitives != nullptr) {
     ConvertFromStdMapToProtoBufMap<std::string, xviz::PrimitiveState>(primitives_map, *primitives);
+  }
+
+  auto time_series = time_series_builder_->GetData();
+  for (auto& time_series_state : *time_series) {
+    auto state_ptr = data->add_time_series();
+    // TODO is this correct?
+    *state_ptr = std::move(time_series_state);
   }
 
   return XVIZFrame(data);

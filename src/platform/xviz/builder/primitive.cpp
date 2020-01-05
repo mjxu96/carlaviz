@@ -236,6 +236,10 @@ void XVIZPrimitiveBuilder::FlushPrimitives() {
   // auto has_base = base_pair.first;
   // auto base = base_pair.second;
 
+  if (type_ == nullptr) {
+    Reset();
+    return;
+  }
   switch (*type_) {
     case Primitive::StreamMetadata_PrimitiveType_POLYGON:
       {
