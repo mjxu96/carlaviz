@@ -17,6 +17,15 @@ using namespace std::string_literals;
 using tcp = boost::asio::ip::tcp;
 namespace websocket = boost::beast::websocket;
 
+void FlatVector(std::vector<double>& v, const std::vector<double>& to_add, int neg_factor = 1) {
+  v.push_back(to_add[0]);
+  v.push_back(neg_factor * to_add[1]);
+  v.push_back(to_add[2]);
+  // for (auto value : to_add) {
+  //   v.push_back(value);
+  // }
+}
+
 std::pair<double, double> AfterRotate(double x, double y, double yaw) {
   return {std::cos(yaw) * x - std::sin(yaw) * y,
           std::sin(yaw) * x + std::cos(yaw) * y};
@@ -104,6 +113,7 @@ void CarlaProxy::Init() {
         boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 
     AddTrafficLightAreas();
+
   } catch (const std::exception& e) {
     LOG_ERROR("%s", e.what());
     exit(1);
@@ -186,7 +196,37 @@ std::string CarlaProxy::GetMetaData() {
         .Stream("/vehicle/velocity")
           .Category(Category::StreamMetadata_Category_TIME_SERIES)
           .Unit("m/s")
-          .Type(ScalarType::StreamMetadata_ScalarType_FLOAT);
+          .Type(ScalarType::StreamMetadata_ScalarType_FLOAT)
+        .Stream("/traffic_lights/red")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
+          .StreamStyle(
+            "{"
+              "\"extruded\": true,"
+              "\"fill_color\": \"#FF0000\","
+              "\"height\": 0.1"
+            "}")
+        .Stream("/traffic_lights/yellow")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
+          .StreamStyle(
+            "{"
+              "\"extruded\": true,"
+              "\"fill_color\": \"#FFFF00\","
+              "\"height\": 0.1"
+            "}")
+        .Stream("/traffic_lights/green")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
+          .StreamStyle(
+            "{"
+              "\"extruded\": true,"
+              "\"fill_color\": \"#00FF00\","
+              "\"height\": 0.1"
+            "}");
         
           
   // XVIZMetaDataBuilder xviz_metadata_builder;
@@ -199,27 +239,6 @@ std::string CarlaProxy::GetMetaData() {
   //                 metadata::StreamStyle().AddStrokeWidth(2.0).AddStrokeColor(
   //                     "#FFD700"))
   //             .AddType("polyline"))
-  //     .AddStream(metadata::Stream("/traffic_lights/red")
-  //                    .AddCategory("primitive")
-  //                    .AddCoordinate("IDENTITY")
-  //                    .AddStreamStyle(metadata::StreamStyle()
-  //                                        .AddExtruded(true)
-  //                                        .AddFillColor("#ff0000")
-  //                                        .AddHeight(0.1)))
-  //     .AddStream(metadata::Stream("/traffic_lights/yellow")
-  //                    .AddCategory("primitive")
-  //                    .AddCoordinate("IDENTITY")
-  //                    .AddStreamStyle(metadata::StreamStyle()
-  //                                        .AddExtruded(true)
-  //                                        .AddFillColor("#ffff00")
-  //                                        .AddHeight(0.1)))
-  //     .AddStream(metadata::Stream("/traffic_lights/green")
-  //                    .AddCategory("primitive")
-  //                    .AddCoordinate("IDENTITY")
-  //                    .AddStreamStyle(metadata::StreamStyle()
-  //                                        .AddExtruded(true)
-  //                                        .AddFillColor("#00ff00")
-  //                                        .AddHeight(0.1)))
   //     .AddStream(
   //         metadata::Stream("/lidar/points")
   //             .AddCategory("primitive")
@@ -254,8 +273,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   double now_time = now.time_since_epoch().count() / 1e9;
 
   XVIZBuilder xviz_builder(metadata_ptr_);
-  // XVIZPrimitiveBuider xviz_primitive_builder("/object/vehicles");
-  // XVIZPrimitiveBuider xviz_primitive_walker_builder("/object/walkers");
   // XVIZPrimitiveBuider xviz_primitive_traffic_light_red_builder(
   //     "/traffic_lights/red");
   // XVIZPrimitiveBuider xviz_primitive_traffic_light_yellow_builder(
@@ -441,10 +458,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     .Value(display_velocity)
     .Id("velocity");
 
-  // XVIZPrimitiveBuilder& xviz_vehicle_builder = ;
-  // XVIZPrimitiveBuilder& xviz_walker_builder = ;
+
   std::vector<std::vector<double>> vehicle_vector;
   std::vector<std::vector<double>> walker_vector;
+
   for (const auto& actor_pair : actors_) {
     auto actor_ptr = actor_pair.second;
 
@@ -460,27 +477,28 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       //           boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
       continue;
     }
-    // if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
-    //   auto traffic_light =
-    //       boost::static_pointer_cast<carla::client::TrafficLight>(actor_ptr);
-    //   auto state = traffic_light->GetState();
-    //   switch (state) {
-    //     case carla::rpc::TrafficLightState::Red:
-    //       AddTrafficLights(xviz_primitive_traffic_light_red_builder,
-    //                        traffic_light);
-    //       break;
-    //     case carla::rpc::TrafficLightState::Yellow:
-    //       AddTrafficLights(xviz_primitive_traffic_light_yellow_builder,
-    //                        traffic_light);
-    //       break;
-    //     case carla::rpc::TrafficLightState::Green:
-    //       AddTrafficLights(xviz_primitive_traffic_light_green_builder,
-    //                        traffic_light);
-    //       break;
-    //     default:
-    //       LOG_WARNING("unknown traffic light state");
-    //   }
-    // }
+    if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
+      auto traffic_light =
+          boost::static_pointer_cast<carla::client::TrafficLight>(actor_ptr);
+      auto state = traffic_light->GetState();
+      switch (state) {
+        case carla::rpc::TrafficLightState::Red:
+          AddTrafficLights(xviz_builder.Primitive("/traffic_lights/red"),
+                           traffic_light);
+          break;
+        case carla::rpc::TrafficLightState::Yellow:
+          AddTrafficLights(xviz_builder.Primitive("/traffic_lights/yellow"),
+                           traffic_light);
+          break;
+        case carla::rpc::TrafficLightState::Green:
+          AddTrafficLights(xviz_builder.Primitive("/traffic_lights/green"),
+                           traffic_light);
+          break;
+        default:
+          LOG_WARNING("unknown traffic light state");
+      }
+      continue;
+    }
   }
 
   for (auto& v : vehicle_vector) {
@@ -533,6 +551,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   // lidar_data_lock_.unlock();
 
   // xviz_builder.AddPrimitive(point_cloud_builder);
+
   return xviz_builder;  //.GetData();
 }
 
@@ -599,8 +618,9 @@ void CarlaProxy::AddTrafficLights(
     return;
   }
 
-  for (const auto& polygon : traffic_lights_[id]) {
+  for (auto& polygon : traffic_lights_[id]) {
     // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(polygon));
+    xviz_primitive_builder.Polygon(polygon);
   }
   // auto trigger = traffic_light->GetTriggerVolume();
   // double x_off = trigger.extent.x;
@@ -660,7 +680,7 @@ void CarlaProxy::AddTrafficLightAreas() {
     if (Utils::IsStartWith(actor->GetTypeId(), "traffic.traffic_light")) {
       auto id = actor->GetId();
       if (traffic_lights_.find(id) == traffic_lights_.end()) {
-        traffic_lights_.insert({id, std::vector<std::vector<point_3d_t>>()});
+        traffic_lights_.insert({id, std::vector<std::vector<double>>()});
       }
       auto tl = boost::static_pointer_cast<carla::client::TrafficLight>(actor);
       auto trigger_volume = tl->GetTriggerVolume();
@@ -705,25 +725,29 @@ void CarlaProxy::AddTrafficLightAreas() {
               "the waypoint of the trigger volume of a traffic light is too "
               "close to the intersection, the map does not show the volumn");
         } else {
-          std::vector<point_3d_t> area;
+          std::vector<double> area;
           auto width = now_waypoint->GetLaneWidth();
           auto tmp_waypoint = tmp_waypoints[0];
-          auto right_top_p = XodrGeojsonConverter::LateralShift(
+          auto right_top_p = XodrGeojsonConverter::LateralShiftGetVector(
               tmp_waypoint->GetTransform(), width / 2.0);
-          auto left_top_p = XodrGeojsonConverter::LateralShift(
+          auto left_top_p = XodrGeojsonConverter::LateralShiftGetVector(
               tmp_waypoint->GetTransform(), -width / 2.0);
-          auto right_down_p = XodrGeojsonConverter::LateralShift(
+          auto right_down_p = XodrGeojsonConverter::LateralShiftGetVector(
               now_waypoint->GetTransform(), width / 2.0);
-          auto left_down_p = XodrGeojsonConverter::LateralShift(
+          auto left_down_p = XodrGeojsonConverter::LateralShiftGetVector(
               now_waypoint->GetTransform(), -width / 2.0);
-          area.push_back(right_top_p);
-          area.push_back(right_down_p);
-          area.push_back(left_down_p);
-          area.push_back(left_top_p);
-          for (auto& p : area) {
-            p.set<1>(-p.get<1>());
-          }
-          traffic_lights_[id].push_back(area);
+          FlatVector(area, right_top_p, -1);
+          FlatVector(area, right_down_p, -1);
+          FlatVector(area, left_down_p, -1);
+          FlatVector(area, left_top_p, -1);
+          // area.push_back(right_top_p);
+          // area.push_back(right_down_p);
+          // area.push_back(left_down_p);
+          // area.push_back(left_top_p);
+          // for (auto& p : area) {
+          //   p.set<1>(-p.get<1>());
+          // }
+          traffic_lights_[id].push_back(std::move(area));
         }
         now_waypoint = now_waypoint->GetLeft();
       }
@@ -754,30 +778,32 @@ void CarlaProxy::AddTrafficLightAreas() {
               "the waypoint of the trigger volume of a traffic light is too "
               "close to the intersection, the map does not show the volumn");
         } else {
-          std::vector<point_3d_t> area;
+          std::vector<double> area;
           auto width = now_waypoint->GetLaneWidth();
           auto tmp_waypoint = tmp_waypoints[0];
-          auto right_top_p = XodrGeojsonConverter::LateralShift(
+          auto right_top_p = XodrGeojsonConverter::LateralShiftGetVector(
               tmp_waypoint->GetTransform(), width / 2.0);
-          auto left_top_p = XodrGeojsonConverter::LateralShift(
+          auto left_top_p = XodrGeojsonConverter::LateralShiftGetVector(
               tmp_waypoint->GetTransform(), -width / 2.0);
-          auto right_down_p = XodrGeojsonConverter::LateralShift(
+          auto right_down_p = XodrGeojsonConverter::LateralShiftGetVector(
               now_waypoint->GetTransform(), width / 2.0);
-          auto left_down_p = XodrGeojsonConverter::LateralShift(
+          auto left_down_p = XodrGeojsonConverter::LateralShiftGetVector(
               now_waypoint->GetTransform(), -width / 2.0);
-          area.push_back(right_top_p);
-          area.push_back(right_down_p);
-          area.push_back(left_down_p);
-          area.push_back(left_top_p);
-          for (auto& p : area) {
-            p.set<1>(-p.get<1>());
-          }
-          traffic_lights_[id].push_back(area);
+          FlatVector(area, right_top_p, -1);
+          FlatVector(area, right_down_p, -1);
+          FlatVector(area, left_down_p, -1);
+          FlatVector(area, left_top_p, -1);
+          // for (auto& p : area) {
+          //   p.set<1>(-p.get<1>());
+          // }
+          traffic_lights_[id].push_back(std::move(area));
         }
         now_waypoint = now_waypoint->GetRight();
       }
     }
   }
+
+
 }
 
 carla::geom::Transform CarlaProxy::GetRelativeTransform(

@@ -85,7 +85,7 @@ class CarlaProxy {
       boost::shared_ptr<carla::client::TrafficLight> traffic_light);
   void AddTrafficLightAreas();
 
-  std::unordered_map<uint32_t, std::vector<std::vector<point_3d_t>>> traffic_lights_{};
+  std::unordered_map<uint32_t, std::vector<std::vector<double>>> traffic_lights_{};
 
   std::string carla_host_{"localhost"};
   uint16_t carla_port_{2000u};

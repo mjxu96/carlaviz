@@ -76,6 +76,8 @@ class XodrGeojsonConverter {
                                        boost::geometry::cs::cartesian>
   LateralShift(carla::geom::Transform transform, double shift);
 
+  static std::vector<double> LateralShiftGetVector(carla::geom::Transform transform, double shift);
+
  private:
   static nlohmann::json InitGeoJson();
   static void AddOneLine(
