@@ -13,6 +13,10 @@
 #include "platform/utils/utils.h"
 #include "platform/xviz/builder/xviz_builder.h"
 #include "platform/xviz/builder/metadata.h"
+#include "platform/xviz/builder/declarative_ui/ui_builder.h"
+#include "platform/xviz/builder/declarative_ui/video_builder.h"
+#include "platform/xviz/builder/declarative_ui/metric_builder.h"
+#include "platform/xviz/builder/declarative_ui/container_builder.h"
 
 #include "carla/client/Actor.h"
 #include "carla/client/ActorBlueprint.h"

@@ -56,6 +56,28 @@ void AddMap(nlohmann::json& json, std::string& map) {
   json["map"] = std::move(map);
 }
 
+std::unordered_map<std::string, XVIZUIBuilder> GetUIs() {
+  std::unordered_map<std::string, XVIZUIBuilder> ui_builders;
+
+  ui_builders["Camera"] = XVIZUIBuilder();
+  ui_builders["Metrics"] = XVIZUIBuilder();
+
+  std::vector<std::string> cameras = {"/camera/images"};
+  std::vector<std::string> acceleration_stream = {"/vehicle/acceleration"};
+  std::vector<std::string> velocity_stream = {"/vehicle/velocity"};
+  auto camera_builder = std::make_shared<XVIZVideoBuilder>(cameras);
+  std::shared_ptr<XVIZBaseUIBuilder> metric_builder1 = std::make_shared<XVIZMetricBuilder>(acceleration_stream, "acceleration", "acceleration");
+  std::shared_ptr<XVIZBaseUIBuilder> metric_builder2 = std::make_shared<XVIZMetricBuilder>(velocity_stream, "velocity", "velocity");
+
+  std::shared_ptr<XVIZBaseUIBuilder> container_builder = std::make_shared<XVIZContainerBuilder>("metrics", LayoutType::VERTICAL);
+  container_builder->Child(metric_builder1);
+  container_builder->Child(metric_builder2);
+  // container_builder->Child(acceleration_stream, "test", "test");
+  ui_builders["Camera"].Child(camera_builder);
+  ui_builders["Metrics"].Child(container_builder);
+  return ui_builders;
+}
+
 CarlaProxy::CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr)
     : client_ptr_(std::move(client_ptr)) {
   world_ptr_ =
@@ -226,11 +248,14 @@ std::string CarlaProxy::GetMetaData() {
               "\"extruded\": true,"
               "\"fill_color\": \"#00FF00\","
               "\"height\": 0.1"
-            "}");
+            "}")
+        .Stream("/camera/images")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Type(Primitive::StreamMetadata_PrimitiveType_IMAGE)
+        .UI(GetUIs());
         
           
   // XVIZMetaDataBuilder xviz_metadata_builder;
-  // xviz_metadata_builder.SetMap(map_geojson)
   //     .AddStream(
   //         metadata::Stream("/planning/trajectory")
   //             .AddCategory("primitive")
@@ -247,13 +272,6 @@ std::string CarlaProxy::GetMetaData() {
   //             .AddStreamStyle(metadata::StreamStyle()
   //                                 .AddPointCloudMode("distance_to_vehicle")
   //                                 .AddRadiusPixels(2.0)))
-  //     .AddStream(metadata::Stream("/camera/images")
-  //                    .AddCategory("primitive")
-  //                    .AddType("image"));
-  // metadata::UIConfig ui_config;
-  // ui_config.AddCamera("/camera/images");
-  // xviz_metadata_builder.AddUIConfig(ui_config);
-  // return xviz_metadata_builder.GetMetaData();
   metadata_ptr_ = xviz_metadata_builder.GetData();
   auto json = xviz_metadata_builder.GetMessage().ToObject();
   // auto v = ;
@@ -310,96 +328,96 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       continue;
     }
     tmp_actors.insert({id, actor_ptr});
-    // if (actor_ptr->GetTypeId().substr(0, 6) == "sensor") {
-    //   auto sensor_ptr =
-    //       boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
-    //   if (real_sensors_.find(id) == real_sensors_.end() &&
-    //       dummy_sensors_.find(id) == dummy_sensors_.end()) {
-    //     LOG_INFO("Listen sensor: %u, type is: %s", id,
-    //              actor_ptr->GetTypeId().c_str());
-    //     auto dummy_sensor = CreateDummySensor(sensor_ptr);
-    //     if (dummy_sensor == nullptr) {
-    //       continue;
-    //     }
-    //     auto dummy_id = dummy_sensor->GetId();
-    //     dummy_sensors_.insert({dummy_id, dummy_sensor});
-    //     double rotation_frequency = 10.0;
-    //     if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
-    //                                   "sensor.lidar")) {
-    //       for (const auto& attribute : sensor_ptr->GetAttributes()) {
-    //         if (attribute.GetId() == "rotation_frequency") {
-    //           rotation_frequency = std::stod(attribute.GetValue());
-    //         }
-    //       }
-    //     }
-    //     dummy_sensor->Listen(
-    //         [this, id, rotation_frequency](
-    //             carla::SharedPtr<carla::sensor::SensorData> data) {
-    //           if (data == nullptr) {
-    //             return;
-    //           }
-    //           auto image_data =
-    //               boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
-    //           if (image_data != nullptr) {
-    //             auto encoded_image = this->GetEncodedImage(*image_data);
-    //             image_data_lock_.lock();
-    //             is_image_received_ = true;
-    //             image_data_queues_[id] = encoded_image;
-    //             image_data_lock_.unlock();
-    //             return;
-    //           }
-    //           auto lidar_data = boost::dynamic_pointer_cast<
-    //               carla::sensor::data::LidarMeasurement>(data);
-    //           if (lidar_data != nullptr) {
-    //             auto point_cloud = this->GetPointCloud(*(lidar_data));
-    //             lidar_data_lock_.lock();
-    //             if (lidar_data_queues_.find(id) == lidar_data_queues_.end()) {
-    //               lidar_data_queues_[id] = std::deque<utils::PointCloud>();
-    //             }
-    //             if (!lidar_data_queues_[id].empty() &&
-    //                 point_cloud.GetTimestamp() -
-    //                         lidar_data_queues_[id].front().GetTimestamp() >
-    //                     1.0 / rotation_frequency) {
-    //               lidar_data_queues_[id].pop_front();
-    //             }
-    //             lidar_data_queues_[id].push_back(point_cloud);
-    //             lidar_data_lock_.unlock();
-    //             return;
-    //           }
-    //         });
-    //     real_dummy_sensors_relation_.insert({id, dummy_id});
-    //   }
-    //   if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
-    //     tmp_real_sensors.insert(id);
-    //   }
-    // }
+    if (actor_ptr->GetTypeId().substr(0, 6) == "sensor") {
+      auto sensor_ptr =
+          boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
+      if (real_sensors_.find(id) == real_sensors_.end() &&
+          dummy_sensors_.find(id) == dummy_sensors_.end()) {
+        LOG_INFO("Listen sensor: %u, type is: %s", id,
+                 actor_ptr->GetTypeId().c_str());
+        auto dummy_sensor = CreateDummySensor(sensor_ptr);
+        if (dummy_sensor == nullptr) {
+          continue;
+        }
+        auto dummy_id = dummy_sensor->GetId();
+        dummy_sensors_.insert({dummy_id, dummy_sensor});
+        double rotation_frequency = 10.0;
+        if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
+                                      "sensor.lidar")) {
+          for (const auto& attribute : sensor_ptr->GetAttributes()) {
+            if (attribute.GetId() == "rotation_frequency") {
+              rotation_frequency = std::stod(attribute.GetValue());
+            }
+          }
+        }
+        dummy_sensor->Listen(
+            [this, id, rotation_frequency](
+                carla::SharedPtr<carla::sensor::SensorData> data) {
+              if (data == nullptr) {
+                return;
+              }
+              auto image_data =
+                  boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
+              if (image_data != nullptr) {
+                auto encoded_image = this->GetEncodedImage(*image_data);
+                image_data_lock_.lock();
+                is_image_received_ = true;
+                image_data_queues_[id] = encoded_image;
+                image_data_lock_.unlock();
+                return;
+              }
+              auto lidar_data = boost::dynamic_pointer_cast<
+                  carla::sensor::data::LidarMeasurement>(data);
+              if (lidar_data != nullptr) {
+                auto point_cloud = this->GetPointCloud(*(lidar_data));
+                lidar_data_lock_.lock();
+                if (lidar_data_queues_.find(id) == lidar_data_queues_.end()) {
+                  lidar_data_queues_[id] = std::deque<utils::PointCloud>();
+                }
+                if (!lidar_data_queues_[id].empty() &&
+                    point_cloud.GetTimestamp() -
+                            lidar_data_queues_[id].front().GetTimestamp() >
+                        1.0 / rotation_frequency) {
+                  lidar_data_queues_[id].pop_front();
+                }
+                lidar_data_queues_[id].push_back(point_cloud);
+                lidar_data_lock_.unlock();
+                return;
+              }
+            });
+        real_dummy_sensors_relation_.insert({id, dummy_id});
+      }
+      if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
+        tmp_real_sensors.insert(id);
+      }
+    }
   }
 
   actors_ = std::move(tmp_actors);
 
-  // std::vector<uint32_t> to_delete_sensor_ids;
-  // for (const auto& real_sensor_id : real_sensors_) {
-  //   if (tmp_real_sensors.find(real_sensor_id) == tmp_real_sensors.end()) {
-  //     to_delete_sensor_ids.push_back(real_sensor_id);
-  //   }
-  // }
-  // for (const auto& id : to_delete_sensor_ids) {
-  //   LOG_INFO("Stop listening sensor: %u", id);
-  //   auto dummy_id = real_dummy_sensors_relation_[id];
-  //   dummy_sensors_[dummy_id]->Stop();
-  //   dummy_sensors_[dummy_id]->Destroy();
-  //   real_dummy_sensors_relation_.erase(id);
-  //   real_sensors_.erase(id);
+  std::vector<uint32_t> to_delete_sensor_ids;
+  for (const auto& real_sensor_id : real_sensors_) {
+    if (tmp_real_sensors.find(real_sensor_id) == tmp_real_sensors.end()) {
+      to_delete_sensor_ids.push_back(real_sensor_id);
+    }
+  }
+  for (const auto& id : to_delete_sensor_ids) {
+    LOG_INFO("Stop listening sensor: %u", id);
+    auto dummy_id = real_dummy_sensors_relation_[id];
+    dummy_sensors_[dummy_id]->Stop();
+    dummy_sensors_[dummy_id]->Destroy();
+    real_dummy_sensors_relation_.erase(id);
+    real_sensors_.erase(id);
 
-  //   image_data_lock_.lock();
-  //   image_data_queues_.erase(id);
-  //   image_data_lock_.unlock();
+    image_data_lock_.lock();
+    image_data_queues_.erase(id);
+    image_data_lock_.unlock();
 
-  //   lidar_data_lock_.lock();
-  //   lidar_data_queues_.erase(id);
-  //   lidar_data_lock_.unlock();
-  // }
-  // real_sensors_ = std::move(tmp_real_sensors);
+    lidar_data_lock_.lock();
+    lidar_data_queues_.erase(id);
+    lidar_data_lock_.unlock();
+  }
+  real_sensors_ = std::move(tmp_real_sensors);
 
   point_3d_t ego_position(0, 0, 0);
   point_3d_t ego_orientation(0, 0, 0);
@@ -517,25 +535,26 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   //     .AddPrimitive(xviz_primitive_traffic_light_yellow_builder)
   //     .AddPrimitive(xviz_primitive_traffic_light_green_builder);
 
-  // bool should_add = false;
-  // XVIZPrimitiveBuider image_builder("/camera/images");
-  // image_data_lock_.lock();
-  // if (is_image_received_) {
-  //   std::vector<uint32_t> to_delete_image_ids;
-  //   for (const auto& image_pair : image_data_queues_) {
-  //     if (real_dummy_sensors_relation_.find(image_pair.first) !=
-  //         real_dummy_sensors_relation_.end()) {
-  //       should_add = true;
-  //       image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
-  //     } else {
-  //       to_delete_sensor_ids.push_back(image_pair.first);
-  //     }
-  //   }
-  //   for (auto image_id : to_delete_image_ids) {
-  //     image_data_queues_.erase(image_id);
-  //   }
-  // }
-  // image_data_lock_.unlock();
+  bool should_add = false;
+  XVIZPrimitiveBuilder& image_builder = xviz_builder.Primitive("/camera/images");
+  image_data_lock_.lock();
+  if (is_image_received_) {
+    std::vector<uint32_t> to_delete_image_ids;
+    for (const auto& image_pair : image_data_queues_) {
+      if (real_dummy_sensors_relation_.find(image_pair.first) !=
+          real_dummy_sensors_relation_.end()) {
+        should_add = true;
+        // image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
+        image_builder.Image(image_pair.second.GetData());
+      } else {
+        to_delete_sensor_ids.push_back(image_pair.first);
+      }
+    }
+    for (auto image_id : to_delete_image_ids) {
+      image_data_queues_.erase(image_id);
+    }
+  }
+  image_data_lock_.unlock();
   // if (should_add) {
   //   xviz_builder.AddPrimitive(image_builder);
   // }
@@ -886,7 +905,11 @@ utils::Image CarlaProxy::GetEncodedImage(
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  std::string data_str = base64_encode(image_data.data(), image_data.size());
+  // std::string data_str = base64_encode(image_data.data(), image_data.size());
+  std::string data_str;
+  for (const auto& c : image_data) {
+    data_str += (char)c;
+  }
   utils::Image encoded_image(data_str, image.GetWidth(), image.GetHeight());
   return encoded_image;
 }
