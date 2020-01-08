@@ -32,6 +32,7 @@ protected:
   void ValidateMatchMetadata();
   virtual void Flush() = 0;
 
+  static std::unordered_map<Primitive, std::unordered_set<std::string>> primitive_style_map_;
 };
 
 }

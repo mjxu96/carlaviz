@@ -7,6 +7,8 @@
 #ifndef XVIZ_METADATA_BUILDER_H_
 #define XVIZ_METADATA_BUILDER_H_
 
+#include "declarative_ui/ui_builder.h"
+
 #include "utils/macrologger.h"
 #include "utils/definitions.h"
 #include "utils/utils.h"
@@ -30,9 +32,9 @@ public:
   XVIZMetadataBuilder& StartTime(double time);
   XVIZMetadataBuilder& EndTime(double time);
 
-  XVIZMetadataBuilder& UI(const std::unordered_map<std::string, ::google::protobuf::Struct>& ui);
-  XVIZMetadataBuilder& UI(std::unordered_map<std::string, ::google::protobuf::Struct>&& ui);
-  XVIZMetadataBuilder& UI(const std::shared_ptr<std::unordered_map<std::string, ::google::protobuf::Struct>>& ui_ptr);
+  XVIZMetadataBuilder& UI(const std::unordered_map<std::string, XVIZUIBuilder>& ui_builder);
+  XVIZMetadataBuilder& UI(std::unordered_map<std::string, XVIZUIBuilder>&& ui_builder);
+  XVIZMetadataBuilder& UI(const std::shared_ptr<std::unordered_map<std::string, XVIZUIBuilder>>& ui_builder_ptr);
 
   XVIZMetadataBuilder& Source(const std::string& source);
   XVIZMetadataBuilder& Source(std::string&& source);
@@ -60,7 +62,7 @@ private:
   void Reset();
 
   std::shared_ptr<Metadata> data_{nullptr};
-  std::shared_ptr<std::unordered_map<std::string, ::google::protobuf::Struct>> ui_{nullptr};
+  std::shared_ptr<std::unordered_map<std::string, XVIZUIBuilder>> ui_{nullptr};
   std::string stream_id_{};
   StreamMetadata temp_stream_{};
   uint32_t type_ = -1;

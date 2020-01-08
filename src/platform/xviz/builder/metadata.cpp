@@ -23,10 +23,16 @@ std::shared_ptr<Metadata> XVIZMetadataBuilder::GetData() {
   if (ui_ != nullptr) {
     auto ui_config_ptr = data_->mutable_ui_config();
 
-    for (auto& [panel_key, cfg] : *ui_) {
+    for (auto& [panel_key, builder] : *ui_) {
       auto ui_panel_info = UIPanelInfo();
       ui_panel_info.set_name(panel_key);
-      ui_panel_info.mutable_config()->CopyFrom(cfg);
+      ui_panel_info.set_type("panel");
+      auto uis = builder.GetUI();
+      for (auto& ui : uis) {
+        auto new_ui = ui_panel_info.add_children();
+        *new_ui = std::move(ui);
+      }
+      // *(ui_panel_info.mutable_config()) = std::move(cfg);
       (*ui_config_ptr)[panel_key] = std::move(ui_panel_info);
     }
   }
@@ -56,16 +62,16 @@ XVIZMetadataBuilder& XVIZMetadataBuilder::EndTime(double time) {
   return *this;
 }
 
-XVIZMetadataBuilder& XVIZMetadataBuilder::UI(const std::unordered_map<std::string, ::google::protobuf::Struct>& ui) {
-  return UI(std::make_shared<std::unordered_map<std::string, ::google::protobuf::Struct>>(ui));
+XVIZMetadataBuilder& XVIZMetadataBuilder::UI(const std::unordered_map<std::string, XVIZUIBuilder>& ui_builder) {
+  return UI(std::make_shared<std::unordered_map<std::string, XVIZUIBuilder>>(ui_builder));
 }
 
-XVIZMetadataBuilder& XVIZMetadataBuilder::UI(std::unordered_map<std::string, ::google::protobuf::Struct>&& ui) {
-  return UI(std::make_shared<std::unordered_map<std::string, ::google::protobuf::Struct>>(std::move(ui)));
+XVIZMetadataBuilder& XVIZMetadataBuilder::UI(std::unordered_map<std::string, XVIZUIBuilder>&& ui_builder) {
+  return UI(std::make_shared<std::unordered_map<std::string, XVIZUIBuilder>>(std::move(ui_builder)));
 }
 
-XVIZMetadataBuilder& XVIZMetadataBuilder::UI(const std::shared_ptr<std::unordered_map<std::string, ::google::protobuf::Struct>>& ui_ptr) {
-  ui_ = ui_ptr;
+XVIZMetadataBuilder& XVIZMetadataBuilder::UI(const std::shared_ptr<std::unordered_map<std::string, XVIZUIBuilder>>& ui_builder_ptr) {
+  ui_ = ui_builder_ptr;
   return *this;
 }
 

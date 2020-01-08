@@ -8,6 +8,79 @@
 
 using namespace xviz;
 
+std::unordered_map<Primitive, std::unordered_set<std::string>> 
+  XVIZBaseBuilder::primitive_style_map_ = 
+  {
+    {
+      Primitive::StreamMetadata_PrimitiveType_CIRCLE, {
+        "opacity",
+        "stroked",
+        "filled",
+        "stroke_color",
+        "fill_color",
+        "radius",
+        "radius_min_pixels",
+        "radius_max_pixels",
+        "stroke_width",
+        "stroke_width_min_pixels",
+        "stroke_width_max_pixels"
+      }
+    },
+    {
+      Primitive::StreamMetadata_PrimitiveType_POINT, {
+        "opacity",
+        "fill_color",
+        "radius_pixels",
+        "point_color_mode",
+        "point_color_domain"
+      }
+    },
+    {
+      Primitive::StreamMetadata_PrimitiveType_POLYGON, {
+        "stroke_color",
+        "fill_color",
+        "stroke_width",
+        "stroke_width_min_pixels",
+        "stroke_width_max_pixels",
+        "height",
+        "opacity",
+        "stroked",
+        "filled",
+        "extruded"
+      }
+    },
+    {
+      Primitive::StreamMetadata_PrimitiveType_POLYLINE, {
+        "opacity",
+        "stroke_color",
+        "stroke_width",
+        "stroke_width_min_pixels",
+        "stroke_width_max_pixels"
+      }
+    },
+    {
+      Primitive::StreamMetadata_PrimitiveType_TEXT, {
+        "opacity",
+        "font_family",
+        "font_weight",
+        "text_size",
+        "text_rotation",
+        "text_anchor",
+        "text_baseline",
+        "fill_color"
+      }
+    },
+    {
+      Primitive::StreamMetadata_PrimitiveType_STADIUM, {
+        "opacity",
+        "fill_color",
+        "radius",
+        "radius_min_pixels",
+        "radius_max_pixels"
+      }
+    }
+  };
+
 XVIZBaseBuilder::XVIZBaseBuilder(Category category, const std::shared_ptr<xviz::Metadata>& metadata) {
   category_ = category;
   metadata_ = metadata;

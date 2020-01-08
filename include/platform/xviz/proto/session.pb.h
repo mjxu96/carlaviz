@@ -40,6 +40,7 @@
 #include "core.pb.h"
 #include "options.pb.h"
 #include "style.pb.h"
+#include "declarativeui.pb.h"
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
 #define PROTOBUF_INTERNAL_EXPORT_session_2eproto
@@ -2895,33 +2896,27 @@ class UIPanelInfo :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kNeededStreamsFieldNumber = 2,
+    kChildrenFieldNumber = 2,
     kNameFieldNumber = 1,
-    kConfigFieldNumber = 3,
+    kTypeFieldNumber = 3,
   };
-  // repeated string needed_streams = 2;
-  int needed_streams_size() const;
+  // repeated .xviz.UIPanel children = 2;
+  int children_size() const;
   private:
-  int _internal_needed_streams_size() const;
+  int _internal_children_size() const;
   public:
-  void clear_needed_streams();
-  const std::string& needed_streams(int index) const;
-  std::string* mutable_needed_streams(int index);
-  void set_needed_streams(int index, const std::string& value);
-  void set_needed_streams(int index, std::string&& value);
-  void set_needed_streams(int index, const char* value);
-  void set_needed_streams(int index, const char* value, size_t size);
-  std::string* add_needed_streams();
-  void add_needed_streams(const std::string& value);
-  void add_needed_streams(std::string&& value);
-  void add_needed_streams(const char* value);
-  void add_needed_streams(const char* value, size_t size);
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& needed_streams() const;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_needed_streams();
+  void clear_children();
+  ::xviz::UIPanel* mutable_children(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::xviz::UIPanel >*
+      mutable_children();
   private:
-  const std::string& _internal_needed_streams(int index) const;
-  std::string* _internal_add_needed_streams();
+  const ::xviz::UIPanel& _internal_children(int index) const;
+  ::xviz::UIPanel* _internal_add_children();
   public:
+  const ::xviz::UIPanel& children(int index) const;
+  ::xviz::UIPanel* add_children();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::xviz::UIPanel >&
+      children() const;
 
   // string name = 1;
   void clear_name();
@@ -2939,19 +2934,20 @@ class UIPanelInfo :
   std::string* _internal_mutable_name();
   public:
 
-  // .google.protobuf.Struct config = 3;
-  bool has_config() const;
+  // string type = 3;
+  void clear_type();
+  const std::string& type() const;
+  void set_type(const std::string& value);
+  void set_type(std::string&& value);
+  void set_type(const char* value);
+  void set_type(const char* value, size_t size);
+  std::string* mutable_type();
+  std::string* release_type();
+  void set_allocated_type(std::string* type);
   private:
-  bool _internal_has_config() const;
-  public:
-  void clear_config();
-  const PROTOBUF_NAMESPACE_ID::Struct& config() const;
-  PROTOBUF_NAMESPACE_ID::Struct* release_config();
-  PROTOBUF_NAMESPACE_ID::Struct* mutable_config();
-  void set_allocated_config(PROTOBUF_NAMESPACE_ID::Struct* config);
-  private:
-  const PROTOBUF_NAMESPACE_ID::Struct& _internal_config() const;
-  PROTOBUF_NAMESPACE_ID::Struct* _internal_mutable_config();
+  const std::string& _internal_type() const;
+  void _internal_set_type(const std::string& value);
+  std::string* _internal_mutable_type();
   public:
 
   // @@protoc_insertion_point(class_scope:xviz.UIPanelInfo)
@@ -2959,9 +2955,9 @@ class UIPanelInfo :
   class _Internal;
 
   ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> needed_streams_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::xviz::UIPanel > children_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
-  PROTOBUF_NAMESPACE_ID::Struct* config_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr type_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_session_2eproto;
 };
@@ -5043,133 +5039,100 @@ inline void UIPanelInfo::set_allocated_name(std::string* name) {
   // @@protoc_insertion_point(field_set_allocated:xviz.UIPanelInfo.name)
 }
 
-// repeated string needed_streams = 2;
-inline int UIPanelInfo::_internal_needed_streams_size() const {
-  return needed_streams_.size();
+// repeated .xviz.UIPanel children = 2;
+inline int UIPanelInfo::_internal_children_size() const {
+  return children_.size();
 }
-inline int UIPanelInfo::needed_streams_size() const {
-  return _internal_needed_streams_size();
+inline int UIPanelInfo::children_size() const {
+  return _internal_children_size();
 }
-inline void UIPanelInfo::clear_needed_streams() {
-  needed_streams_.Clear();
+inline ::xviz::UIPanel* UIPanelInfo::mutable_children(int index) {
+  // @@protoc_insertion_point(field_mutable:xviz.UIPanelInfo.children)
+  return children_.Mutable(index);
 }
-inline std::string* UIPanelInfo::add_needed_streams() {
-  // @@protoc_insertion_point(field_add_mutable:xviz.UIPanelInfo.needed_streams)
-  return _internal_add_needed_streams();
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::xviz::UIPanel >*
+UIPanelInfo::mutable_children() {
+  // @@protoc_insertion_point(field_mutable_list:xviz.UIPanelInfo.children)
+  return &children_;
 }
-inline const std::string& UIPanelInfo::_internal_needed_streams(int index) const {
-  return needed_streams_.Get(index);
+inline const ::xviz::UIPanel& UIPanelInfo::_internal_children(int index) const {
+  return children_.Get(index);
 }
-inline const std::string& UIPanelInfo::needed_streams(int index) const {
-  // @@protoc_insertion_point(field_get:xviz.UIPanelInfo.needed_streams)
-  return _internal_needed_streams(index);
+inline const ::xviz::UIPanel& UIPanelInfo::children(int index) const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanelInfo.children)
+  return _internal_children(index);
 }
-inline std::string* UIPanelInfo::mutable_needed_streams(int index) {
-  // @@protoc_insertion_point(field_mutable:xviz.UIPanelInfo.needed_streams)
-  return needed_streams_.Mutable(index);
+inline ::xviz::UIPanel* UIPanelInfo::_internal_add_children() {
+  return children_.Add();
 }
-inline void UIPanelInfo::set_needed_streams(int index, const std::string& value) {
-  // @@protoc_insertion_point(field_set:xviz.UIPanelInfo.needed_streams)
-  needed_streams_.Mutable(index)->assign(value);
+inline ::xviz::UIPanel* UIPanelInfo::add_children() {
+  // @@protoc_insertion_point(field_add:xviz.UIPanelInfo.children)
+  return _internal_add_children();
 }
-inline void UIPanelInfo::set_needed_streams(int index, std::string&& value) {
-  // @@protoc_insertion_point(field_set:xviz.UIPanelInfo.needed_streams)
-  needed_streams_.Mutable(index)->assign(std::move(value));
-}
-inline void UIPanelInfo::set_needed_streams(int index, const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  needed_streams_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:xviz.UIPanelInfo.needed_streams)
-}
-inline void UIPanelInfo::set_needed_streams(int index, const char* value, size_t size) {
-  needed_streams_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanelInfo.needed_streams)
-}
-inline std::string* UIPanelInfo::_internal_add_needed_streams() {
-  return needed_streams_.Add();
-}
-inline void UIPanelInfo::add_needed_streams(const std::string& value) {
-  needed_streams_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:xviz.UIPanelInfo.needed_streams)
-}
-inline void UIPanelInfo::add_needed_streams(std::string&& value) {
-  needed_streams_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:xviz.UIPanelInfo.needed_streams)
-}
-inline void UIPanelInfo::add_needed_streams(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  needed_streams_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:xviz.UIPanelInfo.needed_streams)
-}
-inline void UIPanelInfo::add_needed_streams(const char* value, size_t size) {
-  needed_streams_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:xviz.UIPanelInfo.needed_streams)
-}
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
-UIPanelInfo::needed_streams() const {
-  // @@protoc_insertion_point(field_list:xviz.UIPanelInfo.needed_streams)
-  return needed_streams_;
-}
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
-UIPanelInfo::mutable_needed_streams() {
-  // @@protoc_insertion_point(field_mutable_list:xviz.UIPanelInfo.needed_streams)
-  return &needed_streams_;
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::xviz::UIPanel >&
+UIPanelInfo::children() const {
+  // @@protoc_insertion_point(field_list:xviz.UIPanelInfo.children)
+  return children_;
 }
 
-// .google.protobuf.Struct config = 3;
-inline bool UIPanelInfo::_internal_has_config() const {
-  return this != internal_default_instance() && config_ != nullptr;
+// string type = 3;
+inline void UIPanelInfo::clear_type() {
+  type_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
-inline bool UIPanelInfo::has_config() const {
-  return _internal_has_config();
+inline const std::string& UIPanelInfo::type() const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanelInfo.type)
+  return _internal_type();
 }
-inline const PROTOBUF_NAMESPACE_ID::Struct& UIPanelInfo::_internal_config() const {
-  const PROTOBUF_NAMESPACE_ID::Struct* p = config_;
-  return p != nullptr ? *p : *reinterpret_cast<const PROTOBUF_NAMESPACE_ID::Struct*>(
-      &PROTOBUF_NAMESPACE_ID::_Struct_default_instance_);
+inline void UIPanelInfo::set_type(const std::string& value) {
+  _internal_set_type(value);
+  // @@protoc_insertion_point(field_set:xviz.UIPanelInfo.type)
 }
-inline const PROTOBUF_NAMESPACE_ID::Struct& UIPanelInfo::config() const {
-  // @@protoc_insertion_point(field_get:xviz.UIPanelInfo.config)
-  return _internal_config();
+inline std::string* UIPanelInfo::mutable_type() {
+  // @@protoc_insertion_point(field_mutable:xviz.UIPanelInfo.type)
+  return _internal_mutable_type();
 }
-inline PROTOBUF_NAMESPACE_ID::Struct* UIPanelInfo::release_config() {
-  // @@protoc_insertion_point(field_release:xviz.UIPanelInfo.config)
+inline const std::string& UIPanelInfo::_internal_type() const {
+  return type_.GetNoArena();
+}
+inline void UIPanelInfo::_internal_set_type(const std::string& value) {
   
-  PROTOBUF_NAMESPACE_ID::Struct* temp = config_;
-  config_ = nullptr;
-  return temp;
+  type_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
 }
-inline PROTOBUF_NAMESPACE_ID::Struct* UIPanelInfo::_internal_mutable_config() {
+inline void UIPanelInfo::set_type(std::string&& value) {
   
-  if (config_ == nullptr) {
-    auto* p = CreateMaybeMessage<PROTOBUF_NAMESPACE_ID::Struct>(GetArenaNoVirtual());
-    config_ = p;
-  }
-  return config_;
+  type_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:xviz.UIPanelInfo.type)
 }
-inline PROTOBUF_NAMESPACE_ID::Struct* UIPanelInfo::mutable_config() {
-  // @@protoc_insertion_point(field_mutable:xviz.UIPanelInfo.config)
-  return _internal_mutable_config();
+inline void UIPanelInfo::set_type(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  type_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:xviz.UIPanelInfo.type)
 }
-inline void UIPanelInfo::set_allocated_config(PROTOBUF_NAMESPACE_ID::Struct* config) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
-  if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(config_);
-  }
-  if (config) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(config)->GetArena();
-    if (message_arena != submessage_arena) {
-      config = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, config, submessage_arena);
-    }
+inline void UIPanelInfo::set_type(const char* value, size_t size) {
+  
+  type_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanelInfo.type)
+}
+inline std::string* UIPanelInfo::_internal_mutable_type() {
+  
+  return type_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* UIPanelInfo::release_type() {
+  // @@protoc_insertion_point(field_release:xviz.UIPanelInfo.type)
+  
+  return type_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void UIPanelInfo::set_allocated_type(std::string* type) {
+  if (type != nullptr) {
     
   } else {
     
   }
-  config_ = config;
-  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanelInfo.config)
+  type_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), type);
+  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanelInfo.type)
 }
 
 // -------------------------------------------------------------------

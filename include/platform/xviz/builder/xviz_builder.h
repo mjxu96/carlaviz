@@ -11,6 +11,7 @@
 #include "pose.h"
 #include "primitive.h"
 #include "time_series.h"
+#include "ui_primitive.h"
 #include "message.h"
 
 #include <optional>
@@ -24,6 +25,7 @@ public:
   XVIZPoseBuilder& Pose(const std::string& stream_id);
   XVIZPrimitiveBuilder& Primitive(const std::string& stream_id);
   XVIZTimeSeriesBuilder& TimeSeries(const std::string& stream_id);
+  XVIZUIPrimitiveBuilder& UIPrimitive(const std::string& stream_id);
   XVIZFrame GetData();
   XVIZMessage GetMessage();
 
@@ -33,6 +35,7 @@ private:
   std::shared_ptr<XVIZPoseBuilder> pose_builder_{nullptr};
   std::shared_ptr<XVIZPrimitiveBuilder> primitive_builder_{nullptr};
   std::shared_ptr<XVIZTimeSeriesBuilder> time_series_builder_{nullptr};
+  std::shared_ptr<XVIZUIPrimitiveBuilder> ui_primitive_builder_{nullptr};
   // TODO do I need optional?
   std::shared_ptr<Metadata> metadata_{nullptr};
 };

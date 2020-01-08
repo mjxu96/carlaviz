@@ -25,6 +25,7 @@ extern PROTOBUF_INTERNAL_EXPORT_session_2eproto ::PROTOBUF_NAMESPACE_ID::interna
 extern PROTOBUF_INTERNAL_EXPORT_core_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<8> scc_info_StreamSet_core_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_style_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_StyleClass_style_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_style_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_StyleStreamValue_style_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_declarativeui_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_UIPanel_declarativeui_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_session_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_UIPanelInfo_session_2eproto;
 namespace xviz {
 class StartDefaultTypeInternal {
@@ -323,7 +324,7 @@ static void InitDefaultsscc_info_UIPanelInfo_session_2eproto() {
 
 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_UIPanelInfo_session_2eproto =
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_UIPanelInfo_session_2eproto}, {
-      &scc_info_ListValue_google_2fprotobuf_2fstruct_2eproto.base,}};
+      &scc_info_UIPanel_declarativeui_2eproto.base,}};
 
 static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_session_2eproto[16];
 static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_session_2eproto[10];
@@ -466,8 +467,8 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_session_2eproto::offsets[] PRO
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   PROTOBUF_FIELD_OFFSET(::xviz::UIPanelInfo, name_),
-  PROTOBUF_FIELD_OFFSET(::xviz::UIPanelInfo, needed_streams_),
-  PROTOBUF_FIELD_OFFSET(::xviz::UIPanelInfo, config_),
+  PROTOBUF_FIELD_OFFSET(::xviz::UIPanelInfo, children_),
+  PROTOBUF_FIELD_OFFSET(::xviz::UIPanelInfo, type_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::xviz::LogInfo, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -517,95 +518,96 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 const char descriptor_table_protodef_session_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\rsession.proto\022\004xviz\032\034google/protobuf/s"
   "truct.proto\032\ncore.proto\032\roptions.proto\032\013"
-  "style.proto\"\356\001\n\005Start\022\017\n\007version\030\001 \001(\t\022\017"
-  "\n\007profile\030\002 \001(\t\022\'\n\014session_type\030\003 \001(\0162\021."
-  "xviz.SessionType\0221\n\016message_format\030\004 \001(\016"
-  "2\031.xviz.Start.MessageFormat\022\013\n\003log\030\005 \001(\t"
-  "\"G\n\rMessageFormat\022 \n\034START_MESSAGE_FORMA"
-  "T_INVALID\020\000\022\010\n\004JSON\020\001\022\n\n\006BINARY\020\002:\021\302\273\032\rs"
-  "ession/start\"~\n\014TransformLog\022\n\n\002id\030\001 \001(\t"
-  "\022\027\n\017start_timestamp\030\002 \001(\001\022\025\n\rend_timesta"
-  "mp\030\003 \001(\001\022\027\n\017desired_streams\030\004 \003(\t:\031\302\273\032\025s"
-  "ession/transform_log\"\363\001\n\013StateUpdate\0221\n\013"
-  "update_type\030\001 \001(\0162\034.xviz.StateUpdate.Upd"
-  "ateType\022 \n\007updates\030\002 \003(\0132\017.xviz.StreamSe"
-  "t\"u\n\nUpdateType\022$\n STATE_UPDATE_UPDATE_T"
-  "YPE_INVALID\020\000\022\014\n\010SNAPSHOT\020\001\022\017\n\013INCREMENT"
-  "AL\020\002\022\022\n\016COMPLETE_STATE\020\003\022\016\n\nPERSISTENT\020\004"
-  ":\030\302\273\032\024session/state_update\">\n\020TransformL"
-  "ogDone\022\n\n\002id\030\001 \001(\t:\036\302\273\032\032session/transfor"
-  "m_log_done\"y\n\024TransformPointInTime\022\n\n\002id"
-  "\030\001 \001(\t\022\027\n\017query_timestamp\030\002 \001(\001\022\027\n\017desir"
-  "ed_streams\030\003 \003(\t:#\302\273\032\037session/transform_"
-  "point_in_time\"\321\001\n\013Reconfigure\0221\n\013update_"
-  "type\030\001 \001(\0162\034.xviz.Reconfigure.UpdateType"
-  "\022.\n\rconfig_update\030\002 \001(\0132\027.google.protobu"
-  "f.Struct\"F\n\nUpdateType\022#\n\037RECONFIGURE_UP"
-  "DATE_TYPE_INVALID\020\000\022\t\n\005DELTA\020\001\022\010\n\004FULL\020\002"
-  ":\027\302\273\032\023session/reconfigure\"\234\004\n\010Metadata\022\017"
-  "\n\007version\030\001 \001(\t\022,\n\007streams\030\002 \003(\0132\033.xviz."
-  "Metadata.StreamsEntry\022,\n\007cameras\030\003 \003(\0132\033"
-  ".xviz.Metadata.CamerasEntry\0229\n\016stream_al"
-  "iases\030\004 \003(\0132!.xviz.Metadata.StreamAliase"
-  "sEntry\022/\n\tui_config\030\005 \003(\0132\034.xviz.Metadat"
-  "a.UiConfigEntry\022\037\n\010log_info\030\006 \001(\0132\r.xviz"
-  ".LogInfo\032D\n\014StreamsEntry\022\013\n\003key\030\001 \001(\t\022#\n"
-  "\005value\030\002 \001(\0132\024.xviz.StreamMetadata:\0028\001\032@"
-  "\n\014CamerasEntry\022\013\n\003key\030\001 \001(\t\022\037\n\005value\030\002 \001"
-  "(\0132\020.xviz.CameraInfo:\0028\001\0324\n\022StreamAliase"
-  "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032B"
-  "\n\rUiConfigEntry\022\013\n\003key\030\001 \001(\t\022 \n\005value\030\002 "
-  "\001(\0132\021.xviz.UIPanelInfo:\0028\001:\024\302\273\032\020session/"
-  "metadata\"+\n\005Error\022\017\n\007message\030\001 \001(\t:\021\302\273\032\r"
-  "session/error\"\340\t\n\016StreamMetadata\022\016\n\006sour"
-  "ce\030\001 \001(\t\022\r\n\005units\030\002 \001(\t\022/\n\010category\030\003 \001("
-  "\0162\035.xviz.StreamMetadata.Category\0224\n\013scal"
-  "ar_type\030\004 \001(\0162\037.xviz.StreamMetadata.Scal"
-  "arType\022:\n\016primitive_type\030\005 \001(\0162\".xviz.St"
-  "reamMetadata.PrimitiveType\022\?\n\021ui_primiti"
-  "ve_type\030\006 \001(\0162$.xviz.StreamMetadata.UIPr"
-  "imitiveType\022<\n\017annotation_type\030\007 \001(\0162#.x"
-  "viz.StreamMetadata.AnnotationType\022,\n\014str"
-  "eam_style\030\010 \001(\0132\026.xviz.StyleStreamValue\022"
-  "\'\n\rstyle_classes\030\t \003(\0132\020.xviz.StyleClass"
-  "\0227\n\ncoordinate\030\n \001(\0162#.xviz.StreamMetada"
-  "ta.CoordinateType\022\021\n\ttransform\030\013 \003(\001\022\032\n\022"
-  "transform_callback\030\014 \001(\t\"\237\001\n\010Category\022$\n"
-  " STREAM_METADATA_CATEGORY_INVALID\020\000\022\r\n\tP"
-  "RIMITIVE\020\001\022\017\n\013TIME_SERIES\020\002\022\014\n\010VARIABLE\020"
-  "\003\022\016\n\nANNOTATION\020\004\022\023\n\017FUTURE_INSTANCE\020\005\022\010"
-  "\n\004POSE\020\006\022\020\n\014UI_PRIMITIVE\020\007\"a\n\nScalarType"
-  "\022\'\n#STREAM_METADATA_SCALAR_TYPE_INVALID\020"
-  "\000\022\t\n\005FLOAT\020\001\022\t\n\005INT32\020\002\022\n\n\006STRING\020\003\022\010\n\004B"
-  "OOL\020\004\"\217\001\n\rPrimitiveType\022*\n&STREAM_METADA"
-  "TA_PRIMITIVE_TYPE_INVALID\020\000\022\n\n\006CIRCLE\020\001\022"
-  "\t\n\005IMAGE\020\002\022\t\n\005POINT\020\003\022\013\n\007POLYGON\020\004\022\014\n\010PO"
-  "LYLINE\020\005\022\013\n\007STADIUM\020\006\022\010\n\004TEXT\020\007\"O\n\017UIPri"
-  "mitiveType\022-\n)STREAM_METADATA_UI_PRIMITI"
-  "VE_TYPE_INVALID\020\000\022\r\n\tTREETABLE\020\001\"I\n\016Anno"
-  "tationType\022+\n\'STREAM_METADATA_ANNOTATION"
-  "_TYPE_INVALID\020\000\022\n\n\006VISUAL\020\001\"~\n\016Coordinat"
-  "eType\022+\n\'STREAM_METADATA_COORDINATE_TYPE"
-  "_INVALID\020\000\022\016\n\nGEOGRAPHIC\020\001\022\014\n\010IDENTITY\020\002"
-  "\022\013\n\007DYNAMIC\020\003\022\024\n\020VEHICLE_RELATIVE\020\004:\033\302\273\032"
-  "\027session/stream_metadata\"\344\001\n\nCameraInfo\022"
-  "\022\n\nhuman_name\030\001 \001(\t\022\016\n\006source\030\002 \001(\t\022\030\n\020v"
-  "ehicle_position\030\003 \003(\001\022\033\n\023vehicle_orienta"
-  "tion\030\004 \003(\001\022\023\n\013pixel_width\030\005 \001(\001\022\024\n\014pixel"
-  "_height\030\006 \001(\001\022 \n\030rectification_projectio"
-  "n\030\007 \003(\001\022\025\n\rgl_projection\030\010 \003(\001:\027\302\273\032\023sess"
-  "ion/camera_info\"w\n\013UIPanelInfo\022\014\n\004name\030\001"
-  " \001(\t\022\026\n\016needed_streams\030\002 \003(\t\022\'\n\006config\030\003"
-  " \001(\0132\027.google.protobuf.Struct:\031\302\273\032\025sessi"
-  "on/ui_panel_info\"E\n\007LogInfo\022\022\n\nstart_tim"
-  "e\030\001 \001(\001\022\020\n\010end_time\030\002 \001(\001:\024\302\273\032\020session/l"
-  "og_info*N\n\013SessionType\022\030\n\024SESSION_TYPE_I"
-  "NVALID\020\000\022\010\n\004LIVE\020\001\022\007\n\003LOG\020\002\022\022\n\016UNBUFFERE"
-  "D_LOG\020\003B4\n\013com.xviz.v2B\014SessionProtoP\001Z\004"
-  "v2pb\242\002\004XVIZ\252\002\007xviz.V2b\006proto3"
+  "style.proto\032\023declarativeui.proto\"\356\001\n\005Sta"
+  "rt\022\017\n\007version\030\001 \001(\t\022\017\n\007profile\030\002 \001(\t\022\'\n\014"
+  "session_type\030\003 \001(\0162\021.xviz.SessionType\0221\n"
+  "\016message_format\030\004 \001(\0162\031.xviz.Start.Messa"
+  "geFormat\022\013\n\003log\030\005 \001(\t\"G\n\rMessageFormat\022 "
+  "\n\034START_MESSAGE_FORMAT_INVALID\020\000\022\010\n\004JSON"
+  "\020\001\022\n\n\006BINARY\020\002:\021\302\273\032\rsession/start\"~\n\014Tra"
+  "nsformLog\022\n\n\002id\030\001 \001(\t\022\027\n\017start_timestamp"
+  "\030\002 \001(\001\022\025\n\rend_timestamp\030\003 \001(\001\022\027\n\017desired"
+  "_streams\030\004 \003(\t:\031\302\273\032\025session/transform_lo"
+  "g\"\363\001\n\013StateUpdate\0221\n\013update_type\030\001 \001(\0162\034"
+  ".xviz.StateUpdate.UpdateType\022 \n\007updates\030"
+  "\002 \003(\0132\017.xviz.StreamSet\"u\n\nUpdateType\022$\n "
+  "STATE_UPDATE_UPDATE_TYPE_INVALID\020\000\022\014\n\010SN"
+  "APSHOT\020\001\022\017\n\013INCREMENTAL\020\002\022\022\n\016COMPLETE_ST"
+  "ATE\020\003\022\016\n\nPERSISTENT\020\004:\030\302\273\032\024session/state"
+  "_update\">\n\020TransformLogDone\022\n\n\002id\030\001 \001(\t:"
+  "\036\302\273\032\032session/transform_log_done\"y\n\024Trans"
+  "formPointInTime\022\n\n\002id\030\001 \001(\t\022\027\n\017query_tim"
+  "estamp\030\002 \001(\001\022\027\n\017desired_streams\030\003 \003(\t:#\302"
+  "\273\032\037session/transform_point_in_time\"\321\001\n\013R"
+  "econfigure\0221\n\013update_type\030\001 \001(\0162\034.xviz.R"
+  "econfigure.UpdateType\022.\n\rconfig_update\030\002"
+  " \001(\0132\027.google.protobuf.Struct\"F\n\nUpdateT"
+  "ype\022#\n\037RECONFIGURE_UPDATE_TYPE_INVALID\020\000"
+  "\022\t\n\005DELTA\020\001\022\010\n\004FULL\020\002:\027\302\273\032\023session/recon"
+  "figure\"\234\004\n\010Metadata\022\017\n\007version\030\001 \001(\t\022,\n\007"
+  "streams\030\002 \003(\0132\033.xviz.Metadata.StreamsEnt"
+  "ry\022,\n\007cameras\030\003 \003(\0132\033.xviz.Metadata.Came"
+  "rasEntry\0229\n\016stream_aliases\030\004 \003(\0132!.xviz."
+  "Metadata.StreamAliasesEntry\022/\n\tui_config"
+  "\030\005 \003(\0132\034.xviz.Metadata.UiConfigEntry\022\037\n\010"
+  "log_info\030\006 \001(\0132\r.xviz.LogInfo\032D\n\014Streams"
+  "Entry\022\013\n\003key\030\001 \001(\t\022#\n\005value\030\002 \001(\0132\024.xviz"
+  ".StreamMetadata:\0028\001\032@\n\014CamerasEntry\022\013\n\003k"
+  "ey\030\001 \001(\t\022\037\n\005value\030\002 \001(\0132\020.xviz.CameraInf"
+  "o:\0028\001\0324\n\022StreamAliasesEntry\022\013\n\003key\030\001 \001(\t"
+  "\022\r\n\005value\030\002 \001(\t:\0028\001\032B\n\rUiConfigEntry\022\013\n\003"
+  "key\030\001 \001(\t\022 \n\005value\030\002 \001(\0132\021.xviz.UIPanelI"
+  "nfo:\0028\001:\024\302\273\032\020session/metadata\"+\n\005Error\022\017"
+  "\n\007message\030\001 \001(\t:\021\302\273\032\rsession/error\"\340\t\n\016S"
+  "treamMetadata\022\016\n\006source\030\001 \001(\t\022\r\n\005units\030\002"
+  " \001(\t\022/\n\010category\030\003 \001(\0162\035.xviz.StreamMeta"
+  "data.Category\0224\n\013scalar_type\030\004 \001(\0162\037.xvi"
+  "z.StreamMetadata.ScalarType\022:\n\016primitive"
+  "_type\030\005 \001(\0162\".xviz.StreamMetadata.Primit"
+  "iveType\022\?\n\021ui_primitive_type\030\006 \001(\0162$.xvi"
+  "z.StreamMetadata.UIPrimitiveType\022<\n\017anno"
+  "tation_type\030\007 \001(\0162#.xviz.StreamMetadata."
+  "AnnotationType\022,\n\014stream_style\030\010 \001(\0132\026.x"
+  "viz.StyleStreamValue\022\'\n\rstyle_classes\030\t "
+  "\003(\0132\020.xviz.StyleClass\0227\n\ncoordinate\030\n \001("
+  "\0162#.xviz.StreamMetadata.CoordinateType\022\021"
+  "\n\ttransform\030\013 \003(\001\022\032\n\022transform_callback\030"
+  "\014 \001(\t\"\237\001\n\010Category\022$\n STREAM_METADATA_CA"
+  "TEGORY_INVALID\020\000\022\r\n\tPRIMITIVE\020\001\022\017\n\013TIME_"
+  "SERIES\020\002\022\014\n\010VARIABLE\020\003\022\016\n\nANNOTATION\020\004\022\023"
+  "\n\017FUTURE_INSTANCE\020\005\022\010\n\004POSE\020\006\022\020\n\014UI_PRIM"
+  "ITIVE\020\007\"a\n\nScalarType\022\'\n#STREAM_METADATA"
+  "_SCALAR_TYPE_INVALID\020\000\022\t\n\005FLOAT\020\001\022\t\n\005INT"
+  "32\020\002\022\n\n\006STRING\020\003\022\010\n\004BOOL\020\004\"\217\001\n\rPrimitive"
+  "Type\022*\n&STREAM_METADATA_PRIMITIVE_TYPE_I"
+  "NVALID\020\000\022\n\n\006CIRCLE\020\001\022\t\n\005IMAGE\020\002\022\t\n\005POINT"
+  "\020\003\022\013\n\007POLYGON\020\004\022\014\n\010POLYLINE\020\005\022\013\n\007STADIUM"
+  "\020\006\022\010\n\004TEXT\020\007\"O\n\017UIPrimitiveType\022-\n)STREA"
+  "M_METADATA_UI_PRIMITIVE_TYPE_INVALID\020\000\022\r"
+  "\n\tTREETABLE\020\001\"I\n\016AnnotationType\022+\n\'STREA"
+  "M_METADATA_ANNOTATION_TYPE_INVALID\020\000\022\n\n\006"
+  "VISUAL\020\001\"~\n\016CoordinateType\022+\n\'STREAM_MET"
+  "ADATA_COORDINATE_TYPE_INVALID\020\000\022\016\n\nGEOGR"
+  "APHIC\020\001\022\014\n\010IDENTITY\020\002\022\013\n\007DYNAMIC\020\003\022\024\n\020VE"
+  "HICLE_RELATIVE\020\004:\033\302\273\032\027session/stream_met"
+  "adata\"\344\001\n\nCameraInfo\022\022\n\nhuman_name\030\001 \001(\t"
+  "\022\016\n\006source\030\002 \001(\t\022\030\n\020vehicle_position\030\003 \003"
+  "(\001\022\033\n\023vehicle_orientation\030\004 \003(\001\022\023\n\013pixel"
+  "_width\030\005 \001(\001\022\024\n\014pixel_height\030\006 \001(\001\022 \n\030re"
+  "ctification_projection\030\007 \003(\001\022\025\n\rgl_proje"
+  "ction\030\010 \003(\001:\027\302\273\032\023session/camera_info\"e\n\013"
+  "UIPanelInfo\022\014\n\004name\030\001 \001(\t\022\037\n\010children\030\002 "
+  "\003(\0132\r.xviz.UIPanel\022\014\n\004type\030\003 \001(\t:\031\302\273\032\025se"
+  "ssion/ui_panel_info\"E\n\007LogInfo\022\022\n\nstart_"
+  "time\030\001 \001(\001\022\020\n\010end_time\030\002 \001(\001:\024\302\273\032\020sessio"
+  "n/log_info*N\n\013SessionType\022\030\n\024SESSION_TYP"
+  "E_INVALID\020\000\022\010\n\004LIVE\020\001\022\007\n\003LOG\020\002\022\022\n\016UNBUFF"
+  "ERED_LOG\020\003B4\n\013com.xviz.v2B\014SessionProtoP"
+  "\001Z\004v2pb\242\002\004XVIZ\252\002\007xviz.V2b\006proto3"
   ;
-static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_session_2eproto_deps[4] = {
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_session_2eproto_deps[5] = {
   &::descriptor_table_core_2eproto,
+  &::descriptor_table_declarativeui_2eproto,
   &::descriptor_table_google_2fprotobuf_2fstruct_2eproto,
   &::descriptor_table_options_2eproto,
   &::descriptor_table_style_2eproto,
@@ -631,8 +633,8 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_ses
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_session_2eproto_once;
 static bool descriptor_table_session_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_session_2eproto = {
-  &descriptor_table_session_2eproto_initialized, descriptor_table_protodef_session_2eproto, "session.proto", 3509,
-  &descriptor_table_session_2eproto_once, descriptor_table_session_2eproto_sccs, descriptor_table_session_2eproto_deps, 16, 4,
+  &descriptor_table_session_2eproto_initialized, descriptor_table_protodef_session_2eproto, "session.proto", 3512,
+  &descriptor_table_session_2eproto_once, descriptor_table_session_2eproto_sccs, descriptor_table_session_2eproto_deps, 16, 5,
   schemas, file_default_instances, TableStruct_session_2eproto::offsets,
   file_level_metadata_session_2eproto, 16, file_level_enum_descriptors_session_2eproto, file_level_service_descriptors_session_2eproto,
 };
@@ -4197,23 +4199,13 @@ void CameraInfo::InternalSwap(CameraInfo* other) {
 // ===================================================================
 
 void UIPanelInfo::InitAsDefaultInstance() {
-  ::xviz::_UIPanelInfo_default_instance_._instance.get_mutable()->config_ = const_cast< PROTOBUF_NAMESPACE_ID::Struct*>(
-      PROTOBUF_NAMESPACE_ID::Struct::internal_default_instance());
 }
 class UIPanelInfo::_Internal {
  public:
-  static const PROTOBUF_NAMESPACE_ID::Struct& config(const UIPanelInfo* msg);
 };
 
-const PROTOBUF_NAMESPACE_ID::Struct&
-UIPanelInfo::_Internal::config(const UIPanelInfo* msg) {
-  return *msg->config_;
-}
-void UIPanelInfo::clear_config() {
-  if (GetArenaNoVirtual() == nullptr && config_ != nullptr) {
-    delete config_;
-  }
-  config_ = nullptr;
+void UIPanelInfo::clear_children() {
+  children_.Clear();
 }
 UIPanelInfo::UIPanelInfo()
   : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
@@ -4223,16 +4215,15 @@ UIPanelInfo::UIPanelInfo()
 UIPanelInfo::UIPanelInfo(const UIPanelInfo& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
       _internal_metadata_(nullptr),
-      needed_streams_(from.needed_streams_) {
+      children_(from.children_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (!from._internal_name().empty()) {
     name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
   }
-  if (from._internal_has_config()) {
-    config_ = new PROTOBUF_NAMESPACE_ID::Struct(*from.config_);
-  } else {
-    config_ = nullptr;
+  type_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_type().empty()) {
+    type_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.type_);
   }
   // @@protoc_insertion_point(copy_constructor:xviz.UIPanelInfo)
 }
@@ -4240,7 +4231,7 @@ UIPanelInfo::UIPanelInfo(const UIPanelInfo& from)
 void UIPanelInfo::SharedCtor() {
   ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_UIPanelInfo_session_2eproto.base);
   name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  config_ = nullptr;
+  type_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 UIPanelInfo::~UIPanelInfo() {
@@ -4250,7 +4241,7 @@ UIPanelInfo::~UIPanelInfo() {
 
 void UIPanelInfo::SharedDtor() {
   name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete config_;
+  type_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void UIPanelInfo::SetCachedSize(int size) const {
@@ -4268,12 +4259,9 @@ void UIPanelInfo::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  needed_streams_.Clear();
+  children_.Clear();
   name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == nullptr && config_ != nullptr) {
-    delete config_;
-  }
-  config_ = nullptr;
+  type_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
@@ -4293,24 +4281,24 @@ const char* UIPanelInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // repeated string needed_streams = 2;
+      // repeated .xviz.UIPanel children = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
           ptr -= 1;
           do {
             ptr += 1;
-            auto str = _internal_add_needed_streams();
-            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-            CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "xviz.UIPanelInfo.needed_streams"));
+            ptr = ctx->ParseMessage(_internal_add_children(), ptr);
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
         } else goto handle_unusual;
         continue;
-      // .google.protobuf.Struct config = 3;
+      // string type = 3;
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
-          ptr = ctx->ParseMessage(_internal_mutable_config(), ptr);
+          auto str = _internal_mutable_type();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "xviz.UIPanelInfo.type"));
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -4350,22 +4338,22 @@ failure:
         1, this->_internal_name(), target);
   }
 
-  // repeated string needed_streams = 2;
-  for (int i = 0, n = this->_internal_needed_streams_size(); i < n; i++) {
-    const auto& s = this->_internal_needed_streams(i);
-    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
-      s.data(), static_cast<int>(s.length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "xviz.UIPanelInfo.needed_streams");
-    target = stream->WriteString(2, s, target);
-  }
-
-  // .google.protobuf.Struct config = 3;
-  if (this->has_config()) {
+  // repeated .xviz.UIPanel children = 2;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->_internal_children_size()); i < n; i++) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::config(this), target, stream);
+      InternalWriteMessage(2, this->_internal_children(i), target, stream);
+  }
+
+  // string type = 3;
+  if (this->type().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_type().data(), static_cast<int>(this->_internal_type().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "xviz.UIPanelInfo.type");
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_type(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -4384,12 +4372,11 @@ size_t UIPanelInfo::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // repeated string needed_streams = 2;
-  total_size += 1 *
-      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(needed_streams_.size());
-  for (int i = 0, n = needed_streams_.size(); i < n; i++) {
-    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
-      needed_streams_.Get(i));
+  // repeated .xviz.UIPanel children = 2;
+  total_size += 1UL * this->_internal_children_size();
+  for (const auto& msg : this->children_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // string name = 1;
@@ -4399,11 +4386,11 @@ size_t UIPanelInfo::ByteSizeLong() const {
         this->_internal_name());
   }
 
-  // .google.protobuf.Struct config = 3;
-  if (this->has_config()) {
+  // string type = 3;
+  if (this->type().size() > 0) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *config_);
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_type());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -4437,13 +4424,14 @@ void UIPanelInfo::MergeFrom(const UIPanelInfo& from) {
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  needed_streams_.MergeFrom(from.needed_streams_);
+  children_.MergeFrom(from.children_);
   if (from.name().size() > 0) {
 
     name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.name_);
   }
-  if (from.has_config()) {
-    _internal_mutable_config()->PROTOBUF_NAMESPACE_ID::Struct::MergeFrom(from._internal_config());
+  if (from.type().size() > 0) {
+
+    type_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.type_);
   }
 }
 
@@ -4468,10 +4456,11 @@ bool UIPanelInfo::IsInitialized() const {
 void UIPanelInfo::InternalSwap(UIPanelInfo* other) {
   using std::swap;
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  needed_streams_.InternalSwap(&other->needed_streams_);
+  children_.InternalSwap(&other->children_);
   name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  swap(config_, other->config_);
+  type_.Swap(&other->type_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata UIPanelInfo::GetMetadata() const {

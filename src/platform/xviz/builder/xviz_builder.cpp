@@ -13,8 +13,9 @@ std::string primary_pose_stream = "/vehicle_pose";
 template<typename K, typename V>
 void ConvertFromStdMapToProtoBufMap(google::protobuf::Map<K, V>* map, std::unordered_map<K, V>& m) {
   map->clear();
-  for (const auto& [k, v] : m) {
-    (*map)[k] = v;
+  for (auto& [k, v] : m) {
+    // TODO is it correct
+    (*map)[k] = std::move(v);
   }
 }
 
@@ -24,6 +25,7 @@ XVIZBuilder::XVIZBuilder(std::shared_ptr<Metadata> metadata) :
   pose_builder_ = std::make_shared<XVIZPoseBuilder>(metadata_);
   primitive_builder_ = std::make_shared<XVIZPrimitiveBuilder>(metadata_);
   time_series_builder_ = std::make_shared<XVIZTimeSeriesBuilder>(metadata_);
+  ui_primitive_builder_ = std::make_shared<XVIZUIPrimitiveBuilder>(metadata_);
 }
 
 XVIZPoseBuilder& XVIZBuilder::Pose(const std::string& stream_id) {
@@ -35,6 +37,10 @@ XVIZPrimitiveBuilder& XVIZBuilder::Primitive(const std::string& stream_id) {
 
 XVIZTimeSeriesBuilder& XVIZBuilder::TimeSeries(const std::string& stream_id) {
   return time_series_builder_->Stream(stream_id);
+}
+
+XVIZUIPrimitiveBuilder& XVIZBuilder::UIPrimitive(const std::string& stream_id) {
+  return ui_primitive_builder_->Stream(stream_id);
 }
 
 XVIZFrame XVIZBuilder::GetData() {
@@ -60,6 +66,12 @@ XVIZFrame XVIZBuilder::GetData() {
     auto state_ptr = data->add_time_series();
     // TODO is this correct?
     *state_ptr = std::move(time_series_state);
+  }
+
+  auto ui_primitives = ui_primitive_builder_->GetData();
+  auto ui_primitives_map = data->mutable_ui_primitives();
+  if (ui_primitives != nullptr) {
+    ConvertFromStdMapToProtoBufMap<std::string, xviz::UIPrimitiveState>(ui_primitives_map, *ui_primitives);
   }
 
   return XVIZFrame(data);

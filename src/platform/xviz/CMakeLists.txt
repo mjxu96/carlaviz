@@ -12,6 +12,7 @@ include_directories(${XVIZ_ROOT_FOLDER}/include)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 add_library(xviz-pb
+  proto/declarativeui.pb.cc
   proto/session.pb.cc
   proto/core.pb.cc
   proto/annotation.pb.cc
@@ -29,6 +30,17 @@ add_library(xviz-utils
   utils/utils.cpp
 )
 
+add_library(xviz-ui-builder
+  builder/declarative_ui/ui_builder.cpp
+  builder/declarative_ui/container_builder.cpp
+  builder/declarative_ui/video_builder.cpp
+  builder/declarative_ui/metric_builder.cpp
+  builder/declarative_ui/base_ui_builder.cpp
+)
+
+target_link_libraries(xviz-ui-builder
+  xviz-pb
+)
 
 add_library(xviz-builder
   builder/metadata.cpp
@@ -36,8 +48,11 @@ add_library(xviz-builder
   builder/pose.cpp
   builder/primitive.cpp
   builder/time_series.cpp
+  builder/ui_primitive.cpp
   builder/xviz_builder.cpp
 )
+
+target_link_libraries(xviz-builder xviz-ui-builder)
 
 
 add_library(xviz-message
@@ -45,4 +60,4 @@ add_library(xviz-message
 )
 
 add_library(xviz)
-target_link_libraries(xviz xviz-message xviz-builder xviz-pb xviz-utils)
+target_link_libraries(xviz xviz-ui-builder xviz-message xviz-builder xviz-pb xviz-utils)
