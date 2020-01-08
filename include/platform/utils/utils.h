@@ -44,19 +44,19 @@ class Utils {
 class PointCloud {
  public:
   PointCloud() = default;
-  PointCloud(double timestamp, std::vector<point_3d_t> points);
+  PointCloud(double timestamp, std::vector<double>&& points);
   double GetTimestamp() const;
-  std::vector<point_3d_t> GetPoints() const;
+  std::vector<double> GetPoints() const;
 
  private:
-  std::vector<point_3d_t> points_;
+  std::vector<double> points_;
   double timestamp_;
 };
 
 class Image {
  public:
   Image() = default;
-  Image(std::string encoded_str, size_t width, size_t height);
+  Image(std::string&& encoded_str, size_t width, size_t height);
   std::string GetData() const;
   size_t GetWidth() const;
   size_t GetHeight() const;

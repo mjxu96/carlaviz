@@ -82,6 +82,6 @@ XVIZMessage XVIZBuilder::GetMessage() {
   state_update->set_update_type(StateUpdate::UpdateType::StateUpdate_UpdateType_SNAPSHOT);
   auto new_update = state_update->add_updates();
   auto frame = GetData();
-  *new_update = *(frame.Data());
+  *new_update = std::move(*(frame.Data()));
   return XVIZMessage(state_update);
 }

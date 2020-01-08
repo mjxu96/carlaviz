@@ -71,6 +71,7 @@ class CarlaProxy {
   xviz::XVIZBuilder GetUpdateData(
       const carla::client::WorldSnapshot& world_snapshots);
   xviz::XVIZBuilder GetUpdateData();
+  // std::string GetUpdateData();
   void Run();
   void AddClient(boost::asio::ip::tcp::socket socket);
 

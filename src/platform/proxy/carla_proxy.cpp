@@ -252,6 +252,15 @@ std::string CarlaProxy::GetMetaData() {
         .Stream("/camera/images")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_IMAGE)
+        .Stream("/lidar/points")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Type(Primitive::StreamMetadata_PrimitiveType_POINT)
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .StreamStyle(
+            "{"
+              "\"point_cloud_mode\": \"distance_to_vehicle\","
+              "\"raidus_pixels\": 2.0"
+            "}")
         .UI(GetUIs());
         
           
@@ -362,7 +371,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
                 auto encoded_image = this->GetEncodedImage(*image_data);
                 image_data_lock_.lock();
                 is_image_received_ = true;
-                image_data_queues_[id] = encoded_image;
+                image_data_queues_[id] = std::move(encoded_image);
                 image_data_lock_.unlock();
                 return;
               }
@@ -380,7 +389,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
                         1.0 / rotation_frequency) {
                   lidar_data_queues_[id].pop_front();
                 }
-                lidar_data_queues_[id].push_back(point_cloud);
+                lidar_data_queues_[id].push_back(std::move(point_cloud));
                 lidar_data_lock_.unlock();
                 return;
               }
@@ -536,7 +545,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   //     .AddPrimitive(xviz_primitive_traffic_light_green_builder);
 
   bool should_add = false;
-  XVIZPrimitiveBuilder& image_builder = xviz_builder.Primitive("/camera/images");
+  std::vector<std::string> images_data;
+    // auto now_timee = std::chrono::system_clock::now();
+    // auto nnn = now_timee.time_since_epoch().count() / 1e9;
   image_data_lock_.lock();
   if (is_image_received_) {
     std::vector<uint32_t> to_delete_image_ids;
@@ -545,7 +556,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           real_dummy_sensors_relation_.end()) {
         should_add = true;
         // image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
-        image_builder.Image(image_pair.second.GetData());
+        images_data.push_back(std::get<1>(image_pair).GetData());
+        // image_builder.Image("");
       } else {
         to_delete_sensor_ids.push_back(image_pair.first);
       }
@@ -554,24 +566,47 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       image_data_queues_.erase(image_id);
     }
   }
+  is_image_received_ = false;
   image_data_lock_.unlock();
-  // if (should_add) {
-  //   xviz_builder.AddPrimitive(image_builder);
-  // }
+  if (should_add) {
+    // xviz_builder.AddPrimitive(image_builder);
 
-  // lidar_data_lock_.lock();
-  // XVIZPrimitiveBuider point_cloud_builder("/lidar/points");
-  // for (const auto& point_cloud_pair : lidar_data_queues_) {
-  //   for (const auto& point_cloud : point_cloud_pair.second) {
-  //     point_cloud_builder.AddPoints(
-  //         XVIZPrimitivePointBuilder(point_cloud.GetPoints()));
-  //   }
-  // }
-  // lidar_data_lock_.unlock();
+    XVIZPrimitiveBuilder& image_builder = xviz_builder.Primitive("/camera/images");
+    for (auto& image_data : images_data) {
+      image_builder.Image(std::move(image_data));
+    }
 
+  }
+
+    // now_timee = std::chrono::system_clock::now();
+    // nnn = now_timee.time_since_epoch().count() / 1e9 - nnn;
+    // std::cout << "add image spend: " << nnn << std::endl;
+    // auto now_timee = std::chrono::system_clock::now();
+    // auto nnn = now_timee.time_since_epoch().count() / 1e9;
+  lidar_data_lock_.lock();
+  XVIZPrimitiveBuilder& point_cloud_builder = xviz_builder.Primitive("/lidar/points");
+  std::vector<std::vector<double>> point_clouds;
+  for (const auto& point_cloud_pair : lidar_data_queues_) {
+    for (const auto& point_cloud : point_cloud_pair.second) {
+      // point_cloud_builder.AddPoints(
+      //     XVIZPrimitivePointBuilder(point_cloud.GetPoints()));
+      // point_cloud_builder.Points(point_cloud.GetPoints());
+      point_clouds.push_back(point_cloud.GetPoints());
+    }
+  }
+  lidar_data_lock_.unlock();
+
+
+  for (auto& point_cloud : point_clouds) {
+    point_cloud_builder.Points(std::move(point_cloud));
+  }
+
+    // now_timee = std::chrono::system_clock::now();
+    // nnn = now_timee.time_since_epoch().count() / 1e9 - nnn;
+    // std::cout << "add point cloud spend: " << nnn << std::endl;
   // xviz_builder.AddPrimitive(point_cloud_builder);
 
-  return xviz_builder;  //.GetData();
+  return std::move(xviz_builder);  //.GetData();
 }
 
 void CarlaProxy::AddVehicle(
@@ -873,7 +908,7 @@ boost::shared_ptr<carla::client::Sensor> CarlaProxy::CreateDummySensor(
 
 utils::PointCloud CarlaProxy::GetPointCloud(
     const carla::sensor::data::LidarMeasurement& lidar_measurement) {
-  std::vector<point_3d_t> points;
+  std::vector<double> points;
   // std::vector<point_3d_t> dbg_points;
   double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
   auto location = lidar_measurement.GetSensorTransform().location;
@@ -881,13 +916,13 @@ utils::PointCloud CarlaProxy::GetPointCloud(
     // dbg_points.emplace_back(point.x, point.y, point.z);
     point_3d_t offset = Utils::GetOffsetAfterTransform(
         point_3d_t(point.x, point.y, point.z), (yaw + 90.0) / 180.0 * M_PI);
-    points.emplace_back(location.x + offset.get<0>(),
-                        -(location.y + offset.get<1>()),
-                        location.z - offset.get<2>());
+    points.emplace_back(location.x + offset.get<0>());
+    points.emplace_back(-(location.y + offset.get<1>()));
+    points.emplace_back(location.z - offset.get<2>());
   }
   // uint32_t partition =
   // (uint32_t)((int)lidar_measurement.GetHorizontalAngle()) / 120;
-  return utils::PointCloud(lidar_measurement.GetTimestamp(), points);
+  return utils::PointCloud(lidar_measurement.GetTimestamp(), std::move(points));
 }
 
 utils::Image CarlaProxy::GetEncodedImage(
@@ -910,6 +945,5 @@ utils::Image CarlaProxy::GetEncodedImage(
   for (const auto& c : image_data) {
     data_str += (char)c;
   }
-  utils::Image encoded_image(data_str, image.GetWidth(), image.GetHeight());
-  return encoded_image;
+  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
 }

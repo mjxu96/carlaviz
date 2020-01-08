@@ -272,12 +272,12 @@ void XVIZPrimitiveBuilder::FlushPrimitives() {
           break;
         }
         auto point_ptr = stream_ptr->add_points();
-        for (const auto& v : *vertices_) {
+        for (auto v : *vertices_) {
           point_ptr->add_points(v);
         }
         if (colors_ != nullptr) {
           auto colors_ptr = point_ptr->mutable_colors();
-          *colors_ptr = *colors_;
+          *colors_ptr = std::move(*colors_);
         }
         AddBase<xviz::Point>(point_ptr, base_pair);
         // if (has_base) {
