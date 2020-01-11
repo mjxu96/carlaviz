@@ -8,11 +8,51 @@
 
 using namespace xviz;
 
+// template<typename T>
+// void AddChild(std::vector<std::shared_ptr<XVIZBaseUIBuilder>>& children, T&& child) {
+//   children.push_back(std::move(child));
+// }
+
+// template<typename T>
+// void AddChild(std::vector<std::shared_ptr<XVIZBaseUIBuilder>>& children, const T& child) {
+//   children.push_back(child);
+// }
+
 XVIZUIBuilder::XVIZUIBuilder() {
 }
 
 XVIZUIBuilder& XVIZUIBuilder::Child(const std::shared_ptr<XVIZBaseUIBuilder>& child) {
   children_.push_back(child);
+  return *this;
+}
+
+XVIZUIBuilder& XVIZUIBuilder::Child(const XVIZContainerBuilder& child) {
+  children_.push_back(std::make_shared<XVIZContainerBuilder>(child));
+  return *this;
+}
+
+XVIZUIBuilder& XVIZUIBuilder::Child(XVIZContainerBuilder&& child) {
+  children_.push_back(std::make_shared<XVIZContainerBuilder>(std::move(child)));
+  return *this;
+}
+
+XVIZUIBuilder& XVIZUIBuilder::Child(const XVIZMetricBuilder& child) {
+  children_.push_back(std::make_shared<XVIZMetricBuilder>(child));
+  return *this;
+}
+
+XVIZUIBuilder& XVIZUIBuilder::Child(XVIZMetricBuilder&& child) {
+  children_.push_back(std::make_shared<XVIZMetricBuilder>(std::move(child)));
+  return *this;
+}
+
+XVIZUIBuilder& XVIZUIBuilder::Child(const XVIZVideoBuilder& child) {
+  children_.push_back(std::make_shared<XVIZVideoBuilder>(child));
+  return *this;
+}
+
+XVIZUIBuilder& XVIZUIBuilder::Child(XVIZVideoBuilder&& child) {
+  children_.push_back(std::make_shared<XVIZVideoBuilder>(std::move(child)));
   return *this;
 }
 

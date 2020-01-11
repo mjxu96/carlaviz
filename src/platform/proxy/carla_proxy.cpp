@@ -59,18 +59,17 @@ std::unordered_map<std::string, XVIZUIBuilder> GetUIs() {
   std::vector<std::string> cameras = {"/camera/images"};
   std::vector<std::string> acceleration_stream = {"/vehicle/acceleration"};
   std::vector<std::string> velocity_stream = {"/vehicle/velocity"};
-  auto camera_builder = std::make_shared<XVIZVideoBuilder>(cameras);
-  std::shared_ptr<XVIZBaseUIBuilder> metric_builder1 = std::make_shared<XVIZMetricBuilder>(acceleration_stream, "acceleration", "acceleration");
+  XVIZVideoBuilder camera_builder(cameras);
   std::shared_ptr<XVIZBaseUIBuilder> metric_builder2 = std::make_shared<XVIZMetricBuilder>(velocity_stream, "velocity", "velocity");
 
-  std::shared_ptr<XVIZBaseUIBuilder> container_builder = std::make_shared<XVIZContainerBuilder>("metrics", LayoutType::VERTICAL);
-  container_builder->Child(metric_builder1);
+  std::shared_ptr<XVIZContainerBuilder> container_builder = std::make_shared<XVIZContainerBuilder>("metrics", LayoutType::VERTICAL);
+  container_builder->Child(acceleration_stream, "acceleration", "acceleration");
   container_builder->Child(metric_builder2);
   container_builder->Child(acceleration_stream, "test", "test");
   ui_builders["Camera"] = XVIZUIBuilder();
   ui_builders["Camera"].Child(camera_builder);
   ui_builders["Metrics"] = XVIZUIBuilder();
-  ui_builders["Metrics"].Child(container_builder);
+  ui_builders["Metrics"].Child(std::move(*container_builder));
   return ui_builders;
 }
 
