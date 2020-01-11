@@ -9,6 +9,7 @@
 using namespace mellocolate;
 using namespace mellocolate::utils;
 using namespace xviz;
+
 // For readable seconds
 using namespace std::chrono_literals;
 using namespace std::string_literals;
@@ -21,9 +22,6 @@ void FlatVector(std::vector<double>& v, const std::vector<double>& to_add, int n
   v.push_back(to_add[0]);
   v.push_back(neg_factor * to_add[1]);
   v.push_back(to_add[2]);
-  // for (auto value : to_add) {
-  //   v.push_back(value);
-  // }
 }
 
 std::pair<double, double> AfterRotate(double x, double y, double yaw) {
@@ -58,8 +56,6 @@ void AddMap(nlohmann::json& json, std::string& map) {
 
 std::unordered_map<std::string, XVIZUIBuilder> GetUIs() {
   std::unordered_map<std::string, XVIZUIBuilder> ui_builders;
-
-
   std::vector<std::string> cameras = {"/camera/images"};
   std::vector<std::string> acceleration_stream = {"/vehicle/acceleration"};
   std::vector<std::string> velocity_stream = {"/vehicle/velocity"};
@@ -86,34 +82,6 @@ CarlaProxy::CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr)
 CarlaProxy::CarlaProxy(const std::string& carla_host, uint16_t carla_port)
     : carla_host_(carla_host), carla_port_(carla_port) {}
 
-void CarlaProxy::Run() {
-  while (true) {
-    auto world_snapshots = world_ptr_->WaitForTick(2s);
-    auto xviz_builder = GetUpdateData(world_snapshots);
-    Update(xviz_builder.GetMessage().ToObjectString());  // GetUpdateData(world_snapshots));
-  }
-}
-
-void CarlaProxy::AddClient(boost::asio::ip::tcp::socket socket) {
-  auto ws_ptr =
-      boost::make_shared<websocket::stream<tcp::socket>>(std::move(socket));
-  try {
-    ws_ptr->accept();
-    LOG_INFO("Frontend connected");
-    boost::beast::multi_buffer buffer;
-    boost::beast::ostream(buffer) << GetMetaData();
-    ws_ptr->write(buffer.data());
-
-    std::lock_guard<std::mutex> lock_guard(clients_addition_lock_);
-    ws_ptrs_.insert(ws_ptr);
-  } catch (boost::system::system_error const& se) {
-    if (se.code() != websocket::error::closed) {
-      throw se;
-    } else {
-      LOG_INFO("Frontend connection closed");
-    }
-  }
-}
 
 void CarlaProxy::Init() {
   try {
@@ -139,50 +107,6 @@ void CarlaProxy::Init() {
   } catch (const std::exception& e) {
     LOG_ERROR("%s", e.what());
     exit(1);
-  }
-  // try {
-  //   ws_ptr_->accept();
-  //   LOG_INFO("Frontend connected");
-  //   boost::beast::multi_buffer buffer;
-  //   boost::beast::ostream(buffer) << GetMetaData();
-  //   ws_ptr_->write(buffer.data());
-  // } catch (boost::system::system_error const& se) {
-  //   if (se.code() != websocket::error::closed) {
-  //     throw se;
-  //   } else {
-  //     LOG_INFO("Frontend connection closed");
-  //   }
-  // }
-}
-
-void CarlaProxy::Update(const std::string& data_str) {
-  boost::beast::multi_buffer buffer;
-
-  boost::beast::ostream(buffer) << data_str;  // GetUpdateData();
-  auto data = buffer.data();
-
-  boost::unordered_set<boost::shared_ptr<
-      boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>>
-      to_delete_ws_ptrs;
-
-  std::lock_guard<std::mutex> lock_guard(clients_addition_lock_);
-  for (auto ws_ptr : ws_ptrs_) {
-    try {
-      ws_ptr->write(data);
-    } catch (boost::system::system_error const& se) {
-      to_delete_ws_ptrs.insert(ws_ptr);
-      if (se.code() != websocket::error::closed &&
-          std::strcmp(se.what(), "Broken pipe") != 0 &&
-          std::strcmp(se.what(), "Connection reset by peer")) {
-        LOG_ERROR("ERROR WHEN SENDDING UPDATE %s", se.what());
-      } else {
-        LOG_INFO("Frontend connection closed");
-      }
-    }
-  }
-
-  for (auto to_delete_ws_ptr : to_delete_ws_ptrs) {
-    ws_ptrs_.erase(to_delete_ws_ptr);
   }
 }
 
@@ -273,14 +197,6 @@ std::string CarlaProxy::GetMetaData() {
   //                 metadata::StreamStyle().AddStrokeWidth(2.0).AddStrokeColor(
   //                     "#FFD700"))
   //             .AddType("polyline"))
-  //     .AddStream(
-  //         metadata::Stream("/lidar/points")
-  //             .AddCategory("primitive")
-  //             .AddCoordinate("IDENTITY")
-  //             .AddType("points")
-  //             .AddStreamStyle(metadata::StreamStyle()
-  //                                 .AddPointCloudMode("distance_to_vehicle")
-  //                                 .AddRadiusPixels(2.0)))
   metadata_ptr_ = xviz_metadata_builder.GetData();
   auto json = xviz_metadata_builder.GetMessage().ToObject();
   // auto v = ;
@@ -288,6 +204,7 @@ std::string CarlaProxy::GetMetaData() {
   return json.dump();
   // return xviz_metadata_builder.GetMessage().ToObjectString();
 }
+
 XVIZBuilder CarlaProxy::GetUpdateData() {
   auto world_snapshots = world_ptr_->WaitForTick(2s);
   return GetUpdateData(world_snapshots);
@@ -300,12 +217,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   double now_time = now.time_since_epoch().count() / 1e9;
 
   XVIZBuilder xviz_builder(metadata_ptr_);
-  // XVIZPrimitiveBuider xviz_primitive_traffic_light_red_builder(
-  //     "/traffic_lights/red");
-  // XVIZPrimitiveBuider xviz_primitive_traffic_light_yellow_builder(
-  //     "/traffic_lights/yellow");
-  // XVIZPrimitiveBuider xviz_primitive_traffic_light_green_builder(
-  //     "/traffic_lights/green");
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
       tmp_actors;
@@ -530,9 +441,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     for (const auto& [camera_id, image] : image_data_queues_) {
       if (real_dummy_sensors_relation_.find(camera_id) !=
           real_dummy_sensors_relation_.end()) {
-        // image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
         last_received_images_.push_back(image.GetData());
-        // image_builder.Image("");
       } else {
         to_delete_sensor_ids.push_back(camera_id);
       }
@@ -563,60 +472,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   return std::move(xviz_builder);  //.GetData();
 }
 
-void CarlaProxy::AddVehicle(
-    XVIZPrimitiveBuilder& xviz_primitive_builder,
-    boost::shared_ptr<carla::client::Vehicle> vehicle_ptr) {
-  auto bounding_box = vehicle_ptr->GetBoundingBox();
-  double x_off = bounding_box.extent.x;
-  double y_off = bounding_box.extent.y;
-  double yaw = vehicle_ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
-  std::vector<std::pair<double, double>> offset = {
-      AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
-      AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
-  double x = vehicle_ptr->GetLocation().x;
-  double y = vehicle_ptr->GetLocation().y;
-  double z = vehicle_ptr->GetLocation().z;
-  // std::vector<point_3d_t> vertices;
-  std::vector<double> vertices;
-  for (int j = 0; j < offset.size(); j++) {
-    // vertices.emplace_back(x + offset[j].first, -(y + offset[j].second), z);
-    vertices.push_back(x + offset[j].first);
-    vertices.push_back(-(y + offset[j].second));
-    vertices.push_back(z);
-  }
-  xviz_primitive_builder
-    .Polygon(std::move(vertices));
-  // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices).AddId(
-  //     vehicle_ptr->GetTypeId() + std::string(".") +
-  //     std::to_string(vehicle_ptr->GetId())));
-}
-
-void CarlaProxy::AddWalker(
-    XVIZPrimitiveBuilder& xviz_primitive_builder,
-    boost::shared_ptr<carla::client::Walker> walker_ptr) {
-  auto bounding_box = walker_ptr->GetBoundingBox();
-  double x_off = bounding_box.extent.x;
-  double y_off = bounding_box.extent.y;
-  double yaw = walker_ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
-  std::vector<std::pair<double, double>> offset = {
-      AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
-      AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
-  double x = walker_ptr->GetLocation().x;
-  double y = walker_ptr->GetLocation().y;
-  double z = walker_ptr->GetLocation().z;
-  std::vector<double> vertices;
-  for (int j = 0; j < offset.size(); j++) {
-    vertices.push_back(x + offset[j].first);
-    vertices.push_back(-(y + offset[j].second));
-    vertices.push_back(z);
-  }
-  xviz_primitive_builder
-    .Polygon(std::move(vertices));
-  // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices).AddId(
-  //     walker_ptr->GetTypeId() + std::string(".") +
-  //     std::to_string(walker_ptr->GetId())));
-}
-
 void CarlaProxy::AddTrafficLights(
     XVIZPrimitiveBuilder& xviz_primitive_builder,
     boost::shared_ptr<carla::client::TrafficLight> traffic_light) {
@@ -627,57 +482,8 @@ void CarlaProxy::AddTrafficLights(
   }
 
   for (auto& polygon : traffic_lights_[id]) {
-    // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(polygon));
     xviz_primitive_builder.Polygon(polygon);
   }
-  // auto trigger = traffic_light->GetTriggerVolume();
-  // double x_off = trigger.extent.x;
-  // double y_off = trigger.extent.y;
-  // auto transform = traffic_light->GetTransform();
-  // transform.TransformPoint(trigger.location);
-  // auto location = trigger.location;
-  // std::vector<point_3d_t> vertices;
-
-  // double yaw = transform.rotation.yaw / 180.0 * M_PI;
-  // std::vector<std::pair<double, double>> offset = {
-  //     AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
-  //     AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
-
-  // for (int j = 0; j < offset.size(); j++) {
-  //   vertices.emplace_back(location.x + offset[j].first, -(location.y +
-  //   offset[j].second), location.z);
-  // }
-  // xviz_primitive_builder.AddPolygon(XVIZPrimitivePolygonBuilder(vertices));
-}
-
-void dbgPrintMaxMinDeg(const std::vector<point_3d_t>& points) {
-  double min_deg = 10000;
-  double max_deg = -11111;
-  for (const auto& point : points) {
-    double x = point.get<0>();
-    double y = point.get<1>();
-    double deg = std::atan2(y, x) / M_PI * 180.0;
-    if (x < 0) {
-      deg += 180.0;
-    }
-    min_deg = std::min(min_deg, deg);
-    max_deg = std::max(max_deg, deg);
-  }
-  LOG_INFO("MIN: %.2f, MAX: %.2f", min_deg, max_deg);
-}
-
-std::string dbgPointString(const point_3d_t& p) {
-  std::string str = "[" + std::to_string(p.get<0>()) + ", " +
-                    std::to_string(p.get<1>()) + "]";
-  return str;
-}
-
-std::string dbgPolygonString(const std::vector<point_3d_t>& pol) {
-  std::string str;
-  for (const auto& p : pol) {
-    str += dbgPointString(p) + ", ";
-  }
-  return str;
 }
 
 void CarlaProxy::AddTrafficLightAreas() {
@@ -748,13 +554,6 @@ void CarlaProxy::AddTrafficLightAreas() {
           FlatVector(area, right_down_p, -1);
           FlatVector(area, left_down_p, -1);
           FlatVector(area, left_top_p, -1);
-          // area.push_back(right_top_p);
-          // area.push_back(right_down_p);
-          // area.push_back(left_down_p);
-          // area.push_back(left_top_p);
-          // for (auto& p : area) {
-          //   p.set<1>(-p.get<1>());
-          // }
           traffic_lights_[id].push_back(std::move(area));
         }
         now_waypoint = now_waypoint->GetLeft();
@@ -801,9 +600,6 @@ void CarlaProxy::AddTrafficLightAreas() {
           FlatVector(area, right_down_p, -1);
           FlatVector(area, left_down_p, -1);
           FlatVector(area, left_top_p, -1);
-          // for (auto& p : area) {
-          //   p.set<1>(-p.get<1>());
-          // }
           traffic_lights_[id].push_back(std::move(area));
         }
         now_waypoint = now_waypoint->GetRight();
@@ -863,19 +659,15 @@ boost::shared_ptr<carla::client::Sensor> CarlaProxy::CreateDummySensor(
 utils::PointCloud CarlaProxy::GetPointCloud(
     const carla::sensor::data::LidarMeasurement& lidar_measurement) {
   std::vector<double> points;
-  // std::vector<point_3d_t> dbg_points;
   double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
   auto location = lidar_measurement.GetSensorTransform().location;
   for (const auto& point : lidar_measurement) {
-    // dbg_points.emplace_back(point.x, point.y, point.z);
     point_3d_t offset = Utils::GetOffsetAfterTransform(
         point_3d_t(point.x, point.y, point.z), (yaw + 90.0) / 180.0 * M_PI);
     points.emplace_back(location.x + offset.get<0>());
     points.emplace_back(-(location.y + offset.get<1>()));
     points.emplace_back(location.z - offset.get<2>());
   }
-  // uint32_t partition =
-  // (uint32_t)((int)lidar_measurement.GetHorizontalAngle()) / 120;
   return utils::PointCloud(lidar_measurement.GetTimestamp(), std::move(points));
 }
 
@@ -894,7 +686,6 @@ utils::Image CarlaProxy::GetEncodedImage(
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  // std::string data_str = base64_encode(image_data.data(), image_data.size());
   std::string data_str;
   for (const auto& c : image_data) {
     data_str += (char)c;

@@ -26,7 +26,6 @@ add_library(xviz-pb
 target_link_libraries(xviz-pb ${PROTOBUF_LIBRARIES})
 
 add_library(xviz-utils
-  utils/base64.cpp
   utils/utils.cpp
 )
 

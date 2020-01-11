@@ -7,7 +7,6 @@
 #ifndef MELLOCOLATE_PROXY_H_
 #define MELLOCOLATE_PROXY_H_
 
-#include "platform/utils/base64.h"
 #include "platform/utils/def.h"
 #include "platform/utils/lodepng.h"
 #include "platform/utils/utils.h"
@@ -71,20 +70,9 @@ class CarlaProxy {
   xviz::XVIZBuilder GetUpdateData(
       const carla::client::WorldSnapshot& world_snapshots);
   xviz::XVIZBuilder GetUpdateData();
-  // std::string GetUpdateData();
-  void Run();
-  void AddClient(boost::asio::ip::tcp::socket socket);
 
  private:
   void Update(const std::string& data_str);
-
-  // Carla related
-  // std::string GetUpdateData(
-  // const carla::client::WorldSnapshot& world_snapshots);
-  void AddVehicle(xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
-                  boost::shared_ptr<carla::client::Vehicle> vehicle);
-  void AddWalker(xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
-                 boost::shared_ptr<carla::client::Walker> walker);
   void AddTrafficLights(
       xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
       boost::shared_ptr<carla::client::TrafficLight> traffic_light);
