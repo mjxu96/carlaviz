@@ -109,6 +109,7 @@ class CarlaProxy {
   std::mutex image_data_lock_;
   bool is_image_received_{false};
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
+  std::vector<std::string> last_received_images_{};
   std::mutex lidar_data_lock_;
   std::unordered_map<uint32_t, std::deque<utils::PointCloud>>
       lidar_data_queues_{};

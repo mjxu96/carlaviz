@@ -419,7 +419,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     real_sensors_.erase(id);
 
     image_data_lock_.lock();
-    image_data_queues_.erase(id);
+    if (image_data_queues_.find(id) != image_data_queues_.end()) {
+      image_data_queues_.erase(id);
+      is_image_received_ = true;
+    }
     image_data_lock_.unlock();
 
     lidar_data_lock_.lock();
@@ -459,21 +462,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     .Orientation(ego_orientation.get<0>(), ego_orientation.get<1>(), ego_orientation.get<2>())
     .Position(ego_position.get<0>(), ego_position.get<1>(), ego_position.get<2>())
     .Timestamp(now_time);
-  // LOG_INFO("HERE1");
-  // TODO TIMESERIES
-
-  // xviz_builder.AddTimestamp(now_time).AddPose(
-  //     XVIZPoseBuilder("/vehicle_pose")
-  //         .AddMapOrigin(point_3d_t(0, 0, 0))
-  //         .AddOrientation(ego_orientation)
-  //         .AddPosition(ego_position)
-  //         .AddTimestamp(now_time))
-  //     .AddTimeSeries(XVIZTimeSeriesBuider("/vehicle/acceleration")
-  //         .AddTimestamp(now_time)
-  //         .AddValue(display_acceleration))
-  //     .AddTimeSeries(XVIZTimeSeriesBuider("/vehicle/velocity")
-  //         .AddTimestamp(now_time)
-  //         .AddValue(display_velocity));
 
   xviz_builder.TimeSeries("/vehicle/acceleration")
     .Timestamp(now_time)
@@ -494,14 +482,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "vehicle")) {
       AddVerticesToVector<carla::client::Vehicle>(vehicle_vector, boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr));
-      // AddVehicle(xviz_builder.Primitive("/object/vehicles"),
-      //            boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr));
       continue;
     }
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "walker")) {
       AddVerticesToVector<carla::client::Walker>(walker_vector, boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
-      // AddWalker(xviz_builder.Primitive("/object/walkers"),
-      //           boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
       continue;
     }
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
@@ -537,43 +521,29 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     xviz_builder.Primitive("/object/walkers")
       .Polygon(std::move(v));
   }
-  // LOG_INFO("HERE2");
-  // xviz_builder.AddPrimitive(xviz_primitive_builder)
-  //     .AddPrimitive(xviz_primitive_walker_builder)
-  //     .AddPrimitive(xviz_primitive_traffic_light_red_builder)
-  //     .AddPrimitive(xviz_primitive_traffic_light_yellow_builder)
-  //     .AddPrimitive(xviz_primitive_traffic_light_green_builder);
 
-  bool should_add = false;
-  std::vector<std::string> images_data;
   image_data_lock_.lock();
   if (is_image_received_) {
+    last_received_images_.clear();
+    is_image_received_ = false;
     std::vector<uint32_t> to_delete_image_ids;
-    for (const auto& image_pair : image_data_queues_) {
-      if (real_dummy_sensors_relation_.find(image_pair.first) !=
+    for (const auto& [camera_id, image] : image_data_queues_) {
+      if (real_dummy_sensors_relation_.find(camera_id) !=
           real_dummy_sensors_relation_.end()) {
-        should_add = true;
         // image_builder.AddImages(XVIZPrimitiveImageBuilder(image_pair.second));
-        images_data.push_back(std::get<1>(image_pair).GetData());
+        last_received_images_.push_back(image.GetData());
         // image_builder.Image("");
       } else {
-        to_delete_sensor_ids.push_back(image_pair.first);
+        to_delete_sensor_ids.push_back(camera_id);
       }
     }
     for (auto image_id : to_delete_image_ids) {
       image_data_queues_.erase(image_id);
     }
   }
-  is_image_received_ = false;
   image_data_lock_.unlock();
-  if (should_add) {
-    // xviz_builder.AddPrimitive(image_builder);
-
-    XVIZPrimitiveBuilder& image_builder = xviz_builder.Primitive("/camera/images");
-    for (auto& image_data : images_data) {
-      image_builder.Image(std::move(image_data));
-    }
-
+  for (auto& image_data : last_received_images_) {
+    xviz_builder.Primitive("/camera/images").Image(image_data);
   }
 
   lidar_data_lock_.lock();
