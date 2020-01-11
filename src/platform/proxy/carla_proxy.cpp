@@ -59,8 +59,6 @@ void AddMap(nlohmann::json& json, std::string& map) {
 std::unordered_map<std::string, XVIZUIBuilder> GetUIs() {
   std::unordered_map<std::string, XVIZUIBuilder> ui_builders;
 
-  ui_builders["Camera"] = XVIZUIBuilder();
-  ui_builders["Metrics"] = XVIZUIBuilder();
 
   std::vector<std::string> cameras = {"/camera/images"};
   std::vector<std::string> acceleration_stream = {"/vehicle/acceleration"};
@@ -72,8 +70,10 @@ std::unordered_map<std::string, XVIZUIBuilder> GetUIs() {
   std::shared_ptr<XVIZBaseUIBuilder> container_builder = std::make_shared<XVIZContainerBuilder>("metrics", LayoutType::VERTICAL);
   container_builder->Child(metric_builder1);
   container_builder->Child(metric_builder2);
-  // container_builder->Child(acceleration_stream, "test", "test");
+  container_builder->Child(acceleration_stream, "test", "test");
+  ui_builders["Camera"] = XVIZUIBuilder();
   ui_builders["Camera"].Child(camera_builder);
+  ui_builders["Metrics"] = XVIZUIBuilder();
   ui_builders["Metrics"].Child(container_builder);
   return ui_builders;
 }
@@ -259,7 +259,7 @@ std::string CarlaProxy::GetMetaData() {
           .StreamStyle(
             "{"
               "\"point_cloud_mode\": \"distance_to_vehicle\","
-              "\"raidus_pixels\": 2.0"
+              "\"radius_pixels\": 2.0"
             "}")
         .UI(GetUIs());
         
@@ -546,8 +546,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   bool should_add = false;
   std::vector<std::string> images_data;
-    // auto now_timee = std::chrono::system_clock::now();
-    // auto nnn = now_timee.time_since_epoch().count() / 1e9;
   image_data_lock_.lock();
   if (is_image_received_) {
     std::vector<uint32_t> to_delete_image_ids;
@@ -578,33 +576,19 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   }
 
-    // now_timee = std::chrono::system_clock::now();
-    // nnn = now_timee.time_since_epoch().count() / 1e9 - nnn;
-    // std::cout << "add image spend: " << nnn << std::endl;
-    // auto now_timee = std::chrono::system_clock::now();
-    // auto nnn = now_timee.time_since_epoch().count() / 1e9;
   lidar_data_lock_.lock();
   XVIZPrimitiveBuilder& point_cloud_builder = xviz_builder.Primitive("/lidar/points");
-  std::vector<std::vector<double>> point_clouds;
-  for (const auto& point_cloud_pair : lidar_data_queues_) {
-    for (const auto& point_cloud : point_cloud_pair.second) {
-      // point_cloud_builder.AddPoints(
-      //     XVIZPrimitivePointBuilder(point_cloud.GetPoints()));
-      // point_cloud_builder.Points(point_cloud.GetPoints());
-      point_clouds.push_back(point_cloud.GetPoints());
+  std::vector<double> points;
+  for (auto& [lidar_id, point_cloud_queue] : lidar_data_queues_) {
+    for (auto& point_cloud : point_cloud_queue) {
+      points.insert(points.end(), point_cloud.GetPoints().begin(), point_cloud.GetPoints().end());
     }
   }
   lidar_data_lock_.unlock();
 
 
-  for (auto& point_cloud : point_clouds) {
-    point_cloud_builder.Points(std::move(point_cloud));
-  }
+  point_cloud_builder.Points(std::move(points));
 
-    // now_timee = std::chrono::system_clock::now();
-    // nnn = now_timee.time_since_epoch().count() / 1e9 - nnn;
-    // std::cout << "add point cloud spend: " << nnn << std::endl;
-  // xviz_builder.AddPrimitive(point_cloud_builder);
 
   return std::move(xviz_builder);  //.GetData();
 }

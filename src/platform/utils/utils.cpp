@@ -55,7 +55,7 @@ PointCloud::PointCloud(double timestamp, std::vector<double>&& points)
 
 double PointCloud::GetTimestamp() const { return timestamp_; }
 
-std::vector<double> PointCloud::GetPoints() const { return points_; }
+std::vector<double>& PointCloud::GetPoints() { return points_; }
 
 Image::Image(std::string&& encoded_str, size_t width, size_t height)
     : encoded_str_(std::move(encoded_str)), width_(width), height_(height) {}

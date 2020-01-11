@@ -11,17 +11,8 @@ void Platform::Run() {
   Init();
 
   while (true) {
-    std::chrono::time_point<std::chrono::system_clock> now =
-        std::chrono::system_clock::now();
-    double time_1 = now.time_since_epoch().count() / 1e9;
     auto xviz = carla_proxy_->GetUpdateData();
-    now = std::chrono::system_clock::now();
-    double time_2 = now.time_since_epoch().count() / 1e9;
     auto xviz_message = xviz.GetMessage();
-    now = std::chrono::system_clock::now();
-    double time_3 = now.time_since_epoch().count() / 1e9;
-
-    std::cout << "1: " << (time_2 - time_1) << "  2: " << (time_3 - time_2) << std::endl;
 
     // auto polylines = drawing_proxy_->GetPolyLines();
     // XVIZPrimitiveBuider polyline_builder("/planning/trajectory");

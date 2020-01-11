@@ -46,7 +46,7 @@ class PointCloud {
   PointCloud() = default;
   PointCloud(double timestamp, std::vector<double>&& points);
   double GetTimestamp() const;
-  std::vector<double> GetPoints() const;
+  std::vector<double>& GetPoints();
 
  private:
   std::vector<double> points_;
