@@ -12,6 +12,8 @@ void Platform::Run() {
 
   while (true) {
     auto xviz = carla_proxy_->GetUpdateData();
+    drawing_proxy_->AddPolyLines(xviz);
+
     auto xviz_message = xviz.GetMessage();
 
     // auto polylines = drawing_proxy_->GetPolyLines();

@@ -20,22 +20,24 @@ void DrawingProxy::StartListen() {
   t.detach();
 }
 
-// XVIZBuilder DrawingProxy::GetPolyLines() {
-//   XVIZBuilder polyline_builder(nullptr);
-//   XVIZPrimitiveBuilder& polyline_primitive_builder = polyline_builder.Primitive("/planning/trajectory");
-//   // XVIZBuilder polyline_builder("/planning/trajectory");
-//   polyline_update_lock_.lock();
-//   for (const auto& polylines_pair : polylines_) {
-//     for (const auto& polyline : polylines_[polylines_pair.first]) {
-//       polyline_primitive_builder.Polyline()
-//       polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.points)
-//                                         .AddColor(polyline.color)
-//                                         .AddWidth(polyline.width));
-//     }
-//   }
-//   polyline_update_lock_.unlock();
-//   return polyline_builder;
-// }
+void DrawingProxy::AddPolyLines(xviz::XVIZBuilder& xviz) {
+  XVIZPrimitiveBuilder& polyline_primitive_builder = xviz.Primitive("/planning/trajectory");
+  // XVIZBuilder polyline_builder("/planning/trajectory");
+  polyline_update_lock_.lock();
+  for (const auto& polylines_pair : polylines_) {
+    for (const auto& polyline : polylines_[polylines_pair.first]) {
+      std::string style = std::string("{\"stroke_color\":\"") + polyline.color + std::string("\", \"stroke_width\":") + std::to_string(polyline.width) + std::string("}");
+      polyline_primitive_builder.Polyline(polyline.points)
+        .Style(style);
+      // polyline_primitive_builder.Polyline()
+      // polyline_builder.AddPolyLine(XVIZPrimitivePolyLineBuilder(polyline.points)
+      //                                   .AddColor(polyline.color)
+      //                                   .AddWidth(polyline.width));
+    }
+  }
+  polyline_update_lock_.unlock();
+  // return polyline_builder;
+}
 
 void DrawingProxy::Accept() {
   LOG_INFO("Waiting for a drawing client to connect. Listening to port %u....",
@@ -125,8 +127,9 @@ std::vector<polyline> DrawingProxy::DecodeToPoints(const std::string& str) {
               if (point.is_array()) {
                 auto point_vertices = point.get<std::vector<double>>();
                 if (point_vertices.size() == 3) {
-                  polyline.points.emplace_back(point_vertices[0], -point_vertices[1],
-                                      point_vertices[2]);
+                  polyline.points.push_back(point_vertices[0]);
+                  polyline.points.push_back(-point_vertices[1]);
+                  polyline.points.push_back(point_vertices[2]);
                 } else {
                   LOG_ERROR("Point should have 3 coordinates");
                   break;

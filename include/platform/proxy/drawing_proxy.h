@@ -30,13 +30,13 @@ namespace mellocolate {
 struct polyline {
   std::string color{"#00FF00"};
   double width{2.5};
-  std::vector<point_3d_t> points{};
+  std::vector<double> points{};
 };
 
 class DrawingProxy {
  public:
   DrawingProxy(uint16_t listen_port);
-  // xviz::XVIZBuilder GetPolyLines();
+  void AddPolyLines(xviz::XVIZBuilder& xviz);
   void StartListen();
 
  private:

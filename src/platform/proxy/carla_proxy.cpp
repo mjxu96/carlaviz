@@ -184,6 +184,15 @@ std::string CarlaProxy::GetMetaData() {
               "\"point_cloud_mode\": \"distance_to_vehicle\","
               "\"radius_pixels\": 2.0"
             "}")
+        .Stream("/planning/trajectory")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Type(Primitive::StreamMetadata_PrimitiveType_POLYLINE)
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .StreamStyle(
+            "{"
+              "\"stroke_color\": \"#FFD700\","
+              "\"stroke_width\": 2.0"
+            "}")
         .UI(GetUIs());
         
           
