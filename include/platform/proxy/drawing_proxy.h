@@ -27,9 +27,20 @@
 
 namespace mellocolate {
 
+enum class DrawingType {
+  LINE = 0u,
+  POINT = 1u,
+};
+
 struct polyline {
   std::string color{"#00FF00"};
   double width{2.5};
+  std::vector<double> points{};
+};
+
+struct point {
+  std::string color{"#00FF00"};
+  double size{2.5};
   std::vector<double> points{};
 };
 
@@ -46,9 +57,12 @@ class DrawingProxy {
       boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
   std::vector<polyline> DecodeToPolylines(const std::string& str);
+  void Decode(const std::string& str, uint32_t id);
 
   std::mutex polyline_update_lock_{};
+  std::mutex point_update_lock_{};
   std::unordered_map<uint32_t, std::vector<polyline>> polylines_{};
+  std::unordered_map<uint32_t, std::vector<point>> points_{};
 
   std::mutex add_client_lock_{};
   uint32_t client_max_id_{0u};

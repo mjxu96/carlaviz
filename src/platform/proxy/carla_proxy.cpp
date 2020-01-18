@@ -193,6 +193,10 @@ std::string CarlaProxy::GetMetaData() {
               "\"stroke_color\": \"#FFD700\","
               "\"stroke_width\": 2.0"
             "}")
+        .Stream("/planning/points")
+          .Category(Category::StreamMetadata_Category_PRIMITIVE)
+          .Type(Primitive::StreamMetadata_PrimitiveType_POLYLINE)
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
         .UI(GetUIs());
         
           
