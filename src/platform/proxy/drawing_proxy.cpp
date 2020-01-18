@@ -83,7 +83,7 @@ void DrawingProxy::AddClient(
       std::ostringstream os;
       os << boost::beast::buffers(buffer.data());
 
-      auto polyline = DecodeToPoints(os.str());
+      auto polyline = DecodeToPolylines(os.str());
       polyline_update_lock_.lock();
       polylines_[id] = polyline;
       polyline_update_lock_.unlock();
@@ -101,7 +101,7 @@ void DrawingProxy::AddClient(
   }
 }
 
-std::vector<polyline> DrawingProxy::DecodeToPoints(const std::string& str) {
+std::vector<polyline> DrawingProxy::DecodeToPolylines(const std::string& str) {
   std::vector<polyline> polylines;
   std::string color = "#FF0000";
   double width = 1.0;

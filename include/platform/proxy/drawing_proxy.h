@@ -45,7 +45,7 @@ class DrawingProxy {
   void AddClient(
       boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
-  std::vector<polyline> DecodeToPoints(const std::string& str);
+  std::vector<polyline> DecodeToPolylines(const std::string& str);
 
   std::mutex polyline_update_lock_{};
   std::unordered_map<uint32_t, std::vector<polyline>> polylines_{};
