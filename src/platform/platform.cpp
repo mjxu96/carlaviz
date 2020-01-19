@@ -12,7 +12,7 @@ void Platform::Run() {
 
   while (true) {
     auto xviz = carla_proxy_->GetUpdateData();
-    drawing_proxy_->AddPolyLines(xviz);
+    drawing_proxy_->AddDrawings(xviz);
 
     auto xviz_message = xviz.GetMessage();
 

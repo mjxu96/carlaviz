@@ -20,7 +20,7 @@ void DrawingProxy::StartListen() {
   t.detach();
 }
 
-void DrawingProxy::AddPolyLines(xviz::XVIZBuilder& xviz) {
+void DrawingProxy::AddDrawings(xviz::XVIZBuilder& xviz) {
   XVIZPrimitiveBuilder& polyline_primitive_builder = xviz.Primitive("/planning/trajectory");
   // XVIZBuilder polyline_builder("/planning/trajectory");
   polyline_update_lock_.lock();
@@ -41,9 +41,7 @@ void DrawingProxy::AddPolyLines(xviz::XVIZBuilder& xviz) {
   point_update_lock_.lock();
   for (const auto& points_pair : points_) {
     for (const auto& point : points_[points_pair.first]) {
-      std::string style = std::string("{\"stroke_color\":\"") + point.color + std::string("\", \"radius_pixels\":") + std::to_string(point.size) + std::string("}");
-      point_primitive_builder.Points(point.points)
-        .Style(style);
+      point_primitive_builder.Points(point.points);
     }
   }
   point_update_lock_.unlock();
@@ -86,9 +84,7 @@ void DrawingProxy::AddClient(
       size_t size = client_ptr->read(buffer, ec);
       if (ec.value() != 0) {
         LOG_INFO("Drawing client %u connection closed", id);
-        polyline_update_lock_.lock();
-        polylines_.erase(id);
-        polyline_update_lock_.unlock();
+        CleanUpDrawing(id);
         return;
       }
       std::ostringstream os;
@@ -102,12 +98,7 @@ void DrawingProxy::AddClient(
     }
 
   } catch (boost::system::system_error const& se) {
-    polyline_update_lock_.lock();
-    polylines_.erase(id);
-    polyline_update_lock_.unlock();
-    point_update_lock_.lock();
-    points_.erase(id);
-    point_update_lock_.unlock();
+    CleanUpDrawing(id);
     if (se.code() != websocket::error::closed) {
       LOG_ERROR("Drawing client read error %s", se.what());
     } else {
@@ -187,8 +178,6 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
   } else if (type == DrawingType::POINT) {
 
     std::vector<point> points;
-    std::string color = "#FF0000";
-    double size = 2.0;
     for (auto itr = decoded_json.begin(); itr != decoded_json.end(); itr++) {
       std::string key = itr.key();
       if (key == "points") {
@@ -224,16 +213,6 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
           break;
         }
       }
-      if (key == "color") {
-        color = itr.value().get<std::string>();
-      }
-      if (key == "size") {
-        size = itr.value().get<double>();
-      }
-    }
-    for (auto& point : points) {
-      point.color = color;
-      point.size = size;
     }
     point_update_lock_.lock();
     points_[id] = std::move(points);
@@ -242,67 +221,12 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
   }
 }
 
+void DrawingProxy::CleanUpDrawing(uint32_t id) {
+    polyline_update_lock_.lock();
+    polylines_.erase(id);
+    polyline_update_lock_.unlock();
 
-std::vector<polyline> DrawingProxy::DecodeToPolylines(const std::string& str) {
-  std::vector<polyline> polylines;
-  std::string color = "#FF0000";
-  double width = 1.0;
-  Json decoded_json;
-  try {
-    decoded_json = Json::parse(str);
-  } catch (std::exception const& e) {
-    LOG_ERROR(
-        "Receive bad json data from drawing client, ignore this data message, "
-        "the message is %s",
-        str.c_str());
-    return polylines;
-  }
-
-  for (auto itr = decoded_json.begin(); itr != decoded_json.end(); itr++) {
-    std::string key = itr.key();
-    if (key == "vertices") {
-      if (itr.value().is_array()) {
-        for (const auto& line : itr.value()) {
-          if (line.is_array()) {
-            polyline polyline;
-            for (const auto& point : line) {
-              if (point.is_array()) {
-                auto point_vertices = point.get<std::vector<double>>();
-                if (point_vertices.size() == 3) {
-                  polyline.points.push_back(point_vertices[0]);
-                  polyline.points.push_back(-point_vertices[1]);
-                  polyline.points.push_back(point_vertices[2]);
-                } else {
-                  LOG_ERROR("Point should have 3 coordinates");
-                  break;
-                }
-              } else {
-                LOG_ERROR(
-                    "Point in vertices entry in drawing message is not array");
-                break;
-              }
-            }
-            polylines.push_back(polyline);
-          } else {
-            LOG_ERROR("One client should send multiple lines");
-          }
-          
-        }
-      } else {
-        LOG_ERROR("Vertices entry in drawing message is not array");
-        break;
-      }
-    }
-    if (key == "color") {
-      color = itr.value().get<std::string>();
-    }
-    if (key == "width") {
-      width = itr.value().get<double>();
-    }
-  }
-  for (auto& polyline : polylines) {
-    polyline.color = color;
-    polyline.width = width;
-  }
-  return polylines;
+    point_update_lock_.lock();
+    points_.erase(id);
+    point_update_lock_.unlock();
 }

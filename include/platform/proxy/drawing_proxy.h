@@ -39,15 +39,13 @@ struct polyline {
 };
 
 struct point {
-  std::string color{"#00FF00"};
-  double size{2.5};
   std::vector<double> points{};
 };
 
 class DrawingProxy {
  public:
   DrawingProxy(uint16_t listen_port);
-  void AddPolyLines(xviz::XVIZBuilder& xviz);
+  void AddDrawings(xviz::XVIZBuilder& xviz);
   void StartListen();
 
  private:
@@ -56,8 +54,8 @@ class DrawingProxy {
   void AddClient(
       boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
-  std::vector<polyline> DecodeToPolylines(const std::string& str);
   void Decode(const std::string& str, uint32_t id);
+  void CleanUpDrawing(uint32_t id);
 
   std::mutex polyline_update_lock_{};
   std::mutex point_update_lock_{};
