@@ -21,7 +21,7 @@ void DrawingProxy::StartListen() {
 }
 
 void DrawingProxy::AddDrawings(xviz::XVIZBuilder& xviz) {
-  XVIZPrimitiveBuilder& polyline_primitive_builder = xviz.Primitive("/planning/trajectory");
+  XVIZPrimitiveBuilder& polyline_primitive_builder = xviz.Primitive("/drawing/polylines");
   // XVIZBuilder polyline_builder("/planning/trajectory");
   polyline_update_lock_.lock();
   for (const auto& polylines_pair : polylines_) {
@@ -37,7 +37,7 @@ void DrawingProxy::AddDrawings(xviz::XVIZBuilder& xviz) {
   }
   polyline_update_lock_.unlock();
 
-  XVIZPrimitiveBuilder& point_primitive_builder = xviz.Primitive("/planning/points");
+  XVIZPrimitiveBuilder& point_primitive_builder = xviz.Primitive("/drawing/points");
   point_update_lock_.lock();
   for (const auto& points_pair : points_) {
     for (const auto& point : points_[points_pair.first]) {
@@ -45,6 +45,17 @@ void DrawingProxy::AddDrawings(xviz::XVIZBuilder& xviz) {
     }
   }
   point_update_lock_.unlock();
+
+  XVIZPrimitiveBuilder& text_primitive_builder = xviz.Primitive("/drawing/texts");
+  text_update_lock_.lock();
+  for (const auto& text_pair : texts_) {
+    for (const auto& text : texts_[text_pair.first]) {
+      std::string style = std::string("{\"fill_color\":\"") + text.color + std::string("\", \"text_size\":") + std::to_string(text.size) + std::string("}");
+      text_primitive_builder.Text(text.message)
+        .Position(text.position).Style(style);
+    }
+  }
+  text_update_lock_.unlock();
   // return polyline_builder;
 }
 
@@ -119,7 +130,13 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
     return;
   }
 
-  DrawingType type = (decoded_json["type"] == "line" ? DrawingType::LINE : DrawingType::POINT);
+  std::string type_str = decoded_json["type"];
+  DrawingType type = DrawingType::LINE;
+  if (type_str == "point") {
+    type = DrawingType::POINT;
+  } else if (type_str == "text") {
+    type = DrawingType::TEXT;
+  }
 
   if (type == DrawingType::LINE) {
     std::vector<polyline> polylines;
@@ -218,6 +235,49 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
     points_[id] = std::move(points);
     point_update_lock_.unlock();
 
+  } else if (type == DrawingType::TEXT) {
+    std::vector<text> texts;
+    std::string color = "#FFFFFF";
+    double size = 13.0;
+    for (auto itr = decoded_json.begin(); itr != decoded_json.end(); itr++) {
+      std::string key = itr.key();
+      if (key == "text") {
+        if (itr.value().is_array()) {
+          for (const auto& tt : itr.value()) {
+            text t;
+            t.message = tt["message"].get<std::string>();
+            auto pos = tt["position"].get<std::vector<double>>();
+            if (pos.size() != 3) {
+              LOG_ERROR("Position should have 3 coordinates");
+              break;
+            } else {
+              pos[1] = -pos[1];
+              t.position = std::move(pos);
+            }
+            texts.push_back(std::move(t));
+          }
+        } else {
+          LOG_ERROR("Input texts should be array");
+        }
+      }
+
+      if (key == "color") {
+        color = itr.value().get<std::string>();
+      }
+
+      if (key == "size") {
+        size = itr.value().get<double>();
+      }
+    }
+
+    for (auto& text :texts) {
+      text.color = color;
+      text.size = size;
+    }
+
+    text_update_lock_.lock();
+    texts_[id] = std::move(texts);
+    text_update_lock_.unlock();
   }
 }
 
@@ -229,4 +289,8 @@ void DrawingProxy::CleanUpDrawing(uint32_t id) {
     point_update_lock_.lock();
     points_.erase(id);
     point_update_lock_.unlock();
+
+    text_update_lock_.lock();
+    texts_.erase(id);
+    text_update_lock_.unlock();
 }

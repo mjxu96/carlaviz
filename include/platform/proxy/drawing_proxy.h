@@ -30,6 +30,7 @@ namespace mellocolate {
 enum class DrawingType {
   LINE = 0u,
   POINT = 1u,
+  TEXT = 2u,
 };
 
 struct polyline {
@@ -40,6 +41,13 @@ struct polyline {
 
 struct point {
   std::vector<double> points{};
+};
+
+struct text {
+  std::string color{"#FFFFFF"};
+  double size{13.0};
+  std::string message{};
+  std::vector<double> position{};
 };
 
 class DrawingProxy {
@@ -58,9 +66,13 @@ class DrawingProxy {
   void CleanUpDrawing(uint32_t id);
 
   std::mutex polyline_update_lock_{};
-  std::mutex point_update_lock_{};
   std::unordered_map<uint32_t, std::vector<polyline>> polylines_{};
+
+  std::mutex point_update_lock_{};
   std::unordered_map<uint32_t, std::vector<point>> points_{};
+
+  std::mutex text_update_lock_{};
+  std::unordered_map<uint32_t, std::vector<text>> texts_{};
 
   std::mutex add_client_lock_{};
   uint32_t client_max_id_{0u};
