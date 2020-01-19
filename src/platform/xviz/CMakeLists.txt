@@ -32,6 +32,8 @@ add_library(xviz-utils
 add_library(xviz-ui-builder
   builder/declarative_ui/ui_builder.cpp
   builder/declarative_ui/container_builder.cpp
+  builder/declarative_ui/plot_builder.cpp
+  builder/declarative_ui/table_builder.cpp
   builder/declarative_ui/video_builder.cpp
   builder/declarative_ui/metric_builder.cpp
   builder/declarative_ui/base_ui_builder.cpp

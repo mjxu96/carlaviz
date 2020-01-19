@@ -229,16 +229,20 @@ class UIPanel :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kChildrenFieldNumber = 4,
-    kCamerasFieldNumber = 5,
+    kChildrenFieldNumber = 6,
+    kCamerasFieldNumber = 7,
     kStreamsFieldNumber = 8,
+    kDependentVariablesFieldNumber = 10,
     kNameFieldNumber = 1,
-    kTitleFieldNumber = 6,
-    kDescriptionFieldNumber = 7,
+    kTitleFieldNumber = 4,
+    kDescriptionFieldNumber = 5,
+    kIndependentVariableFieldNumber = 9,
+    kStreamFieldNumber = 11,
     kTypeFieldNumber = 2,
     kLayoutFieldNumber = 3,
+    kDisplayObjectIdFieldNumber = 12,
   };
-  // repeated .xviz.UIPanel children = 4;
+  // repeated .xviz.UIPanel children = 6;
   int children_size() const;
   private:
   int _internal_children_size() const;
@@ -256,7 +260,7 @@ class UIPanel :
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::xviz::UIPanel >&
       children() const;
 
-  // repeated string cameras = 5;
+  // repeated string cameras = 7;
   int cameras_size() const;
   private:
   int _internal_cameras_size() const;
@@ -304,6 +308,30 @@ class UIPanel :
   std::string* _internal_add_streams();
   public:
 
+  // repeated string dependent_variables = 10;
+  int dependent_variables_size() const;
+  private:
+  int _internal_dependent_variables_size() const;
+  public:
+  void clear_dependent_variables();
+  const std::string& dependent_variables(int index) const;
+  std::string* mutable_dependent_variables(int index);
+  void set_dependent_variables(int index, const std::string& value);
+  void set_dependent_variables(int index, std::string&& value);
+  void set_dependent_variables(int index, const char* value);
+  void set_dependent_variables(int index, const char* value, size_t size);
+  std::string* add_dependent_variables();
+  void add_dependent_variables(const std::string& value);
+  void add_dependent_variables(std::string&& value);
+  void add_dependent_variables(const char* value);
+  void add_dependent_variables(const char* value, size_t size);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& dependent_variables() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_dependent_variables();
+  private:
+  const std::string& _internal_dependent_variables(int index) const;
+  std::string* _internal_add_dependent_variables();
+  public:
+
   // string name = 1;
   void clear_name();
   const std::string& name() const;
@@ -320,7 +348,7 @@ class UIPanel :
   std::string* _internal_mutable_name();
   public:
 
-  // string title = 6;
+  // string title = 4;
   void clear_title();
   const std::string& title() const;
   void set_title(const std::string& value);
@@ -336,7 +364,7 @@ class UIPanel :
   std::string* _internal_mutable_title();
   public:
 
-  // string description = 7;
+  // string description = 5;
   void clear_description();
   const std::string& description() const;
   void set_description(const std::string& value);
@@ -350,6 +378,38 @@ class UIPanel :
   const std::string& _internal_description() const;
   void _internal_set_description(const std::string& value);
   std::string* _internal_mutable_description();
+  public:
+
+  // string independent_variable = 9;
+  void clear_independent_variable();
+  const std::string& independent_variable() const;
+  void set_independent_variable(const std::string& value);
+  void set_independent_variable(std::string&& value);
+  void set_independent_variable(const char* value);
+  void set_independent_variable(const char* value, size_t size);
+  std::string* mutable_independent_variable();
+  std::string* release_independent_variable();
+  void set_allocated_independent_variable(std::string* independent_variable);
+  private:
+  const std::string& _internal_independent_variable() const;
+  void _internal_set_independent_variable(const std::string& value);
+  std::string* _internal_mutable_independent_variable();
+  public:
+
+  // string stream = 11;
+  void clear_stream();
+  const std::string& stream() const;
+  void set_stream(const std::string& value);
+  void set_stream(std::string&& value);
+  void set_stream(const char* value);
+  void set_stream(const char* value, size_t size);
+  std::string* mutable_stream();
+  std::string* release_stream();
+  void set_allocated_stream(std::string* stream);
+  private:
+  const std::string& _internal_stream() const;
+  void _internal_set_stream(const std::string& value);
+  std::string* _internal_mutable_stream();
   public:
 
   // .xviz.ComponentType type = 2;
@@ -370,6 +430,15 @@ class UIPanel :
   void _internal_set_layout(::xviz::LayoutType value);
   public:
 
+  // bool display_object_id = 12;
+  void clear_display_object_id();
+  bool display_object_id() const;
+  void set_display_object_id(bool value);
+  private:
+  bool _internal_display_object_id() const;
+  void _internal_set_display_object_id(bool value);
+  public:
+
   // @@protoc_insertion_point(class_scope:xviz.UIPanel)
  private:
   class _Internal;
@@ -378,11 +447,15 @@ class UIPanel :
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::xviz::UIPanel > children_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> cameras_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> streams_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> dependent_variables_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr title_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr description_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr independent_variable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr stream_;
   int type_;
   int layout_;
+  bool display_object_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_declarativeui_2eproto;
 };
@@ -497,7 +570,127 @@ inline void UIPanel::set_layout(::xviz::LayoutType value) {
   // @@protoc_insertion_point(field_set:xviz.UIPanel.layout)
 }
 
-// repeated .xviz.UIPanel children = 4;
+// string title = 4;
+inline void UIPanel::clear_title() {
+  title_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline const std::string& UIPanel::title() const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanel.title)
+  return _internal_title();
+}
+inline void UIPanel::set_title(const std::string& value) {
+  _internal_set_title(value);
+  // @@protoc_insertion_point(field_set:xviz.UIPanel.title)
+}
+inline std::string* UIPanel::mutable_title() {
+  // @@protoc_insertion_point(field_mutable:xviz.UIPanel.title)
+  return _internal_mutable_title();
+}
+inline const std::string& UIPanel::_internal_title() const {
+  return title_.GetNoArena();
+}
+inline void UIPanel::_internal_set_title(const std::string& value) {
+  
+  title_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+}
+inline void UIPanel::set_title(std::string&& value) {
+  
+  title_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:xviz.UIPanel.title)
+}
+inline void UIPanel::set_title(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  title_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:xviz.UIPanel.title)
+}
+inline void UIPanel::set_title(const char* value, size_t size) {
+  
+  title_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanel.title)
+}
+inline std::string* UIPanel::_internal_mutable_title() {
+  
+  return title_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* UIPanel::release_title() {
+  // @@protoc_insertion_point(field_release:xviz.UIPanel.title)
+  
+  return title_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void UIPanel::set_allocated_title(std::string* title) {
+  if (title != nullptr) {
+    
+  } else {
+    
+  }
+  title_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), title);
+  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanel.title)
+}
+
+// string description = 5;
+inline void UIPanel::clear_description() {
+  description_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline const std::string& UIPanel::description() const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanel.description)
+  return _internal_description();
+}
+inline void UIPanel::set_description(const std::string& value) {
+  _internal_set_description(value);
+  // @@protoc_insertion_point(field_set:xviz.UIPanel.description)
+}
+inline std::string* UIPanel::mutable_description() {
+  // @@protoc_insertion_point(field_mutable:xviz.UIPanel.description)
+  return _internal_mutable_description();
+}
+inline const std::string& UIPanel::_internal_description() const {
+  return description_.GetNoArena();
+}
+inline void UIPanel::_internal_set_description(const std::string& value) {
+  
+  description_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+}
+inline void UIPanel::set_description(std::string&& value) {
+  
+  description_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:xviz.UIPanel.description)
+}
+inline void UIPanel::set_description(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  description_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:xviz.UIPanel.description)
+}
+inline void UIPanel::set_description(const char* value, size_t size) {
+  
+  description_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanel.description)
+}
+inline std::string* UIPanel::_internal_mutable_description() {
+  
+  return description_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* UIPanel::release_description() {
+  // @@protoc_insertion_point(field_release:xviz.UIPanel.description)
+  
+  return description_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void UIPanel::set_allocated_description(std::string* description) {
+  if (description != nullptr) {
+    
+  } else {
+    
+  }
+  description_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), description);
+  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanel.description)
+}
+
+// repeated .xviz.UIPanel children = 6;
 inline int UIPanel::_internal_children_size() const {
   return children_.size();
 }
@@ -536,7 +729,7 @@ UIPanel::children() const {
   return children_;
 }
 
-// repeated string cameras = 5;
+// repeated string cameras = 7;
 inline int UIPanel::_internal_cameras_size() const {
   return cameras_.size();
 }
@@ -608,126 +801,6 @@ inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
 UIPanel::mutable_cameras() {
   // @@protoc_insertion_point(field_mutable_list:xviz.UIPanel.cameras)
   return &cameras_;
-}
-
-// string title = 6;
-inline void UIPanel::clear_title() {
-  title_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline const std::string& UIPanel::title() const {
-  // @@protoc_insertion_point(field_get:xviz.UIPanel.title)
-  return _internal_title();
-}
-inline void UIPanel::set_title(const std::string& value) {
-  _internal_set_title(value);
-  // @@protoc_insertion_point(field_set:xviz.UIPanel.title)
-}
-inline std::string* UIPanel::mutable_title() {
-  // @@protoc_insertion_point(field_mutable:xviz.UIPanel.title)
-  return _internal_mutable_title();
-}
-inline const std::string& UIPanel::_internal_title() const {
-  return title_.GetNoArena();
-}
-inline void UIPanel::_internal_set_title(const std::string& value) {
-  
-  title_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
-}
-inline void UIPanel::set_title(std::string&& value) {
-  
-  title_.SetNoArena(
-    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:xviz.UIPanel.title)
-}
-inline void UIPanel::set_title(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  
-  title_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:xviz.UIPanel.title)
-}
-inline void UIPanel::set_title(const char* value, size_t size) {
-  
-  title_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanel.title)
-}
-inline std::string* UIPanel::_internal_mutable_title() {
-  
-  return title_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline std::string* UIPanel::release_title() {
-  // @@protoc_insertion_point(field_release:xviz.UIPanel.title)
-  
-  return title_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline void UIPanel::set_allocated_title(std::string* title) {
-  if (title != nullptr) {
-    
-  } else {
-    
-  }
-  title_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), title);
-  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanel.title)
-}
-
-// string description = 7;
-inline void UIPanel::clear_description() {
-  description_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline const std::string& UIPanel::description() const {
-  // @@protoc_insertion_point(field_get:xviz.UIPanel.description)
-  return _internal_description();
-}
-inline void UIPanel::set_description(const std::string& value) {
-  _internal_set_description(value);
-  // @@protoc_insertion_point(field_set:xviz.UIPanel.description)
-}
-inline std::string* UIPanel::mutable_description() {
-  // @@protoc_insertion_point(field_mutable:xviz.UIPanel.description)
-  return _internal_mutable_description();
-}
-inline const std::string& UIPanel::_internal_description() const {
-  return description_.GetNoArena();
-}
-inline void UIPanel::_internal_set_description(const std::string& value) {
-  
-  description_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
-}
-inline void UIPanel::set_description(std::string&& value) {
-  
-  description_.SetNoArena(
-    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:xviz.UIPanel.description)
-}
-inline void UIPanel::set_description(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  
-  description_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:xviz.UIPanel.description)
-}
-inline void UIPanel::set_description(const char* value, size_t size) {
-  
-  description_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanel.description)
-}
-inline std::string* UIPanel::_internal_mutable_description() {
-  
-  return description_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline std::string* UIPanel::release_description() {
-  // @@protoc_insertion_point(field_release:xviz.UIPanel.description)
-  
-  return description_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline void UIPanel::set_allocated_description(std::string* description) {
-  if (description != nullptr) {
-    
-  } else {
-    
-  }
-  description_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), description);
-  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanel.description)
 }
 
 // repeated string streams = 8;
@@ -802,6 +875,220 @@ inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
 UIPanel::mutable_streams() {
   // @@protoc_insertion_point(field_mutable_list:xviz.UIPanel.streams)
   return &streams_;
+}
+
+// string independent_variable = 9;
+inline void UIPanel::clear_independent_variable() {
+  independent_variable_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline const std::string& UIPanel::independent_variable() const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanel.independent_variable)
+  return _internal_independent_variable();
+}
+inline void UIPanel::set_independent_variable(const std::string& value) {
+  _internal_set_independent_variable(value);
+  // @@protoc_insertion_point(field_set:xviz.UIPanel.independent_variable)
+}
+inline std::string* UIPanel::mutable_independent_variable() {
+  // @@protoc_insertion_point(field_mutable:xviz.UIPanel.independent_variable)
+  return _internal_mutable_independent_variable();
+}
+inline const std::string& UIPanel::_internal_independent_variable() const {
+  return independent_variable_.GetNoArena();
+}
+inline void UIPanel::_internal_set_independent_variable(const std::string& value) {
+  
+  independent_variable_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+}
+inline void UIPanel::set_independent_variable(std::string&& value) {
+  
+  independent_variable_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:xviz.UIPanel.independent_variable)
+}
+inline void UIPanel::set_independent_variable(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  independent_variable_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:xviz.UIPanel.independent_variable)
+}
+inline void UIPanel::set_independent_variable(const char* value, size_t size) {
+  
+  independent_variable_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanel.independent_variable)
+}
+inline std::string* UIPanel::_internal_mutable_independent_variable() {
+  
+  return independent_variable_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* UIPanel::release_independent_variable() {
+  // @@protoc_insertion_point(field_release:xviz.UIPanel.independent_variable)
+  
+  return independent_variable_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void UIPanel::set_allocated_independent_variable(std::string* independent_variable) {
+  if (independent_variable != nullptr) {
+    
+  } else {
+    
+  }
+  independent_variable_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), independent_variable);
+  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanel.independent_variable)
+}
+
+// repeated string dependent_variables = 10;
+inline int UIPanel::_internal_dependent_variables_size() const {
+  return dependent_variables_.size();
+}
+inline int UIPanel::dependent_variables_size() const {
+  return _internal_dependent_variables_size();
+}
+inline void UIPanel::clear_dependent_variables() {
+  dependent_variables_.Clear();
+}
+inline std::string* UIPanel::add_dependent_variables() {
+  // @@protoc_insertion_point(field_add_mutable:xviz.UIPanel.dependent_variables)
+  return _internal_add_dependent_variables();
+}
+inline const std::string& UIPanel::_internal_dependent_variables(int index) const {
+  return dependent_variables_.Get(index);
+}
+inline const std::string& UIPanel::dependent_variables(int index) const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanel.dependent_variables)
+  return _internal_dependent_variables(index);
+}
+inline std::string* UIPanel::mutable_dependent_variables(int index) {
+  // @@protoc_insertion_point(field_mutable:xviz.UIPanel.dependent_variables)
+  return dependent_variables_.Mutable(index);
+}
+inline void UIPanel::set_dependent_variables(int index, const std::string& value) {
+  // @@protoc_insertion_point(field_set:xviz.UIPanel.dependent_variables)
+  dependent_variables_.Mutable(index)->assign(value);
+}
+inline void UIPanel::set_dependent_variables(int index, std::string&& value) {
+  // @@protoc_insertion_point(field_set:xviz.UIPanel.dependent_variables)
+  dependent_variables_.Mutable(index)->assign(std::move(value));
+}
+inline void UIPanel::set_dependent_variables(int index, const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  dependent_variables_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:xviz.UIPanel.dependent_variables)
+}
+inline void UIPanel::set_dependent_variables(int index, const char* value, size_t size) {
+  dependent_variables_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanel.dependent_variables)
+}
+inline std::string* UIPanel::_internal_add_dependent_variables() {
+  return dependent_variables_.Add();
+}
+inline void UIPanel::add_dependent_variables(const std::string& value) {
+  dependent_variables_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:xviz.UIPanel.dependent_variables)
+}
+inline void UIPanel::add_dependent_variables(std::string&& value) {
+  dependent_variables_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:xviz.UIPanel.dependent_variables)
+}
+inline void UIPanel::add_dependent_variables(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  dependent_variables_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:xviz.UIPanel.dependent_variables)
+}
+inline void UIPanel::add_dependent_variables(const char* value, size_t size) {
+  dependent_variables_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:xviz.UIPanel.dependent_variables)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
+UIPanel::dependent_variables() const {
+  // @@protoc_insertion_point(field_list:xviz.UIPanel.dependent_variables)
+  return dependent_variables_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
+UIPanel::mutable_dependent_variables() {
+  // @@protoc_insertion_point(field_mutable_list:xviz.UIPanel.dependent_variables)
+  return &dependent_variables_;
+}
+
+// string stream = 11;
+inline void UIPanel::clear_stream() {
+  stream_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline const std::string& UIPanel::stream() const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanel.stream)
+  return _internal_stream();
+}
+inline void UIPanel::set_stream(const std::string& value) {
+  _internal_set_stream(value);
+  // @@protoc_insertion_point(field_set:xviz.UIPanel.stream)
+}
+inline std::string* UIPanel::mutable_stream() {
+  // @@protoc_insertion_point(field_mutable:xviz.UIPanel.stream)
+  return _internal_mutable_stream();
+}
+inline const std::string& UIPanel::_internal_stream() const {
+  return stream_.GetNoArena();
+}
+inline void UIPanel::_internal_set_stream(const std::string& value) {
+  
+  stream_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+}
+inline void UIPanel::set_stream(std::string&& value) {
+  
+  stream_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:xviz.UIPanel.stream)
+}
+inline void UIPanel::set_stream(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  stream_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:xviz.UIPanel.stream)
+}
+inline void UIPanel::set_stream(const char* value, size_t size) {
+  
+  stream_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:xviz.UIPanel.stream)
+}
+inline std::string* UIPanel::_internal_mutable_stream() {
+  
+  return stream_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* UIPanel::release_stream() {
+  // @@protoc_insertion_point(field_release:xviz.UIPanel.stream)
+  
+  return stream_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void UIPanel::set_allocated_stream(std::string* stream) {
+  if (stream != nullptr) {
+    
+  } else {
+    
+  }
+  stream_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), stream);
+  // @@protoc_insertion_point(field_set_allocated:xviz.UIPanel.stream)
+}
+
+// bool display_object_id = 12;
+inline void UIPanel::clear_display_object_id() {
+  display_object_id_ = false;
+}
+inline bool UIPanel::_internal_display_object_id() const {
+  return display_object_id_;
+}
+inline bool UIPanel::display_object_id() const {
+  // @@protoc_insertion_point(field_get:xviz.UIPanel.display_object_id)
+  return _internal_display_object_id();
+}
+inline void UIPanel::_internal_set_display_object_id(bool value) {
+  
+  display_object_id_ = value;
+}
+inline void UIPanel::set_display_object_id(bool value) {
+  _internal_set_display_object_id(value);
+  // @@protoc_insertion_point(field_set:xviz.UIPanel.display_object_id)
 }
 
 #ifdef __GNUC__

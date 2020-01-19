@@ -12,6 +12,8 @@
 #include "builder/declarative_ui/container_builder.h"
 #include "builder/declarative_ui/metric_builder.h"
 #include "builder/declarative_ui/video_builder.h"
+#include "builder/declarative_ui/plot_builder.h"
+#include "builder/declarative_ui/table_builder.h"
 
 #include <vector>
 
@@ -34,6 +36,13 @@ public:
 
   XVIZUIBuilder& Child(const XVIZVideoBuilder& child);
   XVIZUIBuilder& Child(XVIZVideoBuilder&& child);
+
+  XVIZUIBuilder& Child(const XVIZPlotBuilder& child);
+  XVIZUIBuilder& Child(XVIZPlotBuilder&& child);
+
+  XVIZUIBuilder& Child(const XVIZTableBuilder& child);
+  XVIZUIBuilder& Child(XVIZTableBuilder&& child);
+
   std::vector<xviz::UIPanel> GetUI();
 
 private:

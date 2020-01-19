@@ -155,27 +155,50 @@ XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Dimensions(uint32_t width_pixel, uin
   return *this;
 }
 
-XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(const std::string& encoded_data_str) {
+XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(const std::string& raw_data_str) {
   if (type_ != nullptr) {
     Flush();
   }
   type_ = std::make_shared<Primitive>();
   *type_ = Primitive::StreamMetadata_PrimitiveType_IMAGE;
   image_ = std::make_shared<xviz::Image>();
-  image_->set_data(encoded_data_str);
+  image_->set_data(raw_data_str);
   return *this;
 }
 
-XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(std::string&& encoded_data_str) {
+XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(std::string&& raw_data_str) {
   if (type_ != nullptr) {
     Flush();
   }
   type_ = std::make_shared<Primitive>();
   *type_ = Primitive::StreamMetadata_PrimitiveType_IMAGE;
   image_ = std::make_shared<xviz::Image>();
-  image_->set_data(std::move(encoded_data_str));
+  image_->set_data(std::move(raw_data_str));
   return *this;
 }
+
+// Text
+
+XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Text(const std::string& message) {
+  return Text(std::make_shared<std::string>(message));
+}
+
+XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Text(std::string&& message) {
+  return Text(std::make_shared<std::string>(std::move(message)));
+}
+
+XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Text(const std::shared_ptr<std::string>& message_ptr) {
+  if (type_ != nullptr) {
+    Flush();
+  }
+
+  type_ = std::make_shared<Primitive>();
+  *type_ = Primitive::StreamMetadata_PrimitiveType_TEXT;
+
+  text_ = message_ptr;
+  return *this;
+}
+
 
 // Style
 XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Style(const std::string& style_json_str) {
@@ -324,6 +347,20 @@ void XVIZPrimitiveBuilder::FlushPrimitives() {
       }
     
     // TEXT, STADIUM,
+    case Primitive::StreamMetadata_PrimitiveType_TEXT:
+      {
+        auto text_ptr = stream_ptr->add_texts();
+        if (vertices_ == nullptr || vertices_->size() != 3) {
+          LOG_ERROR("Text's position must be the form of [x, y, z]");
+          break;
+        }
+        text_ptr->set_text(*text_);
+        for (auto v : *vertices_) {
+          text_ptr->add_position(v);
+        }
+        AddBase<xviz::Text>(text_ptr, base_pair);
+        break;
+      }
     default:
       LOG_ERROR("No this type exists %d", *type_);
       return;
