@@ -20,7 +20,7 @@ extern PROTOBUF_INTERNAL_EXPORT_core_2eproto ::PROTOBUF_NAMESPACE_ID::internal::
 extern PROTOBUF_INTERNAL_EXPORT_primitives_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Image_primitives_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_core_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Link_core_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_core_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_MapOrigin_core_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_primitives_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Point_primitives_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_primitives_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_Point_primitives_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_primitives_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Polygon_primitives_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_primitives_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Polyline_primitives_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_core_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Pose_core_2eproto;

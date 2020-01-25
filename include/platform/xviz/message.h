@@ -32,15 +32,16 @@ class XVIZMessage {
 public:
   // TODO use overload method ?????
   // XVIZMessage(std::shared_ptr<StateUpdate> update = nullptr, std::shared_ptr<Metadata> meatadata = nullptr);
-  XVIZMessage(std::shared_ptr<Metadata> meatadata = nullptr);
+  XVIZMessage(std::shared_ptr<Metadata> metadata = nullptr);
   XVIZMessage(std::shared_ptr<StateUpdate> update = nullptr);
 
   nlohmann::json ToObject(bool unravel = true);
   std::string ToObjectString(bool unravel = true);
-
+  std::shared_ptr<StateUpdate> GetStateUpdate();
+  std::shared_ptr<Metadata> GetMetadata();
 private:
   std::shared_ptr<StateUpdate> update_{nullptr};
-  std::shared_ptr<Metadata> meatadata_{nullptr};
+  std::shared_ptr<Metadata> metadata_{nullptr};
 };
   
 } // namespace xviz

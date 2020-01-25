@@ -27,6 +27,7 @@ target_link_libraries(xviz-pb ${PROTOBUF_LIBRARIES})
 
 add_library(xviz-utils
   utils/utils.cpp
+  utils/base64.cpp
 )
 
 add_library(xviz-ui-builder
@@ -55,10 +56,13 @@ add_library(xviz-builder
 
 target_link_libraries(xviz-builder xviz-ui-builder)
 
+add_library(xviz-io
+  io/glb_writer.cpp
+)
 
 add_library(xviz-message
   message.cpp
 )
 
 add_library(xviz)
-target_link_libraries(xviz xviz-ui-builder xviz-message xviz-builder xviz-pb xviz-utils)
+target_link_libraries(xviz xviz-ui-builder xviz-message xviz-builder xviz-io xviz-pb xviz-utils)

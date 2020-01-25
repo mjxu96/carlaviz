@@ -63,11 +63,11 @@ std::shared_ptr<StreamSet> XVIZFrame::Data() {
 // }
 
 XVIZMessage::XVIZMessage(std::shared_ptr<Metadata> meatadata) : 
-  meatadata_(meatadata), update_(nullptr) {
+  metadata_(meatadata), update_(nullptr) {
 }
 
 XVIZMessage::XVIZMessage(std::shared_ptr<StateUpdate> update) :
-  meatadata_(nullptr), update_(update) {
+  metadata_(nullptr), update_(update) {
 }
 
 nlohmann::json XVIZMessage::ToObject(bool unravel) {
@@ -77,8 +77,8 @@ nlohmann::json XVIZMessage::ToObject(bool unravel) {
       return MessageObjectToJson(message_ptr);
     }
     return MessageObjectToJson(message_ptr);
-  } else if (meatadata_ != nullptr) {
-    auto message_ptr = std::dynamic_pointer_cast<google::protobuf::Message>(meatadata_);
+  } else if (metadata_ != nullptr) {
+    auto message_ptr = std::dynamic_pointer_cast<google::protobuf::Message>(metadata_);
     if (!unravel) {
       return MessageObjectToJson(message_ptr);
     }
@@ -96,8 +96,8 @@ std::string XVIZMessage::ToObjectString(bool unravel) {
       return MessageObjectToString(message_ptr);
     }
     return MessageObjectToString(message_ptr);
-  } else if (meatadata_ != nullptr) {
-    auto message_ptr = std::dynamic_pointer_cast<google::protobuf::Message>(meatadata_);
+  } else if (metadata_ != nullptr) {
+    auto message_ptr = std::dynamic_pointer_cast<google::protobuf::Message>(metadata_);
     if (!unravel) {
       return MessageObjectToString(message_ptr);
     }
@@ -106,4 +106,12 @@ std::string XVIZMessage::ToObjectString(bool unravel) {
     throw std::runtime_error("no message needs to be output");
   }
   return std::string();
+}
+
+std::shared_ptr<StateUpdate> XVIZMessage::GetStateUpdate() {
+  return update_;
+}
+
+std::shared_ptr<Metadata> XVIZMessage::GetMetadata() {
+  return metadata_;
 }

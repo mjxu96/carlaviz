@@ -162,7 +162,7 @@ XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(const std::string& raw_data_st
   type_ = std::make_shared<Primitive>();
   *type_ = Primitive::StreamMetadata_PrimitiveType_IMAGE;
   image_ = std::make_shared<xviz::Image>();
-  image_->set_data(raw_data_str);
+  image_->set_data(base64_encode((const unsigned char*)raw_data_str.c_str(), raw_data_str.size()));
   return *this;
 }
 
@@ -173,7 +173,12 @@ XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(std::string&& raw_data_str) {
   type_ = std::make_shared<Primitive>();
   *type_ = Primitive::StreamMetadata_PrimitiveType_IMAGE;
   image_ = std::make_shared<xviz::Image>();
-  image_->set_data(std::move(raw_data_str));
+  // image_->set_data(std::move(raw_data_str));
+  // google::protobuf::Value data_value;
+  // data_value.set_string_value(std::move(raw_data_str));
+  // auto data_ptr = image_->mutable_data();
+  // (*data_ptr) = std::move(data_value);
+  image_->set_data(base64_encode((const unsigned char*)raw_data_str.c_str(), raw_data_str.size()));
   return *this;
 }
 
@@ -196,6 +201,26 @@ XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Text(const std::shared_ptr<std::stri
   *type_ = Primitive::StreamMetadata_PrimitiveType_TEXT;
 
   text_ = message_ptr;
+  return *this;
+}
+
+XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Stadium(const std::vector<double>& start, const std::vector<double>& end, double radius) {
+  if (type_ != nullptr) {
+    Flush();
+  }
+
+  if (start.size() != 3 || end.size() != 3) {
+    LOG_ERROR("The start/end position should be the form of [x, y, z]");
+    return *this;
+  }
+  vertices_ = std::make_shared<std::vector<double>>();
+  vertices_->insert(vertices_->end(), start.begin(), start.end());
+  vertices_->insert(vertices_->end(), end.begin(), end.end());
+
+  radius_ = std::make_shared<double>(radius);
+
+  type_ = std::make_shared<Primitive>();
+  *type_ = Primitive::StreamMetadata_PrimitiveType_STADIUM;
   return *this;
 }
 
@@ -295,9 +320,20 @@ void XVIZPrimitiveBuilder::FlushPrimitives() {
           break;
         }
         auto point_ptr = stream_ptr->add_points();
+        google::protobuf::Value points_value;
+        google::protobuf::ListValue points_list_value;
         for (auto v : *vertices_) {
-          point_ptr->add_points(v);
+          google::protobuf::Value tmp_point_value;
+          tmp_point_value.set_number_value(v);
+          auto new_value_ptr = points_list_value.add_values();
+          (*new_value_ptr) = std::move(tmp_point_value);
+          // point_ptr->add_points(v);
         }
+        auto new_list_ptr = points_value.mutable_list_value();
+        (*new_list_ptr) = std::move(points_list_value);
+        auto new_points_value_ptr = point_ptr->mutable_points();
+        (*new_points_value_ptr) = std::move(points_value);
+
         if (colors_ != nullptr) {
           auto colors_ptr = point_ptr->mutable_colors();
           *colors_ptr = std::move(*colors_);
@@ -346,7 +382,6 @@ void XVIZPrimitiveBuilder::FlushPrimitives() {
         break;
       }
     
-    // TEXT, STADIUM,
     case Primitive::StreamMetadata_PrimitiveType_TEXT:
       {
         auto text_ptr = stream_ptr->add_texts();
@@ -361,6 +396,27 @@ void XVIZPrimitiveBuilder::FlushPrimitives() {
         AddBase<xviz::Text>(text_ptr, base_pair);
         break;
       }
+    
+    case xviz::StreamMetadata::STADIUM:
+     {
+       auto stadium_ptr = stream_ptr->add_stadiums();
+       if (vertices_ == nullptr || vertices_->size() != 6) {
+         LOG_ERROR("Stadium should give start and end.");
+         break;
+       }
+       for (int i = 0; i < 3; i++) {
+         stadium_ptr->add_start((*vertices_)[i]);
+       }
+       for (int i = 3; i < 6; i++) {
+         stadium_ptr->add_end((*vertices_)[i]);
+       }
+       stadium_ptr->set_radius(*radius_);
+       AddBase<xviz::Stadium>(stadium_ptr, base_pair);
+       break;
+     }
+
+    // STADIUM,
+
     default:
       LOG_ERROR("No this type exists %d", *type_);
       return;
