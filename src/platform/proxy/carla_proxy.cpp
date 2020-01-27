@@ -109,6 +109,17 @@ void CarlaProxy::Init() {
   }
 }
 
+void CarlaProxy::Clear() {
+  client_ptr_->SetTimeout(500ms);
+  for (const auto&[id, dummy_sensor] : dummy_sensors_) {
+    if (dummy_sensor->IsAlive()) {
+      LOG_INFO("Stop listening sensor: %u", id);
+      dummy_sensor->Destroy();
+    }
+  }
+  LOG_INFO("Carla proxy clear!");
+}
+
 std::string CarlaProxy::GetMetaData() {
   std::string map_geojson =
       utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(world_ptr_->GetMap());
@@ -267,8 +278,13 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     if (actor_ptr->GetTypeId().substr(0, 6) == "sensor") {
       auto sensor_ptr =
           boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
+      // if (real_sensors_.find(id) == real_sensors_.end() &&
+      //     dummy_sensors_.find(id) == dummy_sensors_.end()) {
       if (real_sensors_.find(id) == real_sensors_.end() &&
-          dummy_sensors_.find(id) == dummy_sensors_.end()) {
+             recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
+        if (!sensor_ptr->IsAlive()) {
+          continue;
+        }
         LOG_INFO("Listen sensor: %u, type is: %s", id,
                  actor_ptr->GetTypeId().c_str());
         auto dummy_sensor = CreateDummySensor(sensor_ptr);
@@ -276,7 +292,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           continue;
         }
         auto dummy_id = dummy_sensor->GetId();
-        dummy_sensors_.insert({dummy_id, dummy_sensor});
+        recorded_dummy_sensor_ids_.insert(dummy_id);
+        dummy_sensors_.insert({id, dummy_sensor});
         double rotation_frequency = 10.0;
         if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
                                       "sensor.lidar")) {
@@ -323,11 +340,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
             });
         real_dummy_sensors_relation_.insert({id, dummy_id});
       }
-      if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
+      if (recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
         tmp_real_sensors.insert(id);
       }
     }
   }
+
 
   actors_ = std::move(tmp_actors);
 
@@ -339,9 +357,11 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   }
   for (const auto& id : to_delete_sensor_ids) {
     LOG_INFO("Stop listening sensor: %u", id);
-    auto dummy_id = real_dummy_sensors_relation_[id];
-    dummy_sensors_[dummy_id]->Stop();
-    dummy_sensors_[dummy_id]->Destroy();
+    // auto dummy_id = real_dummy_sensors_relation_[id];
+    // recorded_dummy_sensor_ids_.erase(dummy_id);
+    dummy_sensors_[id]->Stop();
+    dummy_sensors_[id]->Destroy();
+    dummy_sensors_.erase(id);
     real_dummy_sensors_relation_.erase(id);
     real_sensors_.erase(id);
 
@@ -503,10 +523,14 @@ void CarlaProxy::AddTrafficLights(
 }
 
 void CarlaProxy::AddTrafficLightAreas() {
-  auto actors = world_ptr_->GetActors();
+  auto actor_snapshots = world_ptr_->WaitForTick(2s);
   auto map = world_ptr_->GetMap();
   const double area_length = 2.0;
-  for (const auto& actor : *actors) {
+  for (const auto& actor_snapshot : actor_snapshots) {
+    auto actor = world_ptr_->GetActor(actor_snapshot.id);
+    if (actor == nullptr) {
+      continue;
+    }
     if (Utils::IsStartWith(actor->GetTypeId(), "traffic.traffic_light")) {
       auto id = actor->GetId();
       if (traffic_lights_.find(id) == traffic_lights_.end()) {

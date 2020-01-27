@@ -66,6 +66,7 @@ class CarlaProxy {
   CarlaProxy(const std::string& carla_host, uint16_t carla_port);
   CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr);
   void Init();
+  void Clear();
   std::string GetMetaData();
   xviz::XVIZBuilder GetUpdateData(
       const carla::client::WorldSnapshot& world_snapshots);
@@ -105,6 +106,7 @@ class CarlaProxy {
   std::unordered_set<uint32_t> real_sensors_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
       dummy_sensors_{};
+  std::unordered_set<uint32_t> recorded_dummy_sensor_ids_{};
 
   // Carla sensor data related
   boost::shared_ptr<carla::client::Sensor> CreateDummySensor(

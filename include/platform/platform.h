@@ -19,6 +19,7 @@ class Platform {
  public:
   Platform() = default;
   void Run();
+  void Clear();
 
  private:
   void Init();

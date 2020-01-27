@@ -5,6 +5,15 @@
  */
 #include "platform/platform.h"
 
+#include <csignal>
+
+mellocolate::Platform platform;
+
+void signal_handler(int signal_num) {
+  platform.Clear();
+  exit(0);
+}
+
 using namespace mellocolate;
 
 void Platform::Run() {
@@ -24,6 +33,14 @@ void Platform::Run() {
   }
 }
 
+void Platform::Clear() {
+  LOG_INFO("Start to clean all resources. Don't forcefully exit!");
+  if (carla_proxy_ != nullptr) {
+    carla_proxy_->Clear();
+  }
+  LOG_INFO("All clear, exit!");
+}
+
 void Platform::Init() {
   drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
   drawing_proxy_->StartListen();
@@ -38,6 +55,7 @@ void Platform::Init() {
 }
 
 int main() {
-  Platform platform;
+  signal(SIGINT, signal_handler);
+  signal(SIGTERM, signal_handler);
   platform.Run();
 }
