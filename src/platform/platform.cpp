@@ -12,23 +12,15 @@ void Platform::Run() {
 
   while (true) {
     auto xviz = carla_proxy_->GetUpdateData();
+
     drawing_proxy_->AddDrawings(xviz);
 
-    // auto xviz_message = xviz.GetMessage();
     std::string output;
-    // output = xviz.GetMessage().ToObjectString();
     xviz::XVIZGLBWriter writer;
     writer.WriteMessage(output, xviz.GetMessage());
 
-    // auto polylines = drawing_proxy_->GetPolyLines();
-    // XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
-    // for (const auto& polyline : polylines) {
-    //   polyline_builder.AddPolyLine(
-    //       XVIZPrimitivePolyLineBuilder(polyline.second));
-    // }
-    // xviz.AddPrimitive(polylines);
-    // frontend_proxy_->SendToAllClients(xviz_message.ToObjectString());
     frontend_proxy_->SendToAllClients(output);
+
   }
 }
 

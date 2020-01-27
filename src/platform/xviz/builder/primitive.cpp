@@ -321,20 +321,18 @@ void XVIZPrimitiveBuilder::FlushPrimitives() {
           LOG_ERROR("Vertice pointer is NULL");
           break;
         }
+
         auto point_ptr = stream_ptr->add_points();
-        google::protobuf::Value points_value;
-        google::protobuf::ListValue points_list_value;
+        google::protobuf::Value* points_value_ptr = new google::protobuf::Value();
+        google::protobuf::ListValue* points_list_value_ptr = new google::protobuf::ListValue();
         for (auto v : *vertices_) {
           google::protobuf::Value tmp_point_value;
           tmp_point_value.set_number_value(v);
-          auto new_value_ptr = points_list_value.add_values();
+          auto new_value_ptr = points_list_value_ptr->add_values();
           (*new_value_ptr) = std::move(tmp_point_value);
-          // point_ptr->add_points(v);
         }
-        auto new_list_ptr = points_value.mutable_list_value();
-        (*new_list_ptr) = std::move(points_list_value);
-        auto new_points_value_ptr = point_ptr->mutable_points();
-        (*new_points_value_ptr) = std::move(points_value);
+        points_value_ptr->set_allocated_list_value(points_list_value_ptr);
+        point_ptr->set_allocated_points(points_value_ptr);
 
         if (colors_ != nullptr) {
           auto colors_ptr = point_ptr->mutable_colors();
