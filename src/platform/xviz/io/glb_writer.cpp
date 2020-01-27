@@ -18,8 +18,6 @@ void AddOneImage(Document& document, std::vector<uint8_t>& buffer, uint32_t imag
   document.images.push_back(fx::gltf::Image());
   document.images.back().bufferView = image_idx;
   document.images.back().mimeType = "image/png";
-  document.images.back().width = image_ptr->width_px();
-  document.images.back().height = image_ptr->height_px();
 
   std::vector<uint8_t> tmp_data = std::vector<uint8_t>(image_ptr->data().begin(), image_ptr->data().end());
   buffer.insert(buffer.end(), tmp_data.begin(), tmp_data.end());
@@ -32,7 +30,6 @@ void GetStateUpdateData(std::string& sink, xviz::XVIZMessage& message) {
   std::vector<uint8_t> buffer;
 
   Document document;
-  document.buffers.push_back(fx::gltf::Buffer());
 
   auto update = message.GetStateUpdate();
 
@@ -46,18 +43,22 @@ void GetStateUpdateData(std::string& sink, xviz::XVIZMessage& message) {
     }
   }
 
-  document.buffers.back().byteLength = buffer.size();
-  document.buffers.back().data = std::move(buffer);
-
-  std::stringstream ss;
-  fx::gltf::Save(document, ss, "", true);
-  sink = std::move(ss.str());
-
   std::string xviz_str = message.ToObjectString();
-  xviz_str = "\"xviz\":{\"type\":\"xviz/status_update\",\"data\":" + std::move(xviz_str) + "}";
+
+  if (!buffer.empty()) {
+    document.buffers.push_back(fx::gltf::Buffer());
+    document.buffers.back().byteLength = buffer.size();
+    document.buffers.back().data = std::move(buffer);
+    std::stringstream ss;
+    xviz_str = ",\"xviz\":{\"type\":\"xviz/state_update\",\"data\":" + std::move(xviz_str) + "}}";
+    fx::gltf::Save(document, ss, "", true, xviz_str);
+    sink = ss.str();
+  } else {
+    sink = std::move(xviz_str);
+  }
+
+
   
-  auto first_left_bracket = sink.find_first_of('{');
-  sink = std::move(sink.substr(0, first_left_bracket + 1)) + std::move(xviz_str) + "," + std::move(sink.substr(first_left_bracket + 1));
 }
 
 XVIZGLBWriter::XVIZGLBWriter(const std::shared_ptr<std::string>& sink) {
@@ -78,5 +79,7 @@ void XVIZGLBWriter::WriteMessage(std::string& sink, xviz::XVIZMessage& message) 
 }
 
 void XVIZGLBWriter::WriteMessage(std::string& sink, xviz::XVIZMessage&& message) {
-
+  if (message.GetStateUpdate() != nullptr) {
+    GetStateUpdateData(sink, message);
+  }
 }

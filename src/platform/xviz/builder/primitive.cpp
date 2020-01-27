@@ -162,7 +162,8 @@ XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(const std::string& raw_data_st
   type_ = std::make_shared<Primitive>();
   *type_ = Primitive::StreamMetadata_PrimitiveType_IMAGE;
   image_ = std::make_shared<xviz::Image>();
-  image_->set_data(base64_encode((const unsigned char*)raw_data_str.c_str(), raw_data_str.size()));
+  // image_->set_data(base64_encode((const unsigned char*)raw_data_str.c_str(), raw_data_str.size()));
+  image_->set_data(raw_data_str);
   return *this;
 }
 
@@ -178,7 +179,8 @@ XVIZPrimitiveBuilder& XVIZPrimitiveBuilder::Image(std::string&& raw_data_str) {
   // data_value.set_string_value(std::move(raw_data_str));
   // auto data_ptr = image_->mutable_data();
   // (*data_ptr) = std::move(data_value);
-  image_->set_data(base64_encode((const unsigned char*)raw_data_str.c_str(), raw_data_str.size()));
+  // image_->set_data(base64_encode((const unsigned char*)raw_data_str.c_str(), raw_data_str.size()));
+  image_->set_data(std::move(raw_data_str));
   return *this;
 }
 

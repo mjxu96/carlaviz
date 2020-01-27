@@ -567,8 +567,8 @@ namespace gltf
         std::string uri;
         std::string mimeType;
 
-        double width;
-        double height;
+        uint32_t width;
+        uint32_t height;
 
         nlohmann::json extensionsAndExtras{};
 
@@ -1436,8 +1436,8 @@ namespace gltf
         detail::WriteField("bufferView", json, image.bufferView, image.uri.empty() ? -1 : 0); // bufferView or uri need to be written; even if default 0
         detail::WriteField("mimeType", json, image.mimeType);
         detail::WriteField("name", json, image.name);
-        detail::WriteField("width", json, image.width, 0.0);
-        detail::WriteField("height", json, image.height, 0.0);
+        detail::WriteField("width", json, image.width, 0u);
+        detail::WriteField("height", json, image.height, 0u);
         detail::WriteField("uri", json, image.uri);
         detail::WriteExtensions(json, image.extensionsAndExtras);
     }
@@ -1733,7 +1733,7 @@ namespace gltf
             }
         }
 
-        inline void Save(Document const & document, std::ostream & output, std::string const & documentRootPath, bool useBinaryFormat)
+        inline void Save(Document const & document, std::ostream & output, std::string const & documentRootPath, bool useBinaryFormat, std::string const & xviz_str)
         {
             // There is no way to check if an ostream has been opened in binary mode or not. Just checking
             // if it's "good" is the best we can do from here...
@@ -1748,6 +1748,8 @@ namespace gltf
                 detail::ChunkHeader binHeader{ 0, detail::GLBChunkBIN };
 
                 std::string jsonText = json.dump();
+                jsonText.pop_back(); // remove last }
+                jsonText += xviz_str;
 
                 Buffer const & binBuffer = document.buffers.front();
                 const uint32_t binPaddedLength = ((binBuffer.byteLength + 3) & (~3u));
@@ -1899,13 +1901,13 @@ namespace gltf
         return LoadFromBinary(input, detail::GetDocumentRootPath(documentFilePath), readQuotas);
     }
 
-    inline void Save(Document const & document, std::ostream & output, std::string const & documentRootPath, bool useBinaryFormat)
+    inline void Save(Document const & document, std::ostream & output, std::string const & documentRootPath, bool useBinaryFormat, std::string const & xviz_str)
     {
         try
         {
             detail::ValidateBuffers(document, useBinaryFormat);
 
-            detail::Save(document, output, documentRootPath, useBinaryFormat);
+            detail::Save(document, output, documentRootPath, useBinaryFormat, xviz_str);
         }
         catch (invalid_gltf_document &)
         {
@@ -1924,7 +1926,7 @@ namespace gltf
     inline void Save(Document const & document, std::string const & documentFilePath, bool useBinaryFormat)
     {
         std::ofstream output(documentFilePath, useBinaryFormat ? std::ios::binary : std::ios::out);
-        Save(document, output, detail::GetDocumentRootPath(documentFilePath), useBinaryFormat);
+        Save(document, output, detail::GetDocumentRootPath(documentFilePath), useBinaryFormat, "");
     }
 } // namespace gltf
 
