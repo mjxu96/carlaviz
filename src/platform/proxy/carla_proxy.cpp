@@ -502,7 +502,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   lidar_data_lock_.unlock();
 
 
-  point_cloud_builder.Points(std::move(points));
+  if (!points.empty()) {
+    point_cloud_builder.Points(std::move(points));
+  }
 
 
   return std::move(xviz_builder);  //.GetData();
