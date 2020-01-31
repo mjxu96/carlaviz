@@ -49,12 +49,12 @@ RUN apt install -y make gcc g++ && \
   cd /home/carla/ && \
   git clone https://github.com/mellocolate/carla-display-frontend.git && \
   cd carla-display-frontend && \
-  yarn add streetscape.gl && \
   yarn
 
 EXPOSE 8080-8081
 
 USER carla
+ENV CARLA_DISPLAY_HOST_IP localhost
 
 COPY run.sh /home/carla/
 WORKDIR /home/carla

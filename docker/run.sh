@@ -1,3 +1,5 @@
+echo -e "CARLA_DISPLAY_HOST_IP=${CARLA_DISPLAY_HOST_IP}" >> /home/carla/.env
+
 echo "Launching backend"
 ./carla-display-backend/bin/platform &
 sleep 3
