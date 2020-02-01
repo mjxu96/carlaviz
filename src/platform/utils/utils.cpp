@@ -50,14 +50,14 @@ double Utils::ComputeSpeed(const carla::geom::Vector3D& velo) {
   return std::sqrt(res);
 }
 
-PointCloud::PointCloud(double timestamp, std::vector<point_3d_t> points)
+PointCloud::PointCloud(double timestamp, std::vector<double>&& points)
     : timestamp_(timestamp), points_(std::move(points)) {}
 
 double PointCloud::GetTimestamp() const { return timestamp_; }
 
-std::vector<point_3d_t> PointCloud::GetPoints() const { return points_; }
+std::vector<double>& PointCloud::GetPoints() { return points_; }
 
-Image::Image(std::string encoded_str, size_t width, size_t height)
+Image::Image(std::string&& encoded_str, size_t width, size_t height)
     : encoded_str_(std::move(encoded_str)), width_(width), height_(height) {}
 
 std::string Image::GetData() const { return encoded_str_; }
@@ -161,6 +161,13 @@ point_3d_t XodrGeojsonConverter::LateralShift(carla::geom::Transform transform,
                     p1.get<2>() + p2.get<2>());
 }
 
+std::vector<double> XodrGeojsonConverter::LateralShiftGetVector(carla::geom::Transform transform, double shift) {
+  transform.rotation.yaw += 90.0;
+  // point_3d_t p1(transform.location.x, transform.location.y,
+  //               transform.location.z);
+  auto p2_tmp = shift * transform.GetForwardVector();
+  return {transform.location.x + p2_tmp.x, transform.location.y + p2_tmp.y, transform.location.z + p2_tmp.z};
+}
 // Save following previous codes for future reference
 /*
   auto& map_data = map.get().GetMap();

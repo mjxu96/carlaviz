@@ -31,6 +31,7 @@ class FrontendClient {
   void Write(const boost::beast::multi_buffer& data);
   void ChangeMetadataSendStatus(bool new_status);
   bool IsMetadataSend() const;
+  bool SetBinary(bool is_binary);
 
  private:
   bool is_metadata_sent_ = false;

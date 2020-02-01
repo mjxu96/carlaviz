@@ -5,6 +5,15 @@
  */
 #include "platform/platform.h"
 
+#include <csignal>
+
+mellocolate::Platform platform;
+
+void signal_handler(int signal_num) {
+  platform.Clear();
+  exit(0);
+}
+
 using namespace mellocolate;
 
 void Platform::Run() {
@@ -12,15 +21,24 @@ void Platform::Run() {
 
   while (true) {
     auto xviz = carla_proxy_->GetUpdateData();
-    auto polylines = drawing_proxy_->GetPolyLines();
-    // XVIZPrimitiveBuider polyline_builder("/planning/trajectory");
-    // for (const auto& polyline : polylines) {
-    //   polyline_builder.AddPolyLine(
-    //       XVIZPrimitivePolyLineBuilder(polyline.second));
-    // }
-    xviz.AddPrimitive(polylines);
-    frontend_proxy_->SendToAllClients(xviz.GetData());
+
+    drawing_proxy_->AddDrawings(xviz);
+
+    std::string output;
+    xviz::XVIZGLBWriter writer;
+    writer.WriteMessage(output, xviz.GetMessage());
+
+    frontend_proxy_->SendToAllClients(output);
+
   }
+}
+
+void Platform::Clear() {
+  LOG_INFO("Start to clean all resources. Don't forcefully exit!");
+  if (carla_proxy_ != nullptr) {
+    carla_proxy_->Clear();
+  }
+  LOG_INFO("All clear, exit!");
 }
 
 void Platform::Init() {
@@ -37,6 +55,7 @@ void Platform::Init() {
 }
 
 int main() {
-  Platform platform;
+  signal(SIGINT, signal_handler);
+  signal(SIGTERM, signal_handler);
   platform.Run();
 }

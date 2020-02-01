@@ -11,12 +11,15 @@
 #include "platform/proxy/drawing_proxy.h"
 #include "platform/proxy/frontend_proxy.h"
 
+#include "platform/xviz/io/glb_writer.h"
+
 namespace mellocolate {
 
 class Platform {
  public:
   Platform() = default;
   void Run();
+  void Clear();
 
  private:
   void Init();

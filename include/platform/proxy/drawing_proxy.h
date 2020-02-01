@@ -11,7 +11,7 @@
 #include "platform/utils/json.hpp"
 #include "platform/utils/macrologger.h"
 
-#include "platform/xviz/xviz_primitive_builder.h"
+#include "platform/xviz/builder/xviz_builder.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -27,16 +27,33 @@
 
 namespace mellocolate {
 
+enum class DrawingType {
+  LINE = 0u,
+  POINT = 1u,
+  TEXT = 2u,
+};
+
 struct polyline {
   std::string color{"#00FF00"};
   double width{2.5};
-  std::vector<point_3d_t> points{};
+  std::vector<double> points{};
+};
+
+struct point {
+  std::vector<double> points{};
+};
+
+struct text {
+  std::string color{"#FFFFFF"};
+  double size{13.0};
+  std::string message{};
+  std::vector<double> position{};
 };
 
 class DrawingProxy {
  public:
   DrawingProxy(uint16_t listen_port);
-  XVIZPrimitiveBuider GetPolyLines();
+  void AddDrawings(xviz::XVIZBuilder& xviz);
   void StartListen();
 
  private:
@@ -45,10 +62,17 @@ class DrawingProxy {
   void AddClient(
       boost::asio::basic_stream_socket<boost::asio::ip::tcp>& socket);
 
-  std::vector<polyline> DecodeToPoints(const std::string& str);
+  void Decode(const std::string& str, uint32_t id);
+  void CleanUpDrawing(uint32_t id);
 
   std::mutex polyline_update_lock_{};
   std::unordered_map<uint32_t, std::vector<polyline>> polylines_{};
+
+  std::mutex point_update_lock_{};
+  std::unordered_map<uint32_t, std::vector<point>> points_{};
+
+  std::mutex text_update_lock_{};
+  std::unordered_map<uint32_t, std::vector<text>> texts_{};
 
   std::mutex add_client_lock_{};
   uint32_t client_max_id_{0u};

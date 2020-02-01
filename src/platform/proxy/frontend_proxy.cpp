@@ -31,6 +31,10 @@ void FrontendClient::ChangeMetadataSendStatus(bool new_status) {
 }
 bool FrontendClient::IsMetadataSend() const { return is_metadata_sent_; }
 
+bool FrontendClient::SetBinary(bool is_binary) {
+  frontend_client_ptr_->binary(true);
+}
+
 FrontendProxy::FrontendProxy(uint16_t frontend_listen_port)
     : frontend_listen_port_(frontend_listen_port) {}
 
@@ -56,6 +60,7 @@ void FrontendProxy::SendToAllClients(const std::string& message) {
   boost::beast::ostream(buffer) << message;
 
   std::unordered_set<uint32_t> to_delete_ids;
+  // LOG_INFO("string size %ld, sent size %ld", message.size(), buffer.size());
 
   std::lock_guard<std::mutex> lock_guard(add_client_lock_);
   for (const auto& client_pair : frontend_clients_) {
@@ -107,6 +112,7 @@ void FrontendProxy::AddClient(boost::asio::ip::tcp::socket socket) {
 
     auto frontend_client = boost::make_shared<FrontendClient>(client_ptr);
 
+    frontend_client->SetBinary(true);
     SendMetadata(frontend_client);
 
     std::lock_guard<std::mutex> lock_guard(add_client_lock_);
