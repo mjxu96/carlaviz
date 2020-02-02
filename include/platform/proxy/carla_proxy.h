@@ -91,9 +91,6 @@ class CarlaProxy {
 
   std::shared_ptr<xviz::Metadata> metadata_ptr_{nullptr};
 
-  // Ego vehicle related
-  boost::optional<double> ego_prev_velo_{boost::none};
-
   // Carla sensor related
   std::mutex image_data_lock_;
   bool is_image_received_{false};

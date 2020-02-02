@@ -28,7 +28,7 @@ void Platform::Run() {
     xviz::XVIZGLBWriter writer;
     writer.WriteMessage(output, xviz.GetMessage());
 
-    frontend_proxy_->SendToAllClients(output);
+    frontend_proxy_->SendToAllClients(std::move(output));
 
   }
 }
@@ -38,7 +38,7 @@ void Platform::Clear() {
   if (carla_proxy_ != nullptr) {
     carla_proxy_->Clear();
   }
-  LOG_INFO("All clear, exit!");
+  LOG_INFO("All clear, exit! You may now forcefully exit if this program does not exit normally.");
 }
 
 void Platform::Init() {
