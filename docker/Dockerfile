@@ -27,7 +27,6 @@ RUN apt install -y git build-essential gcc-7 cmake libpng-dev libtiff5-dev libjp
   git clone https://github.com/mellocolate/carla-display-backend.git && \
   cd carla-display-backend && \
   ./setup/setup.sh && \
-  git checkout test_new_xviz_lib && \
   mkdir build && \
   cd build && \
   cmake ../ && \
