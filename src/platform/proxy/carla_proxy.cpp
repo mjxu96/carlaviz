@@ -269,6 +269,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       if (attribute.GetId() == "role_name" && (attribute.GetValue() == "ego") || attribute.GetValue() == "hero") {
         ego_actor_ = actor_ptr;
         need_continue = true;
+        break;
       }
     }
     if (need_continue) {
@@ -394,14 +395,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     ego_orientation.set<2>(-(orientation.yaw) / 180.0 * M_PI);
 
     display_velocity = Utils::ComputeSpeed(ego_actor_->GetVelocity());
-    if (ego_prev_velo_ != boost::none) {
-      auto settings = world_ptr_->GetSettings();
-      double delta = (settings.fixed_delta_seconds == boost::none ? 1.0/30.0 : settings.fixed_delta_seconds.value());
-      display_acceleration = (display_velocity - ego_prev_velo_.value()) / delta;
-    }
-    ego_prev_velo_ = display_velocity;
-  } else {
-    ego_prev_velo_ = boost::none;
+    display_acceleration = Utils::ComputeSpeed(ego_actor_->GetAcceleration());
   }
 
   xviz_builder.Pose("/vehicle_pose")

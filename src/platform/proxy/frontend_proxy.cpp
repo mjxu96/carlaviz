@@ -55,9 +55,9 @@ void FrontendProxy::StartListen() {
   t.detach();
 }
 
-void FrontendProxy::SendToAllClients(const std::string& message) {
+void FrontendProxy::SendToAllClients(std::string&& message) {
   boost::beast::multi_buffer buffer;
-  boost::beast::ostream(buffer) << message;
+  boost::beast::ostream(buffer) << std::move(message);
 
   std::unordered_set<uint32_t> to_delete_ids;
   // LOG_INFO("string size %ld, sent size %ld", message.size(), buffer.size());

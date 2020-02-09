@@ -46,7 +46,7 @@ class FrontendProxy {
   FrontendProxy(uint16_t frontend_listen_port);
   void UpdateMetadata(std::string updated_metadata);
   void StartListen();
-  void SendToAllClients(const std::string& message);
+  void SendToAllClients(std::string&& message);
 
  private:
   void Accept();
