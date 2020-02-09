@@ -17,7 +17,10 @@ uint32_t AddPadding(std::vector<uint8_t>& buffer) {
   return padding_size;
 }
 
-void AddOneImage(Document& document, std::vector<uint8_t>& buffer, uint32_t image_idx, uint32_t buffer_idx, ::xviz::Image* image_ptr) {
+bool AddOneImage(Document& document, std::vector<uint8_t>& buffer, uint32_t image_idx, uint32_t buffer_idx, ::xviz::Image* image_ptr) {
+  if (image_ptr->data().size() <= 0) {
+    return false;
+  }
   document.bufferViews.push_back(fx::gltf::BufferView());
   document.bufferViews.back().byteOffset = buffer.size();
   document.bufferViews.back().byteLength = image_ptr->data().size();
@@ -31,12 +34,12 @@ void AddOneImage(Document& document, std::vector<uint8_t>& buffer, uint32_t imag
   image_ptr->set_data("#/images/" + std::to_string(image_idx)); 
 
   document.bufferViews.back().byteLength += AddPadding(buffer);
-
+  return true;
 }
 
-void AddOnePoint(Document& document, std::vector<uint8_t>& buffer, uint32_t point_idx, uint32_t buffer_idx, ::xviz::Point* point_ptr) {
+bool AddOnePoint(Document& document, std::vector<uint8_t>& buffer, uint32_t point_idx, uint32_t buffer_idx, ::xviz::Point* point_ptr) {
   if (point_ptr->points().list_value().values_size() <= 0u) {
-    return;
+    return false;
   }
   auto value_size = point_ptr->points().list_value().values_size();
   document.bufferViews.push_back(fx::gltf::BufferView());
@@ -64,7 +67,7 @@ void AddOnePoint(Document& document, std::vector<uint8_t>& buffer, uint32_t poin
   point_ptr->mutable_points()->clear_list_value();
   point_ptr->mutable_points()->set_string_value("#/accessors/" + std::to_string(point_idx));
 
-
+  return true;
 }
 
 void GetStateUpdateData(std::string& sink, xviz::XVIZMessage& message) {
@@ -81,12 +84,14 @@ void GetStateUpdateData(std::string& sink, xviz::XVIZMessage& message) {
   for (auto itr = update->mutable_updates()->begin(); itr != update->mutable_updates()->end(); itr++) {
     for (auto& [k, v] : *(itr->mutable_primitives())) {
       for (uint32_t i = 0; i < v.images_size(); i++) {
-        AddOneImage(document, buffer, image_idx, (image_idx + accessor_idx), v.mutable_images(i));
-        image_idx++;
+        if (AddOneImage(document, buffer, image_idx, (image_idx + accessor_idx), v.mutable_images(i))) {
+          image_idx++;
+        }
       }
       for (uint32_t i = 0; i < v.points_size(); i++) {
-        AddOnePoint(document, buffer, accessor_idx, (image_idx + accessor_idx), v.mutable_points(i));
-        accessor_idx++;
+        if (AddOnePoint(document, buffer, accessor_idx, (image_idx + accessor_idx), v.mutable_points(i))) {
+          accessor_idx++;
+        }
       }
     }
   }

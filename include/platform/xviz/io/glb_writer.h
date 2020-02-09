@@ -38,6 +38,7 @@ public:
   // void WriteMessage(xviz::XVIZMessage&& message);
   void WriteMessage(std::string& sink, xviz::XVIZMessage& message);
   void WriteMessage(std::string& sink, xviz::XVIZMessage&& message);
+  void WriteMessage(const std::string& file_sink, xviz::XVIZMessage& message);
 
 private:
   std::shared_ptr<std::string> sink_{nullptr};
