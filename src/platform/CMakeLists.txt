@@ -23,11 +23,18 @@ add_library(proxy-utils
   utils/lodepng.cpp
 )
 
+add_library(proxy-server
+  server/carla_handler.cpp
+  server/carla_session.cpp
+)
+
+target_link_libraries(proxy-server xviz)
+
 add_library(proxy
   proxy/carla_proxy.cpp
   proxy/frontend_proxy.cpp
   proxy/drawing_proxy.cpp
- )
+)
 
 
 # add_executable(proxy proxy_starter.cpp)
@@ -36,7 +43,7 @@ add_executable(platform platform.cpp)
 #target_link_libraries(carla-base carla_client rpc boost_filesystem)
 target_link_libraries(proxy-utils carla_client rpc boost_filesystem)
 #target_link_libraries(connector converter connector-utils websocket-server xviz)
-target_link_libraries(proxy proxy-utils xviz)
+target_link_libraries(proxy proxy-utils proxy-server xviz)
 # target_link_libraries(proxy proxy-lib)
 target_link_libraries(platform proxy)
 target_include_directories(platform

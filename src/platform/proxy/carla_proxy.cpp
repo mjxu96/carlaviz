@@ -138,7 +138,7 @@ void CarlaProxy::Clear() {
   LOG_INFO("Carla proxy clear!");
 }
 
-std::string CarlaProxy::GetMetaData() {
+void CarlaProxy::UpdateMetaData() {
   std::string map_geojson =
       utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(world_ptr_->GetMap());
     XVIZMetadataBuilder xviz_metadata_builder;
@@ -246,13 +246,28 @@ std::string CarlaProxy::GetMetaData() {
   auto json = xviz_metadata_builder.GetMessage().ToObject();
   // auto v = ;
   AddMap(json, map_geojson);
-  return json.dump();
+  metadata_str_ = json.dump();
   // return xviz_metadata_builder.GetMessage().ToObjectString();
 }
 
+std::string CarlaProxy::GetMetaData() {
+  return metadata_str_;
+}
+
 XVIZBuilder CarlaProxy::GetUpdateData() {
-  auto world_snapshots = world_ptr_->WaitForTick(2s);
-  return GetUpdateData(world_snapshots);
+  // auto world_snapshots = world_ptr_->WaitForTick(2s);
+  // return GetUpdateData(world_snapshots);
+  std::lock_guard lock_guard(internal_update_builder_lock_);
+  // xviz::XVIZBuilder builder{metadata_ptr_};
+  return internal_update_builder_;
+}
+
+void CarlaProxy::UpdateData() {
+  while (true) {
+    auto world_snapshots = world_ptr_->WaitForTick(2s);
+    std::lock_guard lock_guard(internal_update_builder_lock_);
+    internal_update_builder_ = GetUpdateData(world_snapshots);
+  }
 }
 
 XVIZBuilder CarlaProxy::GetUpdateData(
@@ -531,8 +546,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     point_cloud_builder.Points(std::move(points));
   }
 
-
-  return std::move(xviz_builder);  //.GetData();
+  return xviz_builder;  //.GetData();
 }
 
 void CarlaProxy::AddTrafficLights(

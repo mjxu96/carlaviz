@@ -68,11 +68,17 @@ class CarlaProxy {
   void Init();
   void Clear();
   std::string GetMetaData();
-  xviz::XVIZBuilder GetUpdateData(
-      const carla::client::WorldSnapshot& world_snapshots);
   xviz::XVIZBuilder GetUpdateData();
+  void UpdateData();
+  void UpdateMetaData();
 
  private:
+  xviz::XVIZBuilder GetUpdateData(
+      const carla::client::WorldSnapshot& world_snapshots);
+  std::mutex internal_update_builder_lock_{};
+  xviz::XVIZBuilder internal_update_builder_{nullptr};
+  std::string metadata_str_{};
+
   void Update(const std::string& data_str);
   void AddTrafficLights(
       xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,

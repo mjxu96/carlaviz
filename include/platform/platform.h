@@ -9,7 +9,11 @@
 
 #include "platform/proxy/carla_proxy.h"
 #include "platform/proxy/drawing_proxy.h"
-#include "platform/proxy/frontend_proxy.h"
+#include "server/carla_handler.h"
+#include "server/carla_session.h"
+#include "server/xviz_server.h"
+// #include "platform/proxy/frontend_proxy.h"
+
 
 #include "io/glb_writer.h"
 
@@ -24,7 +28,8 @@ class Platform {
  private:
   void Init();
   std::shared_ptr<DrawingProxy> drawing_proxy_{nullptr};
-  std::shared_ptr<FrontendProxy> frontend_proxy_{nullptr};
+  std::shared_ptr<xviz::XVIZServer> server_{nullptr};
+  // std::shared_ptr<FrontendProxy> frontend_proxy_{nullptr};
   std::shared_ptr<CarlaProxy> carla_proxy_{nullptr};
 };
 

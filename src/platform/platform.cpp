@@ -18,19 +18,19 @@ using namespace mellocolate;
 
 void Platform::Run() {
   Init();
+  server_->Serve();
 
-  while (true) {
-    auto xviz = carla_proxy_->GetUpdateData();
+  // while (true) {
+  //   auto xviz = carla_proxy_->GetUpdateData();
 
-    drawing_proxy_->AddDrawings(xviz);
+  //   drawing_proxy_->AddDrawings(xviz);
 
-    std::string output;
-    xviz::XVIZGLBWriter writer;
-    writer.WriteMessage(output, xviz.GetMessage());
+  //   std::string output;
+  //   xviz::XVIZGLBWriter writer;
+  //   writer.WriteMessage(output, xviz.GetMessage());
 
-    frontend_proxy_->SendToAllClients(std::move(output));
-
-  }
+  //   frontend_proxy_->SendToAllClients(std::move(output));
+  // }
 }
 
 void Platform::Clear() {
@@ -45,17 +45,22 @@ void Platform::Init() {
   drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
   drawing_proxy_->StartListen();
 
-  frontend_proxy_ = std::make_shared<FrontendProxy>(8081u);
-  frontend_proxy_->StartListen();
+  // frontend_proxy_ = std::make_shared<FrontendProxy>(8081u);
+  // frontend_proxy_->StartListen();
 
   carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u);
   carla_proxy_->Init();
+  carla_proxy_->UpdateMetaData();
+  std::thread t(std::bind(&CarlaProxy::UpdateData, carla_proxy_));
+  t.detach();
 
-  frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetaData());
+  std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
+  handlers.push_back(std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 100u));
+  server_ = std::make_shared<xviz::XVIZServer>(std::move(handlers));
 }
 
 int main() {
-  signal(SIGINT, signal_handler);
-  signal(SIGTERM, signal_handler);
+  // signal(SIGINT, signal_handler);
+  // signal(SIGTERM, signal_handler);
   platform.Run();
 }
