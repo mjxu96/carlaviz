@@ -11,7 +11,7 @@
 #include "platform/proxy/drawing_proxy.h"
 #include "platform/proxy/frontend_proxy.h"
 
-#include "platform/xviz/io/glb_writer.h"
+#include "io/glb_writer.h"
 
 namespace mellocolate {
 

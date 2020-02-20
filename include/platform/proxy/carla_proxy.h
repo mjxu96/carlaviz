@@ -10,12 +10,12 @@
 #include "platform/utils/def.h"
 #include "platform/utils/lodepng.h"
 #include "platform/utils/utils.h"
-#include "platform/xviz/builder/xviz_builder.h"
-#include "platform/xviz/builder/metadata.h"
-#include "platform/xviz/builder/declarative_ui/ui_builder.h"
-#include "platform/xviz/builder/declarative_ui/video_builder.h"
-#include "platform/xviz/builder/declarative_ui/metric_builder.h"
-#include "platform/xviz/builder/declarative_ui/container_builder.h"
+#include "builder/xviz_builder.h"
+#include "builder/metadata.h"
+#include "builder/declarative_ui/ui_builder.h"
+#include "builder/declarative_ui/video_builder.h"
+#include "builder/declarative_ui/metric_builder.h"
+#include "builder/declarative_ui/container_builder.h"
 
 #include "carla/client/Actor.h"
 #include "carla/client/ActorBlueprint.h"
@@ -88,6 +88,7 @@ class CarlaProxy {
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   boost::shared_ptr<carla::client::Actor> ego_actor_{nullptr};
+  int ego_id_{-1};
 
   std::shared_ptr<xviz::Metadata> metadata_ptr_{nullptr};
 

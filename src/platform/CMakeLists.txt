@@ -4,9 +4,7 @@ cmake_minimum_required(VERSION 3.5.1)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CLIENT_ROOT_FOLDER}/bin)
 
 
-set(XVIZ_ROOT_FOLDER ${CLIENT_ROOT_FOLDER})
 include_directories(${CLIENT_ROOT_FOLDER}/include/lib ${CLIENT_ROOT_FOLDER}/include)
-include_directories(${XVIZ_ROOT_FOLDER}/include/platform/xviz)
 link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
 # add_library(xviz
@@ -18,7 +16,6 @@ link_directories(${CLIENT_ROOT_FOLDER}/lib)
 #   xviz/xviz_primitive_builder.cpp
 #   xviz/xviz_time_series_builder.cpp
 # )
-add_subdirectory("xviz")
 
 
 add_library(proxy-utils 
@@ -42,4 +39,8 @@ target_link_libraries(proxy-utils carla_client rpc boost_filesystem)
 target_link_libraries(proxy proxy-utils xviz)
 # target_link_libraries(proxy proxy-lib)
 target_link_libraries(platform proxy)
+target_include_directories(platform
+  PUBLIC
+  ${CLIENT_ROOT_FOLDER}/include/lib ${CLIENT_ROOT_FOLDER}/include
+)
 # target_link_libraries(converter connector-utils websocket-server)
