@@ -22,11 +22,11 @@ namespace mellocolate {
 class Platform {
  public:
   Platform() = default;
+  void Init();
   void Run();
   void Clear();
 
  private:
-  void Init();
   std::shared_ptr<DrawingProxy> drawing_proxy_{nullptr};
   std::shared_ptr<xviz::XVIZServer> server_{nullptr};
   // std::shared_ptr<FrontendProxy> frontend_proxy_{nullptr};

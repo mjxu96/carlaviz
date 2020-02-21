@@ -17,20 +17,7 @@ void signal_handler(int signal_num) {
 using namespace mellocolate;
 
 void Platform::Run() {
-  Init();
   server_->Serve();
-
-  // while (true) {
-  //   auto xviz = carla_proxy_->GetUpdateData();
-
-  //   drawing_proxy_->AddDrawings(xviz);
-
-  //   std::string output;
-  //   xviz::XVIZGLBWriter writer;
-  //   writer.WriteMessage(output, xviz.GetMessage());
-
-  //   frontend_proxy_->SendToAllClients(std::move(output));
-  // }
 }
 
 void Platform::Clear() {
@@ -60,7 +47,8 @@ void Platform::Init() {
 }
 
 int main() {
-  // signal(SIGINT, signal_handler);
-  // signal(SIGTERM, signal_handler);
+  signal(SIGINT, signal_handler);
+  signal(SIGTERM, signal_handler);
+  platform.Init();
   platform.Run();
 }
