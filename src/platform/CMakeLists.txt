@@ -32,7 +32,6 @@ target_link_libraries(proxy-server xviz)
 
 add_library(proxy
   proxy/carla_proxy.cpp
-  proxy/frontend_proxy.cpp
   proxy/drawing_proxy.cpp
 )
 

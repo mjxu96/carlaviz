@@ -32,9 +32,6 @@ void Platform::Init() {
   drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
   drawing_proxy_->StartListen();
 
-  // frontend_proxy_ = std::make_shared<FrontendProxy>(8081u);
-  // frontend_proxy_->StartListen();
-
   carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u);
   carla_proxy_->Init();
   carla_proxy_->UpdateMetaData();
