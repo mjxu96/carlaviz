@@ -258,8 +258,9 @@ XVIZBuilder CarlaProxy::GetUpdateData() {
   // auto world_snapshots = world_ptr_->WaitForTick(2s);
   // return GetUpdateData(world_snapshots);
   std::lock_guard lock_guard(internal_update_builder_lock_);
-  // xviz::XVIZBuilder builder{metadata_ptr_};
-  return internal_update_builder_;
+  xviz::XVIZBuilder builder(nullptr);
+  builder.DeepCopyFrom(internal_update_builder_);
+  return builder;
 }
 
 void CarlaProxy::UpdateData() {
