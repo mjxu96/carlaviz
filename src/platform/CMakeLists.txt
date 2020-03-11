@@ -4,7 +4,9 @@ cmake_minimum_required(VERSION 3.5.1)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CLIENT_ROOT_FOLDER}/bin)
 
 
-include_directories(${CLIENT_ROOT_FOLDER}/include/lib ${CLIENT_ROOT_FOLDER}/include)
+include_directories(${CLIENT_ROOT_FOLDER}/include)
+include_directories(${CLIENT_ROOT_FOLDER}/include/system)
+include_directories(${CLIENT_ROOT_FOLDER}/third_party/LibCarla/source)
 link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
 # add_library(xviz

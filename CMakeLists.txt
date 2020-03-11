@@ -17,6 +17,7 @@ set(LIBCARLA_BUILD_DEBUG OFF)
 set(LIBCARLA_BUILD_TEST OFF)
 set(CMAKE_INSTALL_PREFIX ${CLIENT_ROOT_FOLDER})
 set(CMAKE_BUILD_TYPE "Client")
+include("third_party/LibCarla/cmake/CMakeLists.txt.in")
 add_subdirectory("third_party/LibCarla/cmake")
 
 add_subdirectory("third_party/xviz")

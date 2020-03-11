@@ -11,13 +11,14 @@
 /include/lib/rpc/
 /include/lib/gtest/
 /include/lib/recast/
+/include/system
 
 # Build files
 /build/
 /bin/
 
 # CMake file
-/src/libcarla/cmake/CMakeLists.txt.in
+/third_party/LibCarla/cmake/CMakeLists.txt.in
 
 # Carla version file
 /include/lib/carla/Version.h

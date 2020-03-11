@@ -22,6 +22,8 @@ namespace detail {
   class ActorState : private MovableNonCopyable {
   public:
 
+    explicit ActorState(rpc::Actor description, EpisodeProxy episode);
+
     ActorId GetId() const {
       return _description.id;
     }
@@ -74,8 +76,6 @@ namespace detail {
   private:
 
     friend class Simulator;
-
-    explicit ActorState(rpc::Actor description, EpisodeProxy episode);
 
     rpc::Actor _description;
 
