@@ -257,9 +257,14 @@ std::string CarlaProxy::GetMetaData() {
 XVIZBuilder CarlaProxy::GetUpdateData() {
   // auto world_snapshots = world_ptr_->WaitForTick(2s);
   // return GetUpdateData(world_snapshots);
+  // auto lock_start = std::chrono::high_resolution_clock::now();
   std::lock_guard lock_guard(internal_update_builder_lock_);
+  // auto lock_end = std::chrono::high_resolution_clock::now();
   xviz::XVIZBuilder builder(nullptr);
   builder.DeepCopyFrom(internal_update_builder_);
+  // auto copy_end = std::chrono::high_resolution_clock::now();
+  // LOG_INFO("Lock time: %.3fms, copy time: %.3f", std::chrono::duration<double, std::milli>(lock_end - lock_start).count(),
+    // std::chrono::duration<double, std::milli>(copy_end - lock_end).count());
   return builder;
 }
 

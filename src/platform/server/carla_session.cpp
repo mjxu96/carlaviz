@@ -40,15 +40,26 @@ void CarlaSession::Main() {
   }
   while (true) {
     // LOG_ERROR("Drawing once");
+    auto data_start = std::chrono::high_resolution_clock::now();
     auto builder = carla_proxy_ptr_->GetUpdateData();
+    auto data_end = std::chrono::high_resolution_clock::now();
     drawing_proxy_ptr_->AddDrawings(builder);
+    auto drawing_end = std::chrono::high_resolution_clock::now();
     std::string output;
     XVIZGLBWriter writer;
     writer.WriteMessage(output, builder.GetMessage());
+    auto writer_end = std::chrono::high_resolution_clock::now();
     auto err_code = conn_ptr_->send(std::move(output), websocketpp::frame::opcode::BINARY);
     if (err_code) {
+      LOG_ERROR("Sending error, exit");
       return;
     }
+    auto send_finish = std::chrono::high_resolution_clock::now();
+    LOG_ERROR("Data spend %.3f, drawing spend: %.3f, writer spend: %.3f, send spend %.3f", 
+      std::chrono::duration<double, std::milli>(data_end - data_start).count(),
+      std::chrono::duration<double, std::milli>(drawing_end - data_end).count(),
+      std::chrono::duration<double, std::milli>(writer_end - drawing_end).count(),
+      std::chrono::duration<double, std::milli>(send_finish - writer_end).count());
     std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms_));
   }
 }

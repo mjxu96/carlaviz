@@ -39,7 +39,7 @@ void Platform::Init() {
   t.detach();
 
   std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
-  handlers.push_back(std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 100u));
+  handlers.push_back(std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 66u));
   server_ = std::make_shared<xviz::XVIZServer>(std::move(handlers));
 }
 
