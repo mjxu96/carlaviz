@@ -756,6 +756,7 @@ utils::PointCloud CarlaProxy::GetPointCloud(
 
 utils::Image CarlaProxy::GetEncodedImage(
     const carla::sensor::data::Image& image) {
+  // LOG_INFO("Receive image %.3f", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1e9);
   std::vector<unsigned char> pixel_data;
   for (const auto& p : image) {
     pixel_data.emplace_back(p.r);
@@ -773,5 +774,7 @@ utils::Image CarlaProxy::GetEncodedImage(
   for (const auto& c : image_data) {
     data_str += (char)c;
   }
+  // LOG_INFO("Get image %.3f", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1e9);
+
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
 }
