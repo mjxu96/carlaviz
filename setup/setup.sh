@@ -137,53 +137,6 @@ rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
 unset RPCLIB_BASENAME
 
 # ==============================================================================
-# -- Get GTest and compile it with libstdc++ --------------------------------------
-# ==============================================================================
-
-# GTEST_VERSION=1.8.1
-# GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
-
-# GTEST_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
-# #${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
-# GTEST_LIBSTDCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
-
-# rm -Rf \
-#     ${GTEST_BASENAME}-source \
-#     ${GTEST_BASENAME}-libstdcxx-build \
-#     ${GTEST_BASENAME}-libstdcxx-install
-
-# log "Retrieving Google Test."
-
-# git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
-
-# log "Building Google Test with libstdc++."
-
-# mkdir -p ${GTEST_BASENAME}-libstdcxx-build
-
-# pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
-
-# cmake -G "Unix Makefiles" \
-#     -DCMAKE_CXX_FLAGS="-std=c++14" \
-#     -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
-#     ../${GTEST_BASENAME}-source
-
-# make -j${LIB_BUILD_CONCURRENCY}
-
-# make install
-
-# popd >/dev/null
-
-# rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
-
-
-# cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
-# # cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
-
-# rm -Rf ${GTEST_BASENAME}-libstdcxx-install/include
-
-# unset GTEST_BASENAME
-
-# ==============================================================================
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
