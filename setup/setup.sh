@@ -33,7 +33,7 @@ fi
 # ==============================================================================
 # -- mkdir include folder ------------------------------------------------------
 # ==============================================================================
-LIB_HEADER_INCLUDE_PATH=${CARLA_ROOT_FOLDER}/include/lib
+LIB_HEADER_INCLUDE_PATH=${CARLA_BUILD_FOLDER}/include
 mkdir -p ${LIB_HEADER_INCLUDE_PATH}
 
 mkdir -p ${CARLA_BUILD_FOLDER}
@@ -47,7 +47,7 @@ BOOST_VERSION=1.69.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
-BOOST_LIBPATH=${CARLA_BUILD_FOLDER}
+BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib/
 
 rm -Rf ${BOOST_BASENAME}-source
 
@@ -81,9 +81,9 @@ rm -Rf ${BOOST_BASENAME}-source
 rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
 cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}/boost
-cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
+# cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
 
-rm -Rf ${BOOST_BASENAME}-install
+# rm -Rf ${BOOST_BASENAME}-install
 
 
 unset BOOST_BASENAME
@@ -97,8 +97,7 @@ RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/include
-RPCLIB_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
-#${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/lib
+RPCLIB_LIBSTDCXX_LIBPATH=${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/lib
 rm -Rf \
     ${RPCLIB_BASENAME}-source \
     ${RPCLIB_BASENAME}-libstdcxx-build \
@@ -128,9 +127,9 @@ popd >/dev/null
 rm -Rf ${RPCLIB_BASENAME}-source ${RPCLIB_BASENAME}-libstdcxx-build
 
 cp -r ${RPCLIB_BASENAME}-libstdcxx-install/include/rpc ${RPCLIB_LIBSTDCXX_INCLUDE}/rpc
-cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
+# cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/dev/null
 
-rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
+# rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
 
 unset RPCLIB_BASENAME
 
@@ -143,8 +142,7 @@ GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
 
 GTEST_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 #${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
-GTEST_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
-#${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
+GTEST_LIBSTDCXX_LIBPATH=${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
 
 rm -Rf \
     ${GTEST_BASENAME}-source \
@@ -176,9 +174,9 @@ rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
 
 
 cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
-cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
+# cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
 
-rm -Rf ${GTEST_BASENAME}-libstdcxx-install
+# rm -Rf ${GTEST_BASENAME}-libstdcxx-install
 
 unset GTEST_BASENAME
 
@@ -190,7 +188,7 @@ RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
 RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
-RECAST_LIBPATH=${CARLA_BUILD_FOLDER}
+RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
 
 # if [[ -d "${RECAST_BASENAME}-install" ]] ; then
 #   log "${RECAST_BASENAME} already installed."
@@ -235,9 +233,9 @@ rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
 mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
 mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
 cp -r ${RECAST_BASENAME}-install/include/recast ${RECAST_INCLUDE}/recast
-cp -r ${RECAST_BASENAME}-install/lib/* ${RECAST_LIBPATH}/ >/dev/null
+# cp -r ${RECAST_BASENAME}-install/lib/* ${RECAST_LIBPATH}/ >/dev/null
 
-rm -rf ${RECAST_BASENAME}-install
+# rm -rf ${RECAST_BASENAME}-install
 
 # fi
 
@@ -253,7 +251,7 @@ CARLA_VERSION=$(get_git_repository_version)
 
 log "CARLA version ${CARLA_VERSION}."
 
-VERSION_H_FILE=${CARLA_ROOT_FOLDER}/include/lib/carla/Version.h
+VERSION_H_FILE=${CARLA_ROOT_FOLDER}/third_party/LibCarla/source/carla/Version.h
 VERSION_H_FILE_GEN=${CARLA_BUILD_FOLDER}/Version.h
 
 sed -e "s|\${CARLA_VERSION}|${CARLA_VERSION}|g" ${VERSION_H_FILE}.in > ${VERSION_H_FILE_GEN}

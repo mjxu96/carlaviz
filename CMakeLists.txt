@@ -13,6 +13,11 @@ SET(CMAKE_CXX_FLAGS "-std=c++17 -pthread -fPIC -O3 -DNDEBUG")
 
 SET(CLIENT_ROOT_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory("src/libcarla/cmake")
+set(LIBCARLA_BUILD_DEBUG OFF)
+set(LIBCARLA_BUILD_TEST OFF)
+set(CMAKE_INSTALL_PREFIX ${CLIENT_ROOT_FOLDER})
+set(CMAKE_BUILD_TYPE "Client")
+add_subdirectory("third_party/LibCarla/cmake")
+
 add_subdirectory("third_party/xviz")
 add_subdirectory("src/platform")
