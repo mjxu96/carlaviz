@@ -13,22 +13,23 @@
 #include "platform/proxy/carla_proxy.h"
 #include "platform/proxy/drawing_proxy.h"
 
+#include "carla_handler.h"
+
 namespace mellocolate {
 
 class CarlaSession : public xviz::XVIZBaseSession {
 public:
   CarlaSession(std::shared_ptr<websocketpp::connection<websocketpp::config::asio>> conn_ptr,
-    std::shared_ptr<CarlaProxy> carla_proxy_ptr, std::shared_ptr<DrawingProxy> drawing_proxy_ptr, 
-    uint64_t interval_ms);
+    std::weak_ptr<CarlaHandler> handler_weak_ptr, uint64_t interval_ms);
 
   void OnConnect() override;
   void Main() override;
   void OnDisconnect() override;
 private:
   bool is_error_{false};
-  std::shared_ptr<CarlaProxy> carla_proxy_ptr_{nullptr};
-  std::shared_ptr<DrawingProxy> drawing_proxy_ptr_{nullptr};
-  uint64_t interval_ms_{50};
+  uint64_t interval_ms_{100};
+
+  std::weak_ptr<CarlaHandler> handler_weak_ptr_;
 };
   
 } // namespace mellocolate

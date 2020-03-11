@@ -138,7 +138,7 @@ void CarlaProxy::Clear() {
   LOG_INFO("Carla proxy clear!");
 }
 
-void CarlaProxy::UpdateMetaData() {
+std::string CarlaProxy::GetMetaData() {
   std::string map_geojson =
       utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(world_ptr_->GetMap());
     XVIZMetadataBuilder xviz_metadata_builder;
@@ -232,49 +232,45 @@ void CarlaProxy::UpdateMetaData() {
           .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
         .UI(GetUIs());
         
-          
-  // XVIZMetaDataBuilder xviz_metadata_builder;
-  //     .AddStream(
-  //         metadata::Stream("/planning/trajectory")
-  //             .AddCategory("primitive")
-  //             .AddCoordinate("IDENTITY")
-  //             .AddStreamStyle(
-  //                 metadata::StreamStyle().AddStrokeWidth(2.0).AddStrokeColor(
-  //                     "#FFD700"))
-  //             .AddType("polyline"))
   metadata_ptr_ = xviz_metadata_builder.GetData();
   auto json = xviz_metadata_builder.GetMessage().ToObject();
   // auto v = ;
   AddMap(json, map_geojson);
   metadata_str_ = json.dump();
   // return xviz_metadata_builder.GetMessage().ToObjectString();
-}
-
-std::string CarlaProxy::GetMetaData() {
   return metadata_str_;
 }
 
+// std::string CarlaProxy::GetMetaData() {
+//   return metadata_str_;
+// }
+
+// XVIZBuilder CarlaProxy::GetUpdateData() {
+//   // auto world_snapshots = world_ptr_->WaitForTick(2s);
+//   // return GetUpdateData(world_snapshots);
+//   // auto lock_start = std::chrono::high_resolution_clock::now();
+//   std::lock_guard lock_guard(internal_update_builder_lock_);
+//   // auto lock_end = std::chrono::high_resolution_clock::now();
+//   xviz::XVIZBuilder builder(nullptr);
+//   builder.DeepCopyFrom(internal_update_builder_);
+//   // auto copy_end = std::chrono::high_resolution_clock::now();
+//   // LOG_INFO("Lock time: %.3fms, copy time: %.3f", std::chrono::duration<double, std::milli>(lock_end - lock_start).count(),
+//     // std::chrono::duration<double, std::milli>(copy_end - lock_end).count());
+//   return builder;
+// }
+
 XVIZBuilder CarlaProxy::GetUpdateData() {
-  // auto world_snapshots = world_ptr_->WaitForTick(2s);
-  // return GetUpdateData(world_snapshots);
-  // auto lock_start = std::chrono::high_resolution_clock::now();
-  std::lock_guard lock_guard(internal_update_builder_lock_);
-  // auto lock_end = std::chrono::high_resolution_clock::now();
-  xviz::XVIZBuilder builder(nullptr);
-  builder.DeepCopyFrom(internal_update_builder_);
-  // auto copy_end = std::chrono::high_resolution_clock::now();
-  // LOG_INFO("Lock time: %.3fms, copy time: %.3f", std::chrono::duration<double, std::milli>(lock_end - lock_start).count(),
-    // std::chrono::duration<double, std::milli>(copy_end - lock_end).count());
-  return builder;
+  auto world_snapshots = world_ptr_->WaitForTick(2s);
+  return GetUpdateData(world_snapshots);
 }
 
-void CarlaProxy::UpdateData() {
-  while (true) {
-    auto world_snapshots = world_ptr_->WaitForTick(2s);
-    std::lock_guard lock_guard(internal_update_builder_lock_);
-    internal_update_builder_ = GetUpdateData(world_snapshots);
-  }
-}
+// void CarlaProxy::UpdateData() {
+//   while (true) {
+//     auto world_snapshots = world_ptr_->WaitForTick(2s);
+//     std::lock_guard lock_guard(internal_update_builder_lock_);
+//     internal_update_builder_ = GetUpdateData(world_snapshots);
+//   }
+// }
 
 XVIZBuilder CarlaProxy::GetUpdateData(
     const carla::client::WorldSnapshot& world_snapshots) {

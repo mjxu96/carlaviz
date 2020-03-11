@@ -34,12 +34,12 @@ void Platform::Init() {
 
   carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u);
   carla_proxy_->Init();
-  carla_proxy_->UpdateMetaData();
-  std::thread t(std::bind(&CarlaProxy::UpdateData, carla_proxy_));
-  t.detach();
+  // carla_proxy_->UpdateMetaData();
+  // std::thread t(std::bind(&CarlaProxy::UpdateData, carla_proxy_));
+  // t.detach();
 
   std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
-  handlers.push_back(std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 66u));
+  handlers.push_back(std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 80u));
   server_ = std::make_shared<xviz::XVIZServer>(std::move(handlers));
 }
 
