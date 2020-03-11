@@ -11,7 +11,7 @@
 #include "platform/utils/json.hpp"
 #include "platform/utils/macrologger.h"
 
-#include "platform/xviz/builder/xviz_builder.h"
+#include "builder/xviz_builder.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>

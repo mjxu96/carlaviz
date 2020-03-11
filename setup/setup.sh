@@ -17,6 +17,8 @@ unset CARLA_FOLDER
 log "clean up previous build files"
 rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build 
 rm -rf ${CARLA_ROOT_FOLDER}/include/lib/boost ${CARLA_ROOT_FOLDER}/include/lib/rpc ${CARLA_ROOT_FOLDER}/include/lib/gtest ${CARLA_ROOT_FOLDER}/include/lib/recast
+rm -rf ${CARLA_ROOT_FOLDER}/include/system
+rm -rf ${CARLA_ROOT_FOLDER}/include/lib
 rm -f ${CMAKE_CONFIG_FILE}
 
 CXX_TAG=c7
@@ -33,10 +35,11 @@ fi
 # ==============================================================================
 # -- mkdir include folder ------------------------------------------------------
 # ==============================================================================
-LIB_HEADER_INCLUDE_PATH=${CARLA_ROOT_FOLDER}/include/lib
+LIB_HEADER_INCLUDE_PATH=${CARLA_ROOT_FOLDER}/include/system
 mkdir -p ${LIB_HEADER_INCLUDE_PATH}
 
 mkdir -p ${CARLA_BUILD_FOLDER}
+mkdir -p ${CARLA_ROOT_FOLDER}/include/system
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 # ==============================================================================
@@ -98,7 +101,6 @@ RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 RPCLIB_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 #${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/include
 RPCLIB_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
-#${PWD}/${RPCLIB_BASENAME}-libstdcxx-install/lib
 rm -Rf \
     ${RPCLIB_BASENAME}-source \
     ${RPCLIB_BASENAME}-libstdcxx-build \
@@ -133,54 +135,6 @@ cp -r ${RPCLIB_BASENAME}-libstdcxx-install/lib/* ${RPCLIB_LIBSTDCXX_LIBPATH}/ >/
 rm -Rf ${RPCLIB_BASENAME}-libstdcxx-install
 
 unset RPCLIB_BASENAME
-
-# ==============================================================================
-# -- Get GTest and compile it with libstdc++ --------------------------------------
-# ==============================================================================
-
-GTEST_VERSION=1.8.1
-GTEST_BASENAME=gtest-${GTEST_VERSION}-${CXX_TAG}
-
-GTEST_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
-#${PWD}/${GTEST_BASENAME}-libstdcxx-install/include
-GTEST_LIBSTDCXX_LIBPATH=${CARLA_BUILD_FOLDER}
-#${PWD}/${GTEST_BASENAME}-libstdcxx-install/lib
-
-rm -Rf \
-    ${GTEST_BASENAME}-source \
-    ${GTEST_BASENAME}-libstdcxx-build \
-    ${GTEST_BASENAME}-libstdcxx-install
-
-log "Retrieving Google Test."
-
-git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
-
-log "Building Google Test with libstdc++."
-
-mkdir -p ${GTEST_BASENAME}-libstdcxx-build
-
-pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
-
-cmake -G "Unix Makefiles" \
-    -DCMAKE_CXX_FLAGS="-std=c++14" \
-    -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
-    ../${GTEST_BASENAME}-source
-
-make -j${LIB_BUILD_CONCURRENCY}
-
-make install
-
-popd >/dev/null
-
-rm -Rf ${GTEST_BASENAME}-source ${GTEST_BASENAME}-libstdcxx-build
-
-
-cp -r ${GTEST_BASENAME}-libstdcxx-install/include/gtest ${GTEST_LIBSTDCXX_INCLUDE}/gtest
-cp -r ${GTEST_BASENAME}-libstdcxx-install/lib/* ${GTEST_LIBSTDCXX_LIBPATH}/ >/dev/null
-
-rm -Rf ${GTEST_BASENAME}-libstdcxx-install
-
-unset GTEST_BASENAME
 
 # ==============================================================================
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
@@ -253,7 +207,7 @@ CARLA_VERSION=$(get_git_repository_version)
 
 log "CARLA version ${CARLA_VERSION}."
 
-VERSION_H_FILE=${CARLA_ROOT_FOLDER}/include/lib/carla/Version.h
+VERSION_H_FILE=${CARLA_ROOT_FOLDER}/third_party/LibCarla/source/carla/Version.h
 VERSION_H_FILE_GEN=${CARLA_BUILD_FOLDER}/Version.h
 
 sed -e "s|\${CARLA_VERSION}|${CARLA_VERSION}|g" ${VERSION_H_FILE}.in > ${VERSION_H_FILE_GEN}
@@ -306,6 +260,8 @@ rm -r cmake pkgconfig
 
 popd >/dev/null
 rm -rf ${LIBCARLA_BUILD_PATH}
+
+# mv ${CARLA_BUILD_FOLDER}/include/* ${CARLA_ROOT_FOLDER}/include/system/
 
 
 # ==============================================================================

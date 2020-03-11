@@ -34,18 +34,36 @@ void AddVerticesToVector(std::vector<std::vector<double>>& v, const boost::share
   auto bounding_box = ptr->GetBoundingBox();
   double x_off = bounding_box.extent.x;
   double y_off = bounding_box.extent.y;
-  double yaw = ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
-  std::vector<std::pair<double, double>> offset = {
-      AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
-      AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
-  double x = ptr->GetLocation().x;
-  double y = ptr->GetLocation().y;
-  double z = ptr->GetLocation().z;
+  carla::geom::Vector3D bounding_box_pos_0(-x_off, -y_off, 0);
+  carla::geom::Vector3D bounding_box_pos_1(-x_off, y_off, 0);
+  carla::geom::Vector3D bounding_box_pos_2(x_off, y_off, 0);
+  carla::geom::Vector3D bounding_box_pos_3(x_off, -y_off, 0);
+  auto transform = ptr->GetTransform();
+  transform.TransformPoint(bounding_box_pos_0);
+  transform.TransformPoint(bounding_box_pos_1);
+  transform.TransformPoint(bounding_box_pos_2);
+  transform.TransformPoint(bounding_box_pos_3);
+  // double yaw = ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
+  // std::vector<std::pair<double, double>> offset = {
+  //     AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
+  //     AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
+  // double x = ptr->GetLocation().x;
+  // double y = ptr->GetLocation().y;
+  // double z = ptr->GetLocation().z;
+  std::vector<carla::geom::Vector3D> offset = {
+    bounding_box_pos_0,
+    bounding_box_pos_1,
+    bounding_box_pos_2,
+    bounding_box_pos_3
+  };
   std::vector<double> vv;
   for (int j = 0; j < offset.size(); j++) {
-    vv.push_back(x + offset[j].first);
-    vv.push_back(-(y + offset[j].second));
-    vv.push_back(z);
+    vv.push_back(offset[j].x);
+    vv.push_back(-offset[j].y);
+    vv.push_back(offset[j].z);
+    // vv.push_back(x + offset[j].first);
+    // vv.push_back(-(y + offset[j].second));
+    // vv.push_back(z);
   }
   v.push_back(std::move(vv));
 }
@@ -214,28 +232,45 @@ std::string CarlaProxy::GetMetaData() {
           .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
         .UI(GetUIs());
         
-          
-  // XVIZMetaDataBuilder xviz_metadata_builder;
-  //     .AddStream(
-  //         metadata::Stream("/planning/trajectory")
-  //             .AddCategory("primitive")
-  //             .AddCoordinate("IDENTITY")
-  //             .AddStreamStyle(
-  //                 metadata::StreamStyle().AddStrokeWidth(2.0).AddStrokeColor(
-  //                     "#FFD700"))
-  //             .AddType("polyline"))
   metadata_ptr_ = xviz_metadata_builder.GetData();
   auto json = xviz_metadata_builder.GetMessage().ToObject();
   // auto v = ;
   AddMap(json, map_geojson);
-  return json.dump();
+  metadata_str_ = json.dump();
   // return xviz_metadata_builder.GetMessage().ToObjectString();
+  return metadata_str_;
 }
+
+// std::string CarlaProxy::GetMetaData() {
+//   return metadata_str_;
+// }
+
+// XVIZBuilder CarlaProxy::GetUpdateData() {
+//   // auto world_snapshots = world_ptr_->WaitForTick(2s);
+//   // return GetUpdateData(world_snapshots);
+//   // auto lock_start = std::chrono::high_resolution_clock::now();
+//   std::lock_guard lock_guard(internal_update_builder_lock_);
+//   // auto lock_end = std::chrono::high_resolution_clock::now();
+//   xviz::XVIZBuilder builder(nullptr);
+//   builder.DeepCopyFrom(internal_update_builder_);
+//   // auto copy_end = std::chrono::high_resolution_clock::now();
+//   // LOG_INFO("Lock time: %.3fms, copy time: %.3f", std::chrono::duration<double, std::milli>(lock_end - lock_start).count(),
+//     // std::chrono::duration<double, std::milli>(copy_end - lock_end).count());
+//   return builder;
+// }
 
 XVIZBuilder CarlaProxy::GetUpdateData() {
   auto world_snapshots = world_ptr_->WaitForTick(2s);
   return GetUpdateData(world_snapshots);
 }
+
+// void CarlaProxy::UpdateData() {
+//   while (true) {
+//     auto world_snapshots = world_ptr_->WaitForTick(2s);
+//     std::lock_guard lock_guard(internal_update_builder_lock_);
+//     internal_update_builder_ = GetUpdateData(world_snapshots);
+//   }
+// }
 
 XVIZBuilder CarlaProxy::GetUpdateData(
     const carla::client::WorldSnapshot& world_snapshots) {
@@ -250,6 +285,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   std::unordered_set<uint32_t> tmp_real_sensors;
 
   ego_actor_ = nullptr;
+  ego_id_ = -1;
 
   for (const auto& world_snapshot : world_snapshots) {
     uint32_t id = world_snapshot.id;
@@ -268,14 +304,15 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     for (const auto& attribute : actor_ptr->GetAttributes()) {
       if (attribute.GetId() == "role_name" && (attribute.GetValue() == "ego") || attribute.GetValue() == "hero") {
         ego_actor_ = actor_ptr;
+        ego_id_ = ego_actor_->GetId();
         need_continue = true;
         break;
       }
     }
+    tmp_actors.insert({id, actor_ptr});
     if (need_continue) {
       continue;
     }
-    tmp_actors.insert({id, actor_ptr});
     if (actor_ptr->GetTypeId().substr(0, 6) == "sensor") {
       auto sensor_ptr =
           boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
@@ -391,7 +428,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     ego_position.set<1>(-location.y);
     ego_position.set<2>(location.z);
     ego_orientation.set<0>(orientation.roll / 180.0 * M_PI);
-    ego_orientation.set<1>(orientation.pitch / 180.0 * M_PI);
+    ego_orientation.set<1>(-orientation.pitch / 180.0 * M_PI);
     ego_orientation.set<2>(-(orientation.yaw) / 180.0 * M_PI);
 
     display_velocity = Utils::ComputeSpeed(ego_actor_->GetVelocity());
@@ -416,17 +453,24 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
 
   std::vector<std::vector<double>> vehicle_vector;
+  std::vector<uint32_t> vehicle_ids;
   std::vector<std::vector<double>> walker_vector;
+  std::vector<uint32_t> walker_ids;
 
   for (const auto& actor_pair : actors_) {
+    if (ego_id_ == actor_pair.first) {
+      continue;
+    }
     auto actor_ptr = actor_pair.second;
 
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "vehicle")) {
       AddVerticesToVector<carla::client::Vehicle>(vehicle_vector, boost::static_pointer_cast<carla::client::Vehicle>(actor_ptr));
+      vehicle_ids.push_back(actor_pair.first);
       continue;
     }
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "walker")) {
       AddVerticesToVector<carla::client::Walker>(walker_vector, boost::static_pointer_cast<carla::client::Walker>(actor_ptr));
+      walker_ids.push_back(actor_pair.first);
       continue;
     }
     if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
@@ -453,14 +497,18 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   }
 
-  for (auto& v : vehicle_vector) {
+  for (auto i = 0; i < vehicle_vector.size(); i++) {
     xviz_builder.Primitive("/object/vehicles")
-      .Polygon(std::move(v));
+      .Polygon(std::move(vehicle_vector[i]))
+      .ObjectId(std::to_string(vehicle_ids[i]))
+      .Classes({"vehicle"});
   }
 
-  for (auto& v : walker_vector) {
+  for (auto i = 0; i < walker_vector.size(); i++) {
     xviz_builder.Primitive("/object/walkers")
-      .Polygon(std::move(v));
+      .Polygon(std::move(walker_vector[i]))
+      .ObjectId(std::to_string(walker_ids[i]))
+      .Classes({"walker"});
   }
 
   image_data_lock_.lock();
@@ -500,8 +548,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     point_cloud_builder.Points(std::move(points));
   }
 
-
-  return std::move(xviz_builder);  //.GetData();
+  return xviz_builder;  //.GetData();
 }
 
 void CarlaProxy::AddTrafficLights(
@@ -709,6 +756,7 @@ utils::PointCloud CarlaProxy::GetPointCloud(
 
 utils::Image CarlaProxy::GetEncodedImage(
     const carla::sensor::data::Image& image) {
+  // LOG_INFO("Receive image %.3f", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1e9);
   std::vector<unsigned char> pixel_data;
   for (const auto& p : image) {
     pixel_data.emplace_back(p.r);
@@ -726,5 +774,7 @@ utils::Image CarlaProxy::GetEncodedImage(
   for (const auto& c : image_data) {
     data_str += (char)c;
   }
+  // LOG_INFO("Get image %.3f", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1e9);
+
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
 }

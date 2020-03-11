@@ -16,25 +16,37 @@ void signal_handler(int signal_num) {
 
 using namespace mellocolate;
 
+void Platform::SetIsExperimental(bool is_experimental) {
+  is_experimental_ = is_experimental;
+}
+
 void Platform::Run() {
-  Init();
+  try {
+    if (is_experimental_) {
+      LOG_INFO("Using experimental server");
+      server_->Serve();
+    } else {
+      while (true) {
+        auto xviz = carla_proxy_->GetUpdateData();
 
-  while (true) {
-    auto xviz = carla_proxy_->GetUpdateData();
+        drawing_proxy_->AddDrawings(xviz);
 
-    drawing_proxy_->AddDrawings(xviz);
+        std::string output;
+        xviz::XVIZGLBWriter writer;
+        writer.WriteMessage(output, xviz.GetMessage());
 
-    std::string output;
-    xviz::XVIZGLBWriter writer;
-    writer.WriteMessage(output, xviz.GetMessage());
-
-    frontend_proxy_->SendToAllClients(std::move(output));
-
+        frontend_proxy_->SendToAllClients(std::move(output));
+      }
+    }
+  } catch (const std::exception& e) {
+    LOG_ERROR("%s", e.what());
+    platform.Clear();
   }
+
 }
 
 void Platform::Clear() {
-  LOG_INFO("Start to clean all resources. Don't forcefully exit!");
+  LOG_INFO("Start to clean all resources. Don't forcefully exit unless it takes too long!");
   if (carla_proxy_ != nullptr) {
     carla_proxy_->Clear();
   }
@@ -45,17 +57,28 @@ void Platform::Init() {
   drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
   drawing_proxy_->StartListen();
 
-  frontend_proxy_ = std::make_shared<FrontendProxy>(8081u);
-  frontend_proxy_->StartListen();
-
   carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u);
   carla_proxy_->Init();
 
-  frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetaData());
+  // if (!is_experimental_) {
+  // }
+  if (is_experimental_) {
+    std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
+    handlers.push_back(std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 100u));
+    server_ = std::make_shared<xviz::XVIZServer>(std::move(handlers));
+  } else {
+    frontend_proxy_ = std::make_shared<FrontendProxy>(8081u);
+    frontend_proxy_->StartListen();
+    frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetaData());
+  }
 }
 
-int main() {
+int main(int argc, char** argv) {
   signal(SIGINT, signal_handler);
   signal(SIGTERM, signal_handler);
+  if (argc > 1) {
+    platform.SetIsExperimental(true);
+  }
+  platform.Init();
   platform.Run();
 }
