@@ -64,6 +64,15 @@ std::string Image::GetData() const { return encoded_str_; }
 size_t Image::GetWidth() const { return width_; }
 size_t Image::GetHeight() const { return height_; }
 
+CollisionEvent::CollisionEvent(uint32_t self_actor_id, uint32_t other_actor_id, 
+    const std::string& self_actor_name, const std::string& other_actor_name, double hit_timestamp) :
+    self_actor_id_(self_actor_id), other_actor_id_(other_actor_id), self_actor_name_(self_actor_name),
+    other_actor_name_(other_actor_name), last_hit_timestamp_(hit_timestamp) {}
+
+std::string CollisionEvent::GetSelfActorName() const { return self_actor_name_; }
+std::string CollisionEvent::GetOtherActorName() const { return other_actor_name_; }
+double CollisionEvent::GetLastHitTimestamp() const { return last_hit_timestamp_; }
+
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
   carla::client::Map map("map", xodr);
 

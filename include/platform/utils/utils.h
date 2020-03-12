@@ -67,6 +67,24 @@ class Image {
   int height_ = 0;
 };
 
+class CollisionEvent {
+ public:
+  CollisionEvent() = default;
+  CollisionEvent(uint32_t self_actor_id, uint32_t other_actor_id, 
+    const std::string& self_actor_name, const std::string& other_actor_name, double hit_timestamp);
+  
+  std::string GetSelfActorName() const;
+  std::string GetOtherActorName() const;
+  double GetLastHitTimestamp() const;
+  
+ private:
+  uint32_t self_actor_id_{0u};
+  uint32_t other_actor_id_{0u};
+  std::string self_actor_name_{"null"};
+  std::string other_actor_name_{"no collision"};
+  double last_hit_timestamp_{-1.0};
+};
+
 class XodrGeojsonConverter {
  public:
   static std::string Convert(std::string xodr);

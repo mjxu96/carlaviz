@@ -35,6 +35,7 @@
 #include "carla/image/ImageView.h"
 #include "carla/sensor/data/Image.h"
 #include "carla/sensor/data/LidarMeasurement.h"
+#include "carla/sensor/data/CollisionEvent.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -89,8 +90,13 @@ class CarlaProxy {
   xviz::XVIZMetadataBuilder GetBaseMetadataBuilder();
   void AddCameraStream(uint32_t camera_id, const std::string& stream_name="");
   void RemoveCameraStream(uint32_t camera_id);
+
   void AddEgoVehicleMetricStreams();
   void RemoveVehicleMetricStreams();
+
+  void AddTableStreams(const std::string& sensor_type_name);
+  void RemoveTableStreams(const std::string& sensor_type_name);
+
   void UpdateMetadataBuilder();
 
   std::unordered_map<uint32_t, std::vector<std::vector<double>>> traffic_lights_{};
@@ -109,6 +115,7 @@ class CarlaProxy {
   // Metadata related
   xviz::XVIZMetadataBuilder metadata_builder_{};
   std::unordered_map<uint32_t, std::string> camera_streams_{};
+  std::unordered_set<std::string> other_sensor_streams_{};
   std::function<void(const std::string&)> frontend_proxy_update_metadata_callback_;
   bool is_need_update_metadata_{false};
 
@@ -127,8 +134,11 @@ class CarlaProxy {
       dummy_sensors_{};
   std::unordered_set<uint32_t> recorded_dummy_sensor_ids_{};
 
+  std::mutex collision_lock_;
+  std::unordered_map<uint32_t, utils::CollisionEvent> collision_events_{};
+
   // Carla sensor data related
-  boost::shared_ptr<carla::client::Sensor> CreateDummySensor(
+  std::pair<std::string, boost::shared_ptr<carla::client::Sensor>>  CreateDummySensor(
       boost::shared_ptr<carla::client::Sensor> real_sensor);
   carla::geom::Transform GetRelativeTransform(
       const carla::geom::Transform& child,
@@ -136,8 +146,12 @@ class CarlaProxy {
   utils::Image GetEncodedRGBImage(const carla::sensor::data::Image& image);
   utils::Image GetEncodedDepthImage(const carla::sensor::data::Image& image);
   utils::Image GetEncodedLabelImage(const carla::sensor::data::Image& image);
+
   utils::PointCloud GetPointCloud(
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
+
+  utils::CollisionEvent GetCollision(const carla::sensor::data::CollisionEvent& collision_event,
+    const std::string& parent_name);
 
   // Websocket related
   std::mutex clients_addition_lock_;

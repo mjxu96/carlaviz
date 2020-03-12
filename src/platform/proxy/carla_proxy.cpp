@@ -59,13 +59,6 @@ void AddVerticesToVector(std::vector<std::vector<double>>& v, const boost::share
   transform.TransformPoint(bounding_box_pos_1);
   transform.TransformPoint(bounding_box_pos_2);
   transform.TransformPoint(bounding_box_pos_3);
-  // double yaw = ptr->GetTransform().rotation.yaw / 180.0 * M_PI;
-  // std::vector<std::pair<double, double>> offset = {
-  //     AfterRotate(-x_off, -y_off, yaw), AfterRotate(-x_off, y_off, yaw),
-  //     AfterRotate(x_off, y_off, yaw), AfterRotate(x_off, -y_off, yaw)};
-  // double x = ptr->GetLocation().x;
-  // double y = ptr->GetLocation().y;
-  // double z = ptr->GetLocation().z;
   std::vector<carla::geom::Vector3D> offset = {
     bounding_box_pos_0,
     bounding_box_pos_1,
@@ -77,9 +70,6 @@ void AddVerticesToVector(std::vector<std::vector<double>>& v, const boost::share
     vv.push_back(offset[j].x);
     vv.push_back(-offset[j].y);
     vv.push_back(offset[j].z);
-    // vv.push_back(x + offset[j].first);
-    // vv.push_back(-(y + offset[j].second));
-    // vv.push_back(z);
   }
   v.push_back(std::move(vv));
 }
@@ -89,7 +79,8 @@ void AddMap(nlohmann::json& json, std::string& map) {
 }
 
 std::unordered_map<std::string, XVIZUIBuilder> GetUIs(const std::vector<std::string>& cameras,
-  const std::vector<std::string>& acceleration_stream, const std::vector<std::string>& velocity_stream) {
+  const std::vector<std::string>& acceleration_stream, const std::vector<std::string>& velocity_stream,
+  const std::vector<std::string>& table_streams) {
 
   std::unordered_map<std::string, XVIZUIBuilder> ui_builders;
 
@@ -105,6 +96,16 @@ std::unordered_map<std::string, XVIZUIBuilder> GetUIs(const std::vector<std::str
     container_builder.Child(velocity_stream, "velocity", "velocity");
     ui_builders["Metrics"] = XVIZUIBuilder();
     ui_builders["Metrics"].Child(container_builder);
+  }
+
+  if (!table_streams.empty()) {
+    XVIZContainerBuilder container_builder("tables", LayoutType::VERTICAL);
+    for (const auto& stream_name : table_streams) {
+      auto table_stream = std::make_shared<XVIZTableBuilder>(stream_name, stream_name, stream_name, false);
+      container_builder.Child(table_stream);
+    }
+    ui_builders["Tables"] = XVIZUIBuilder();
+    ui_builders["Tables"].Child(container_builder);
   }
   return ui_builders;
 }
@@ -188,6 +189,22 @@ void CarlaProxy::RemoveVehicleMetricStreams() {
   UpdateMetadataBuilder();
 }
 
+void CarlaProxy::AddTableStreams(const std::string& sensor_type_name) {
+  LOG_INFO("Add sensor stream %s", sensor_type_name.c_str());
+  other_sensor_streams_.insert(sensor_type_name);
+  UpdateMetadataBuilder();
+}
+
+void CarlaProxy::RemoveTableStreams(const std::string& sensor_type_name) {
+  if (other_sensor_streams_.find(sensor_type_name) == other_sensor_streams_.end()) {
+    LOG_WARNING("Remove invalid sensor stream %s", sensor_type_name.c_str());
+    return;
+  }
+  LOG_INFO("Remove sensor stream %s", sensor_type_name.c_str());
+  other_sensor_streams_.erase(sensor_type_name);
+  UpdateMetadataBuilder();
+}
+
 void CarlaProxy::UpdateMetadataBuilder() {
   auto base_metadata_builder = GetBaseMetadataBuilder();
   std::vector<std::string> camera_streams_vec;
@@ -198,8 +215,16 @@ void CarlaProxy::UpdateMetadataBuilder() {
         .Type(Primitive::StreamMetadata_PrimitiveType_IMAGE);
     camera_streams_vec.push_back(s_name);
   }
+
+  std::vector<std::string> table_streams;
+  for (const auto& s_name : other_sensor_streams_) {
+    base_metadata_builder
+      .Stream(s_name)
+        .Category(StreamMetadata::UI_PRIMITIVE);
+    table_streams.push_back(s_name);
+  }
   base_metadata_builder
-    .UI(GetUIs(camera_streams_vec,  {"/vehicle/acceleration"}, {"/vehicle/velocity"}));
+    .UI(GetUIs(camera_streams_vec,  {"/vehicle/acceleration"}, {"/vehicle/velocity"}, table_streams));
   metadata_builder_ = base_metadata_builder;
   metadata_ptr_ = metadata_builder_.GetData();
   is_need_update_metadata_ = true;
@@ -322,7 +347,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       std::chrono::system_clock::now();
   double now_time = now.time_since_epoch().count() / 1e9;
 
-  XVIZBuilder xviz_builder(metadata_ptr_);
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
       tmp_actors;
@@ -370,13 +394,21 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         auto type_id = actor_ptr->GetTypeId();
         LOG_INFO("Listen sensor: %u, type is: %s", id,
                  type_id.c_str());
-        auto dummy_sensor = CreateDummySensor(sensor_ptr);
+        auto dummy_sensor_with_parent_name = CreateDummySensor(sensor_ptr);
+        auto parent_name = dummy_sensor_with_parent_name.first;
+        auto dummy_sensor = dummy_sensor_with_parent_name.second;
         if (dummy_sensor == nullptr) {
           continue;
         }
         if (utils::Utils::IsStartWith(type_id,
               "sensor.camera")) {
           AddCameraStream(id, "/camera/" + type_id.substr(14) + "/" + std::to_string(id));
+        }
+        if (utils::Utils::IsStartWith(type_id, "sensor.other.collision")) {
+          AddTableStreams("/sensor/other/collision");
+          collision_lock_.lock();
+          collision_events_[id] = CollisionEvent(0u, 0u, parent_name, "no collision", -1);
+          collision_lock_.unlock();
         }
         auto dummy_id = dummy_sensor->GetId();
         recorded_dummy_sensor_ids_.insert(dummy_id);
@@ -391,7 +423,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           }
         }
         dummy_sensor->Listen(
-            [this, id, rotation_frequency, type_id](
+            [this, id, rotation_frequency, type_id, parent_name] (
                 carla::SharedPtr<carla::sensor::SensorData> data) {
               if (data == nullptr) {
                 return;
@@ -433,6 +465,17 @@ XVIZBuilder CarlaProxy::GetUpdateData(
                 lidar_data_lock_.unlock();
                 return;
               }
+
+              // collision
+              auto collision_data = boost::dynamic_pointer_cast<
+                  carla::sensor::data::CollisionEvent>(data);
+              if (collision_data != nullptr) {
+                auto collision_event = this->GetCollision(*collision_data, parent_name);
+                collision_lock_.lock();
+                collision_events_[id] = std::move(collision_event);
+                collision_lock_.unlock();
+              }
+
             });
         real_dummy_sensors_relation_.insert({id, dummy_id});
       }
@@ -471,6 +514,14 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     lidar_data_lock_.lock();
     lidar_data_queues_.erase(id);
     lidar_data_lock_.unlock();
+
+    collision_lock_.lock();
+    bool is_previous_empty = collision_events_.empty();
+    collision_events_.erase(id);
+    if (collision_events_.empty() && !is_previous_empty) {
+      RemoveTableStreams("/sensor/other/collision");
+    }
+    collision_lock_.unlock();
   }
   real_sensors_ = std::move(tmp_real_sensors);
 
@@ -498,6 +549,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     is_need_update_metadata_ = false;
     UpdateMetadata();
   }
+
+  XVIZBuilder xviz_builder(metadata_ptr_);
 
   xviz_builder.Pose("/vehicle_pose")
     .MapOrigin(0, 0, 0)
@@ -612,6 +665,22 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   if (!points.empty()) {
     point_cloud_builder.Points(std::move(points));
   }
+
+  collision_lock_.lock();
+  if (!collision_events_.empty()) {
+    XVIZUIPrimitiveBuilder& ui_primitive_builder = xviz_builder.UIPrimitive("/sensor/other/collision");
+    ui_primitive_builder
+      .Column("Self actor", TreeTableColumn::STRING)
+      .Column("Other actor", TreeTableColumn::STRING)
+      .Column("Last hit timestamp", TreeTableColumn::DOUBLE);
+    size_t row_id = 0u;
+    for (const auto& [id, event] : collision_events_) {
+      ui_primitive_builder
+        .Row(row_id, {event.GetSelfActorName(), event.GetOtherActorName(), 
+                      std::to_string(event.GetLastHitTimestamp())});
+    }
+  }
+  collision_lock_.unlock();
 
   return xviz_builder;  //.GetData();
 }
@@ -776,7 +845,7 @@ carla::geom::Transform CarlaProxy::GetRelativeTransform(
   return carla::geom::Transform(relative_location, relative_rotation);
 }
 
-boost::shared_ptr<carla::client::Sensor> CarlaProxy::CreateDummySensor(
+std::pair<std::string, boost::shared_ptr<carla::client::Sensor>> CarlaProxy::CreateDummySensor(
     boost::shared_ptr<carla::client::Sensor> real_sensor) {
   auto real_sensor_attribute = real_sensor->GetAttributes();
   auto type_id = real_sensor->GetTypeId();
@@ -788,12 +857,16 @@ boost::shared_ptr<carla::client::Sensor> CarlaProxy::CreateDummySensor(
   }
 
   auto parent = real_sensor->GetParent();
+  std::string parent_name;
   auto parent_transform = carla::geom::Transform();
   if (parent == nullptr) {
-    LOG_WARNING("Real sensor with id %ud has no attached actor",
+    LOG_WARNING("Real sensor with id %ud has no attached actor, "
+                "did you attach it to an actor or successfully desotry it last time?",
                 real_sensor->GetId());
+    parent_name = "null";
   } else {
     parent_transform = parent->GetTransform();
+    parent_name = parent->GetTypeId() + " " + std::to_string(parent->GetId());
   }
   auto sensor_transform = real_sensor->GetTransform();
   auto relative_transform =
@@ -801,7 +874,7 @@ boost::shared_ptr<carla::client::Sensor> CarlaProxy::CreateDummySensor(
 
   auto dummy_sensor = boost::static_pointer_cast<carla::client::Sensor>(
       world_ptr_->SpawnActor(blueprint, relative_transform, parent.get()));
-  return dummy_sensor;
+  return {parent_name, dummy_sensor};
 }
 
 utils::PointCloud CarlaProxy::GetPointCloud(
@@ -894,4 +967,17 @@ utils::Image CarlaProxy::GetEncodedLabelImage(
     data_str += (char)c;
   }
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
+}
+
+CollisionEvent CarlaProxy::GetCollision(const carla::sensor::data::CollisionEvent& collision_event,
+  const std::string& parent_name) {
+  auto other_actor = collision_event.GetOtherActor();
+  std::string other_actor_name;
+  if (other_actor == nullptr) {
+    LOG_WARNING("%s collides with null actor, it is wired.", parent_name.c_str());
+    other_actor_name = "null";
+  } else {
+    other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
+  }
+  return CollisionEvent(0u, 0u, parent_name, other_actor_name, collision_event.GetTimestamp());
 }
