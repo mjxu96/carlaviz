@@ -217,6 +217,7 @@ void CarlaProxy::UpdateMetadataBuilder() {
   }
 
   std::vector<std::string> table_streams;
+  table_streams.push_back("/game/time");
   for (const auto& s_name : other_sensor_streams_) {
     base_metadata_builder
       .Stream(s_name)
@@ -234,6 +235,8 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
   XVIZMetadataBuilder xviz_metadata_builder;
     xviz_metadata_builder
         .Stream("/vehicle_pose").Category(Category::StreamMetadata_Category_POSE)
+        .Stream("/game/time")
+          .Category(StreamMetadata::UI_PRIMITIVE)
         .Stream("/object/vehicles")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
@@ -317,7 +320,8 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
         .Stream("/drawing/texts")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_TEXT)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY);
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+        .UI(GetUIs({}, {}, {}, {"/game/time"}));
   return xviz_metadata_builder;
 }
 
@@ -326,6 +330,7 @@ std::string CarlaProxy::GetMapString() {
 }
 
 std::string CarlaProxy::GetMetadata() {
+  // UpdateMetadataBuilder();
   auto xviz_metadata_builder = GetBaseMetadataBuilder();
   metadata_ptr_ = xviz_metadata_builder.GetData();
   return xviz_metadata_builder.GetMessage().ToObjectString();
@@ -343,9 +348,11 @@ XVIZBuilder CarlaProxy::GetUpdateData() {
 
 XVIZBuilder CarlaProxy::GetUpdateData(
     const carla::client::WorldSnapshot& world_snapshots) {
-  std::chrono::time_point<std::chrono::system_clock> now =
-      std::chrono::system_clock::now();
-  double now_time = now.time_since_epoch().count() / 1e9;
+  // std::chrono::time_point<std::chrono::system_clock> now =
+  //     std::chrono::system_clock::now();
+  // double now_time = now.time_since_epoch().count() / 1e9;
+  double now_time = world_snapshots.GetTimestamp().elapsed_seconds;
+  size_t now_frame = world_snapshots.GetFrame();
 
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
@@ -407,7 +414,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         if (utils::Utils::IsStartWith(type_id, "sensor.other.collision")) {
           AddTableStreams("/sensor/other/collision");
           collision_lock_.lock();
-          collision_events_[id] = CollisionEvent(0u, 0u, parent_name, "no collision", -1);
+          collision_events_[id] = CollisionEvent(0u, 0u, parent_name, "no collision", -1, 0u);
           collision_lock_.unlock();
         }
         if (utils::Utils::IsStartWith(type_id, "sensor.other.gnss")) {
@@ -416,7 +423,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         if (type_id == "sensor.other.obstacle") {
           AddTableStreams("/sensor/other/obstacle");
           obstacle_lock_.lock();
-          obstacle_infos_[id] = ObstacleInfo(parent_name, "no obstacle", -1.0, -1.0);
+          obstacle_infos_[id] = ObstacleInfo(parent_name, "no obstacle", -1.0, -1.0, 0u);
           obstacle_lock_.unlock();
         }
         auto dummy_id = dummy_sensor->GetId();
@@ -524,6 +531,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   }
 
   XVIZBuilder xviz_builder(metadata_ptr_);
+  xviz_builder.UIPrimitive("/game/time")
+    .Column("Game time/s", TreeTableColumn::DOUBLE, "second")
+    .Column("Game frame", TreeTableColumn::INT32)
+      .Row(0, {std::to_string(now_time), std::to_string(now_frame)});
 
   xviz_builder.Pose("/vehicle_pose")
     .MapOrigin(0, 0, 0)
@@ -645,12 +656,13 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     ui_primitive_builder
       .Column("Self actor", TreeTableColumn::STRING)
       .Column("Other actor", TreeTableColumn::STRING)
-      .Column("Last hit timestamp", TreeTableColumn::DOUBLE);
+      .Column("Timestamp", TreeTableColumn::DOUBLE)
+      .Column("Frame", TreeTableColumn::INT32);
     size_t row_id = 0u;
     for (const auto& [id, event] : collision_events_) {
       ui_primitive_builder
         .Row(row_id, {event.GetSelfActorName(), event.GetOtherActorName(), 
-                      std::to_string(event.GetLastHitTimestamp())});
+                      std::to_string(event.GetLastHitTimestamp()), std::to_string(event.GetLastHitFrame())});
       row_id++;
     }
   }
@@ -683,13 +695,15 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       .Column("Self actor", TreeTableColumn::STRING)
       .Column("Other actor", TreeTableColumn::STRING)
       .Column("Detection distance", TreeTableColumn::DOUBLE)
-      .Column("Last timestamp", TreeTableColumn::DOUBLE);
+      .Column("Timestamp", TreeTableColumn::DOUBLE)
+      .Column("Frame", TreeTableColumn::INT32);
     size_t row_id = 0u;
     size_t current_frame = world_snapshots.GetFrame();
     for (auto& [id, info] : obstacle_infos_) {
       ui_primitive_builder
         .Row(row_id, {info.GetSelfActorName(), info.GetOtherActorName(), 
-              std::to_string(info.GetDistance()), std::to_string(info.GetTimestamp())});
+              std::to_string(info.GetDistance()), 
+              std::to_string(info.GetTimestamp()), std::to_string(info.GetFrame())});
       row_id++;
     }
   }
@@ -1103,7 +1117,7 @@ CollisionEvent CarlaProxy::GetCollision(const carla::sensor::data::CollisionEven
   } else {
     other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
   }
-  return CollisionEvent(0u, 0u, parent_name, other_actor_name, collision_event.GetTimestamp());
+  return CollisionEvent(0u, 0u, parent_name, other_actor_name, collision_event.GetTimestamp(), collision_event.GetFrame());
 }
 
 utils::GNSSInfo CarlaProxy::GetGNSSInfo(const carla::sensor::data::GnssEvent& gnss_event,
@@ -1121,5 +1135,5 @@ utils::ObstacleInfo CarlaProxy::GetObstacleInfo(const carla::sensor::data::Obsta
   } else {
     other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
   }
-  return ObstacleInfo(parent_name, other_actor_name, obs_event.GetDistance(), obs_event.GetTimestamp());
+  return ObstacleInfo(parent_name, other_actor_name, obs_event.GetDistance(), obs_event.GetTimestamp(), obs_event.GetFrame());
 }

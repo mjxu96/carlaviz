@@ -73,11 +73,13 @@ class CollisionEvent {
  public:
   CollisionEvent() = default;
   CollisionEvent(uint32_t self_actor_id, uint32_t other_actor_id, 
-    const std::string& self_actor_name, const std::string& other_actor_name, double hit_timestamp);
+    const std::string& self_actor_name, const std::string& other_actor_name, 
+    double hit_timestamp, size_t last_hit_frame);
   
   std::string GetSelfActorName() const;
   std::string GetOtherActorName() const;
   double GetLastHitTimestamp() const;
+  size_t GetLastHitFrame() const;
   
  private:
   uint32_t self_actor_id_{0u};
@@ -85,6 +87,7 @@ class CollisionEvent {
   std::string self_actor_name_{"null"};
   std::string other_actor_name_{"no collision"};
   double last_hit_timestamp_{-1.0};
+  size_t last_hit_frame_{0u};
 };
 
 class GNSSInfo {
@@ -107,7 +110,7 @@ class ObstacleInfo {
  public:
   ObstacleInfo() = default;
   ObstacleInfo(const std::string& self_actor_name, const std::string& other_actor_name,
-    double dis, double timestamp);
+    double dis, double timestamp, size_t frame);
   std::string GetSelfActorName() const;
   std::string GetOtherActorName() const;
   double GetDistance() const;

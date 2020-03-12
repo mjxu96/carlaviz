@@ -66,13 +66,15 @@ size_t Image::GetHeight() const { return height_; }
 double Image::GetTimestamp() const { return timestamp_; }
 
 CollisionEvent::CollisionEvent(uint32_t self_actor_id, uint32_t other_actor_id, 
-    const std::string& self_actor_name, const std::string& other_actor_name, double hit_timestamp) :
+    const std::string& self_actor_name, const std::string& other_actor_name, 
+    double hit_timestamp, size_t hit_frame) :
     self_actor_id_(self_actor_id), other_actor_id_(other_actor_id), self_actor_name_(self_actor_name),
-    other_actor_name_(other_actor_name), last_hit_timestamp_(hit_timestamp) {}
+    other_actor_name_(other_actor_name), last_hit_timestamp_(hit_timestamp), last_hit_frame_(hit_frame) {}
 
 std::string CollisionEvent::GetSelfActorName() const { return self_actor_name_; }
 std::string CollisionEvent::GetOtherActorName() const { return other_actor_name_; }
 double CollisionEvent::GetLastHitTimestamp() const { return last_hit_timestamp_; }
+size_t CollisionEvent::GetLastHitFrame() const { return last_hit_frame_; }
 
 GNSSInfo::GNSSInfo(const std::string& self_actor_name, double lat, double lon, double alt, double ts) :
   self_actor_name_(self_actor_name), latitude_(lat), longitude_(lon), altitude_(alt), timestamp_(ts) {}
@@ -87,8 +89,8 @@ double GNSSInfo::GetTimestamp() const {
 }
 
 ObstacleInfo::ObstacleInfo(const std::string& self_actor_name, const std::string& other_actor_name,
-  double dis, double timestamp) : self_actor_name_(self_actor_name), other_actor_name_(other_actor_name), 
-    distance_(dis), timestamp_(timestamp) {}
+  double dis, double timestamp, size_t frame) : self_actor_name_(self_actor_name), other_actor_name_(other_actor_name), 
+    distance_(dis), timestamp_(timestamp), frame_(frame) {}
 std::string ObstacleInfo::GetSelfActorName() const {
   return self_actor_name_;
 }
