@@ -56,15 +56,17 @@ class PointCloud {
 class Image {
  public:
   Image() = default;
-  Image(std::string&& encoded_str, size_t width, size_t height);
+  Image(std::string&& encoded_str, size_t width, size_t height, double timestamp);
   std::string GetData() const;
   size_t GetWidth() const;
   size_t GetHeight() const;
+  double GetTimestamp() const;
 
  private:
   std::string encoded_str_{};
   int width_ = 0;
   int height_ = 0;
+  double timestamp_ = 0;
 };
 
 class CollisionEvent {
@@ -99,6 +101,24 @@ class GNSSInfo {
   double longitude_{-1.0};
   double altitude_{-1.0};
   double timestamp_{-1.0};
+};
+
+class ObstacleInfo {
+ public:
+  ObstacleInfo() = default;
+  ObstacleInfo(const std::string& self_actor_name, const std::string& other_actor_name,
+    double dis, double timestamp);
+  std::string GetSelfActorName() const;
+  std::string GetOtherActorName() const;
+  double GetDistance() const;
+  size_t GetFrame() const;
+  double GetTimestamp() const;
+ private:
+  std::string self_actor_name_{};
+  std::string other_actor_name_{};
+  double distance_{};
+  double timestamp_{};
+  size_t frame_{0u};
 };
 
 class XodrGeojsonConverter {

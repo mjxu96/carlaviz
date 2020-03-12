@@ -37,6 +37,7 @@
 #include "carla/sensor/data/LidarMeasurement.h"
 #include "carla/sensor/data/CollisionEvent.h"
 #include "carla/sensor/data/GnssEvent.h"
+#include "carla/sensor/data/ObstacleDetectionEvent.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -144,6 +145,9 @@ class CarlaProxy {
   std::mutex gnss_lock_;
   std::unordered_map<uint32_t, utils::GNSSInfo> gnss_infos_{};
 
+  std::mutex obstacle_lock_;
+  std::unordered_map<uint32_t, utils::ObstacleInfo> obstacle_infos_{};
+
   // Carla sensor data related
   std::pair<std::string, boost::shared_ptr<carla::client::Sensor>>  CreateDummySensor(
       boost::shared_ptr<carla::client::Sensor> real_sensor);
@@ -161,6 +165,9 @@ class CarlaProxy {
     const std::string& parent_name);
 
   utils::GNSSInfo GetGNSSInfo(const carla::sensor::data::GnssEvent& gnss_event,
+    const std::string& parent_name);
+
+  utils::ObstacleInfo GetObstacleInfo(const carla::sensor::data::ObstacleDetectionEvent& obs_event,
     const std::string& parent_name);
 
   // Websocket related

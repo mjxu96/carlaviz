@@ -413,6 +413,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         if (utils::Utils::IsStartWith(type_id, "sensor.other.gnss")) {
           AddTableStreams("/sensor/other/gnss");
         }
+        if (type_id == "sensor.other.obstacle") {
+          AddTableStreams("/sensor/other/obstacle");
+          obstacle_lock_.lock();
+          obstacle_infos_[id] = ObstacleInfo(parent_name, "no obstacle", -1.0, -1.0);
+          obstacle_lock_.unlock();
+        }
         auto dummy_id = dummy_sensor->GetId();
         recorded_dummy_sensor_ids_.insert(dummy_id);
         dummy_sensors_.insert({id, dummy_sensor});
@@ -481,6 +487,14 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       RemoveTableStreams("/sensor/other/gnss");
     }
     gnss_lock_.unlock();
+
+    obstacle_lock_.lock();
+    is_previous_empty = obstacle_infos_.empty();
+    obstacle_infos_.erase(id);
+    if (obstacle_infos_.empty() && !is_previous_empty) {
+      RemoveTableStreams("/sensor/other/obstacle");
+    }
+    obstacle_lock_.unlock();
   }
   real_sensors_ = std::move(tmp_real_sensors);
 
@@ -661,6 +675,25 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   }
   gnss_lock_.unlock();
+
+  obstacle_lock_.lock();
+  if (!obstacle_infos_.empty()) {
+    XVIZUIPrimitiveBuilder& ui_primitive_builder = xviz_builder.UIPrimitive("/sensor/other/obstacle");
+    ui_primitive_builder
+      .Column("Self actor", TreeTableColumn::STRING)
+      .Column("Other actor", TreeTableColumn::STRING)
+      .Column("Detection distance", TreeTableColumn::DOUBLE)
+      .Column("Last timestamp", TreeTableColumn::DOUBLE);
+    size_t row_id = 0u;
+    size_t current_frame = world_snapshots.GetFrame();
+    for (auto& [id, info] : obstacle_infos_) {
+      ui_primitive_builder
+        .Row(row_id, {info.GetSelfActorName(), info.GetOtherActorName(), 
+              std::to_string(info.GetDistance()), std::to_string(info.GetTimestamp())});
+      row_id++;
+    }
+  }
+  obstacle_lock_.unlock();
 
   return xviz_builder;  //.GetData();
 }
@@ -851,8 +884,15 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
       LOG_ERROR("Unknown camera type: %s", type_id.c_str());
     }
     image_data_lock_.lock();
-    is_image_received_[id] = true;
-    image_data_queues_[id] = std::move(encoded_image);
+    if (image_data_queues_.find(id) != image_data_queues_.end()) {
+      if (encoded_image.GetTimestamp() > image_data_queues_[id].GetTimestamp()) {
+        is_image_received_[id] = true;
+        image_data_queues_[id] = std::move(encoded_image);
+      }
+    } else {
+      is_image_received_[id] = true;
+      image_data_queues_[id] = std::move(encoded_image);
+    }
     image_data_lock_.unlock();
     return;
   }
@@ -904,10 +944,25 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
       LOG_WARNING("Data received from %s is not gnss data", type_id.c_str());
       return;
     }
-    auto gnss_info = this->GetGNSSInfo(*gnss_data, parent_name);
+    auto gnss_info = GetGNSSInfo(*gnss_data, parent_name);
     gnss_lock_.lock();
     gnss_infos_[id] = std::move(gnss_info);
     gnss_lock_.unlock();
+    return;
+  }
+
+  // obstacle info
+  if (type_id == "sensor.other.obstacle") {
+    auto obstacle_data = boost::dynamic_pointer_cast<
+      carla::sensor::data::ObstacleDetectionEvent>(data);
+    if (obstacle_data == nullptr) {
+      LOG_WARNING("Data received from %s is not obstacle data", type_id.c_str());
+      return;
+    }
+    auto obstacle_info = GetObstacleInfo(*obstacle_data, parent_name);
+    obstacle_lock_.lock();
+    obstacle_infos_[id] = std::move(obstacle_info);
+    obstacle_lock_.unlock();
     return;
   }
 
@@ -980,7 +1035,7 @@ utils::Image CarlaProxy::GetEncodedRGBImage(
   for (const auto& c : image_data) {
     data_str += (char)c;
   }
-  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
+  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 
 utils::Image CarlaProxy::GetEncodedDepthImage(
@@ -1003,7 +1058,7 @@ utils::Image CarlaProxy::GetEncodedDepthImage(
   for (const auto& c : image_data) {
     data_str += (char)c;
   }
-  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
+  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 
 utils::Image CarlaProxy::GetEncodedLabelImage(
@@ -1035,7 +1090,7 @@ utils::Image CarlaProxy::GetEncodedLabelImage(
   for (const auto& c : image_data) {
     data_str += (char)c;
   }
-  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
+  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 
 CollisionEvent CarlaProxy::GetCollision(const carla::sensor::data::CollisionEvent& collision_event,
@@ -1055,4 +1110,16 @@ utils::GNSSInfo CarlaProxy::GetGNSSInfo(const carla::sensor::data::GnssEvent& gn
     const std::string& parent_name) {
   return GNSSInfo(parent_name, gnss_event.GetLatitude(), gnss_event.GetLongitude(),
                 gnss_event.GetAltitude(), gnss_event.GetTimestamp());
+}
+
+utils::ObstacleInfo CarlaProxy::GetObstacleInfo(const carla::sensor::data::ObstacleDetectionEvent& obs_event,
+  const std::string& parent_name) {
+  auto other_actor = obs_event.GetOtherActor();
+  std::string other_actor_name = "null";
+  if (other_actor == nullptr) {
+    LOG_WARNING("Other actor is null");
+  } else {
+    other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
+  }
+  return ObstacleInfo(parent_name, other_actor_name, obs_event.GetDistance(), obs_event.GetTimestamp());
 }
