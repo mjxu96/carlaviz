@@ -20,6 +20,10 @@ void Platform::SetIsExperimental(bool is_experimental) {
   is_experimental_ = is_experimental;
 }
 
+void Platform::SetTimeInterval(uint32_t time_interval) {
+  time_interval_ = time_interval;
+}
+
 void Platform::Run() {
   try {
     if (is_experimental_) {
@@ -64,7 +68,7 @@ void Platform::Init() {
   // }
   if (is_experimental_) {
     std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
-    auto carla_handler = std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 100u); 
+    auto carla_handler = std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, time_interval_); 
     handlers.push_back(carla_handler);
     server_ = std::make_shared<xviz::XVIZServer>(std::move(handlers));
     carla_proxy_->SetUpdateMetadataCallback(std::bind(
@@ -86,6 +90,12 @@ int main(int argc, char** argv) {
   signal(SIGTERM, signal_handler);
   if (argc > 1) {
     platform.SetIsExperimental(true);
+    uint32_t ti = std::stoi(std::string(argv[1]));
+    if (ti < 50u) {
+      LOG_WARNING("The value %u is too small, reset to 50", ti);
+      ti = 50u;
+    }
+    platform.SetTimeInterval(ti);
   }
   platform.Init();
   platform.Run();

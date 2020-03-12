@@ -301,7 +301,7 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
           .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
           .StreamStyle(
             "{"
-              "\"point_cloud_mode\": \"distance_to_vehicle\","
+              "\"point_color_mode\": \"ELEVATION\","
               "\"radius_pixels\": 2.0"
             "}")
         .Stream("/drawing/polylines")

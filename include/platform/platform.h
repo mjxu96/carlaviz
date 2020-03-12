@@ -26,6 +26,7 @@ class Platform {
   void Run();
   void Clear();
   void SetIsExperimental(bool is_experimental);
+  void SetTimeInterval(uint32_t time_interval);
 
  private:
   std::shared_ptr<DrawingProxy> drawing_proxy_{nullptr};
@@ -33,6 +34,7 @@ class Platform {
   std::shared_ptr<FrontendProxy> frontend_proxy_{nullptr};
   std::shared_ptr<CarlaProxy> carla_proxy_{nullptr};
   bool is_experimental_{false};
+  uint32_t time_interval_{100u};
 };
 
 }  // namespace mellocolate
