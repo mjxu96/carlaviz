@@ -85,6 +85,22 @@ class CollisionEvent {
   double last_hit_timestamp_{-1.0};
 };
 
+class GNSSInfo {
+ public:
+  GNSSInfo() = default;
+  GNSSInfo(const std::string& self_actor_name, double lat, double lon, 
+    double alt, double ts);
+  std::string GetSelfActorName() const;
+  std::vector<double> GetPositions() const;
+  double GetTimestamp() const;
+ private:
+  std::string self_actor_name_{};
+  double latitude_{-1.0};
+  double longitude_{-1.0};
+  double altitude_{-1.0};
+  double timestamp_{-1.0};
+};
+
 class XodrGeojsonConverter {
  public:
   static std::string Convert(std::string xodr);

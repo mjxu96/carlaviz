@@ -73,6 +73,18 @@ std::string CollisionEvent::GetSelfActorName() const { return self_actor_name_; 
 std::string CollisionEvent::GetOtherActorName() const { return other_actor_name_; }
 double CollisionEvent::GetLastHitTimestamp() const { return last_hit_timestamp_; }
 
+GNSSInfo::GNSSInfo(const std::string& self_actor_name, double lat, double lon, double alt, double ts) :
+  self_actor_name_(self_actor_name), latitude_(lat), longitude_(lon), altitude_(alt), timestamp_(ts) {}
+std::string GNSSInfo::GetSelfActorName() const {
+  return self_actor_name_;
+}
+std::vector<double> GNSSInfo::GetPositions() const {
+  return {latitude_, longitude_, altitude_};
+}
+double GNSSInfo::GetTimestamp() const {
+  return timestamp_;
+}
+
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
   carla::client::Map map("map", xodr);
 

@@ -410,6 +410,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           collision_events_[id] = CollisionEvent(0u, 0u, parent_name, "no collision", -1);
           collision_lock_.unlock();
         }
+        if (utils::Utils::IsStartWith(type_id, "sensor.other.gnss")) {
+          AddTableStreams("/sensor/other/gnss");
+        }
         auto dummy_id = dummy_sensor->GetId();
         recorded_dummy_sensor_ids_.insert(dummy_id);
         dummy_sensors_.insert({id, dummy_sensor});
@@ -476,6 +479,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
                 collision_lock_.unlock();
               }
 
+              // gnss event
+              auto gnss_data = boost::dynamic_pointer_cast<
+                  carla::sensor::data::GnssEvent>(data);
+              if (gnss_data != nullptr) {
+                auto gnss_info = this->GetGNSSInfo(*gnss_data, parent_name);
+                gnss_lock_.lock();
+                gnss_infos_[id] = std::move(gnss_info);
+                gnss_lock_.unlock();
+              }
+
             });
         real_dummy_sensors_relation_.insert({id, dummy_id});
       }
@@ -522,6 +535,14 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       RemoveTableStreams("/sensor/other/collision");
     }
     collision_lock_.unlock();
+
+    gnss_lock_.lock();
+    is_previous_empty = gnss_infos_.empty();
+    gnss_infos_.erase(id);
+    if (gnss_infos_.empty() && !is_previous_empty) {
+      RemoveTableStreams("/sensor/other/gnss");
+    }
+    gnss_lock_.unlock();
   }
   real_sensors_ = std::move(tmp_real_sensors);
 
@@ -678,9 +699,30 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       ui_primitive_builder
         .Row(row_id, {event.GetSelfActorName(), event.GetOtherActorName(), 
                       std::to_string(event.GetLastHitTimestamp())});
+      row_id++;
     }
   }
   collision_lock_.unlock();
+
+  gnss_lock_.lock();
+  if (!gnss_infos_.empty()) {
+    XVIZUIPrimitiveBuilder& ui_primitive_builder = xviz_builder.UIPrimitive("/sensor/other/gnss");
+    ui_primitive_builder
+      .Column("Actor", TreeTableColumn::STRING)
+      .Column("Lat", TreeTableColumn::DOUBLE)
+      .Column("Lon", TreeTableColumn::DOUBLE)
+      .Column("Alt", TreeTableColumn::DOUBLE)
+      .Column("Timestamp", TreeTableColumn::DOUBLE);
+    size_t row_id = 0u;
+    for (const auto& [id, info] : gnss_infos_) {
+      auto gnss_pos = info.GetPositions();
+      ui_primitive_builder
+        .Row(row_id, {info.GetSelfActorName(), std::to_string(gnss_pos[0]), std::to_string(gnss_pos[1]),
+                      std::to_string(gnss_pos[2]), std::to_string(info.GetTimestamp())});
+      row_id++;
+    }
+  }
+  gnss_lock_.unlock();
 
   return xviz_builder;  //.GetData();
 }
@@ -980,4 +1022,10 @@ CollisionEvent CarlaProxy::GetCollision(const carla::sensor::data::CollisionEven
     other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
   }
   return CollisionEvent(0u, 0u, parent_name, other_actor_name, collision_event.GetTimestamp());
+}
+
+utils::GNSSInfo CarlaProxy::GetGNSSInfo(const carla::sensor::data::GnssEvent& gnss_event,
+    const std::string& parent_name) {
+  return GNSSInfo(parent_name, gnss_event.GetLatitude(), gnss_event.GetLongitude(),
+                gnss_event.GetAltitude(), gnss_event.GetTimestamp());
 }
