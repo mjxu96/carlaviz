@@ -25,11 +25,15 @@ public:
   void OnConnect() override;
   void Main() override;
   void OnDisconnect() override;
+  
+  bool SetSendStatus(bool new_status);
 private:
   bool is_error_{false};
   uint64_t interval_ms_{100};
 
   std::weak_ptr<CarlaHandler> handler_weak_ptr_;
+  std::mutex send_lock_{};
+  bool is_metadata_send_{false};
 };
   
 } // namespace mellocolate

@@ -64,12 +64,20 @@ void Platform::Init() {
   // }
   if (is_experimental_) {
     std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
-    handlers.push_back(std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 100u));
+    auto carla_handler = std::make_shared<mellocolate::CarlaHandler>(carla_proxy_, drawing_proxy_, 100u); 
+    handlers.push_back(carla_handler);
     server_ = std::make_shared<xviz::XVIZServer>(std::move(handlers));
+    carla_proxy_->SetUpdateMetadataCallback(std::bind(
+      &CarlaHandler::UpdateMetadata, carla_handler, std::placeholders::_1
+    ));
   } else {
     frontend_proxy_ = std::make_shared<FrontendProxy>(8081u);
     frontend_proxy_->StartListen();
-    frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetaData());
+    frontend_proxy_->SetMapString(carla_proxy_->GetMapString());
+    frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetadata());
+    carla_proxy_->SetUpdateMetadataCallback(std::bind(
+      &FrontendProxy::UpdateMetadata, frontend_proxy_, std::placeholders::_1
+    ));
   }
 }
 

@@ -67,10 +67,10 @@ class CarlaProxy {
   CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr);
   void Init();
   void Clear();
-  std::string GetMetaData();
+  std::string GetMetadata();
+  std::string GetMapString();
   xviz::XVIZBuilder GetUpdateData();
-  void UpdateData();
-  void UpdateMetaData();
+  void SetUpdateMetadataCallback(const std::function<void(const std::string&)>& func);
 
  private:
   xviz::XVIZBuilder GetUpdateData(
@@ -79,11 +79,19 @@ class CarlaProxy {
   xviz::XVIZBuilder internal_update_builder_{nullptr};
   std::string metadata_str_{};
 
-  void Update(const std::string& data_str);
+  void UpdateMetadata();
   void AddTrafficLights(
       xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
       boost::shared_ptr<carla::client::TrafficLight> traffic_light);
   void AddTrafficLightAreas();
+
+  // Metadata related
+  xviz::XVIZMetadataBuilder GetBaseMetadataBuilder();
+  void AddCameraStream(uint32_t camera_id, const std::string& stream_name="");
+  void RemoveCameraStream(uint32_t camera_id);
+  void AddEgoVehicleMetricStreams();
+  void RemoveVehicleMetricStreams();
+  void UpdateMetadataBuilder();
 
   std::unordered_map<uint32_t, std::vector<std::vector<double>>> traffic_lights_{};
 
@@ -98,11 +106,18 @@ class CarlaProxy {
 
   std::shared_ptr<xviz::Metadata> metadata_ptr_{nullptr};
 
+  // Metadata related
+  xviz::XVIZMetadataBuilder metadata_builder_{};
+  std::unordered_map<uint32_t, std::string> camera_streams_{};
+  std::function<void(const std::string&)> frontend_proxy_update_metadata_callback_;
+  bool is_need_update_metadata_{false};
+
   // Carla sensor related
   std::mutex image_data_lock_;
-  bool is_image_received_{false};
+  // bool is_image_received_{false};
+  std::unordered_map<uint32_t, bool> is_image_received_{};
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
-  std::vector<std::string> last_received_images_{};
+  std::unordered_map<uint32_t, std::string> last_received_images_{};
   std::mutex lidar_data_lock_;
   std::unordered_map<uint32_t, std::deque<utils::PointCloud>>
       lidar_data_queues_{};
@@ -118,7 +133,7 @@ class CarlaProxy {
   carla::geom::Transform GetRelativeTransform(
       const carla::geom::Transform& child,
       const carla::geom::Transform& parent);
-  utils::Image GetEncodedImage(const carla::sensor::data::Image& image);
+  utils::Image GetEncodedRGBImage(const carla::sensor::data::Image& image);
   utils::PointCloud GetPointCloud(
       const carla::sensor::data::LidarMeasurement& lidar_measurement);
 

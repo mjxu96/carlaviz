@@ -72,22 +72,24 @@ void AddMap(nlohmann::json& json, std::string& map) {
   json["map"] = std::move(map);
 }
 
-std::unordered_map<std::string, XVIZUIBuilder> GetUIs() {
-  std::unordered_map<std::string, XVIZUIBuilder> ui_builders;
-  std::vector<std::string> cameras = {"/camera/images"};
-  std::vector<std::string> acceleration_stream = {"/vehicle/acceleration"};
-  std::vector<std::string> velocity_stream = {"/vehicle/velocity"};
-  XVIZVideoBuilder camera_builder(cameras);
-  std::shared_ptr<XVIZBaseUIBuilder> metric_builder2 = std::make_shared<XVIZMetricBuilder>(velocity_stream, "velocity", "velocity");
+std::unordered_map<std::string, XVIZUIBuilder> GetUIs(const std::vector<std::string>& cameras,
+  const std::vector<std::string>& acceleration_stream, const std::vector<std::string>& velocity_stream) {
 
-  std::shared_ptr<XVIZContainerBuilder> container_builder = std::make_shared<XVIZContainerBuilder>("metrics", LayoutType::VERTICAL);
-  container_builder->Child(acceleration_stream, "acceleration", "acceleration");
-  container_builder->Child(metric_builder2);
-  container_builder->Child(acceleration_stream, "test", "test");
-  ui_builders["Camera"] = XVIZUIBuilder();
-  ui_builders["Camera"].Child(camera_builder);
-  ui_builders["Metrics"] = XVIZUIBuilder();
-  ui_builders["Metrics"].Child(std::move(*container_builder));
+  std::unordered_map<std::string, XVIZUIBuilder> ui_builders;
+
+  if (!cameras.empty()) {
+    XVIZVideoBuilder camera_builder(cameras);
+    ui_builders["Camera"] = XVIZUIBuilder();
+    ui_builders["Camera"].Child(camera_builder);
+  }
+
+  if (!acceleration_stream.empty() && !velocity_stream.empty()) {
+    XVIZContainerBuilder container_builder("metrics", LayoutType::VERTICAL);
+    container_builder.Child(acceleration_stream, "acceleration", "acceleration");
+    container_builder.Child(velocity_stream, "velocity", "velocity");
+    ui_builders["Metrics"] = XVIZUIBuilder();
+    ui_builders["Metrics"].Child(container_builder);
+  }
   return ui_builders;
 }
 
@@ -138,11 +140,64 @@ void CarlaProxy::Clear() {
   LOG_INFO("Carla proxy clear!");
 }
 
-std::string CarlaProxy::GetMetaData() {
-  std::string map_geojson =
-      utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(world_ptr_->GetMap());
-    XVIZMetadataBuilder xviz_metadata_builder;
-    xviz_metadata_builder.Stream("/vehicle_pose").Category(Category::StreamMetadata_Category_POSE)
+void CarlaProxy::SetUpdateMetadataCallback(const std::function<void(const std::string&)>& func) {
+  frontend_proxy_update_metadata_callback_ = func;
+}
+
+void CarlaProxy::AddCameraStream(uint32_t camera_id, const std::string& stream_name) {
+  std::string name = stream_name;
+  if (name.empty()) {
+    name = "/camera/" + std::to_string(camera_id);
+  }
+  LOG_INFO("Add camera stream %u - %s", camera_id, name.c_str());
+  camera_streams_[camera_id] = name; 
+  UpdateMetadataBuilder();
+}
+
+void CarlaProxy::RemoveCameraStream(uint32_t camera_id) {
+  if (camera_streams_.find(camera_id) == camera_streams_.end()) {
+    LOG_WARNING("Remove invalid camera stream %u", camera_id);
+    return;
+  }
+  LOG_INFO("Remove camera stream %u - %s", camera_id, camera_streams_[camera_id].c_str());
+  camera_streams_.erase(camera_id);
+  UpdateMetadataBuilder();
+}
+
+void CarlaProxy::AddEgoVehicleMetricStreams() {
+  UpdateMetadataBuilder();
+}
+
+void CarlaProxy::RemoveVehicleMetricStreams() {
+  UpdateMetadataBuilder();
+}
+
+void CarlaProxy::UpdateMetadataBuilder() {
+  auto base_metadata_builder = GetBaseMetadataBuilder();
+  std::vector<std::string> camera_streams_vec;
+  for (const auto& [c_id, s_name] : camera_streams_) {
+    base_metadata_builder
+      .Stream(s_name)
+        .Category(Category::StreamMetadata_Category_PRIMITIVE)
+        .Type(Primitive::StreamMetadata_PrimitiveType_IMAGE);
+    camera_streams_vec.push_back(s_name);
+  }
+  if (ego_actor_ != nullptr) {
+    base_metadata_builder
+      .UI(GetUIs(camera_streams_vec,  {}, {}));
+  } else {
+    base_metadata_builder
+      .UI(GetUIs(camera_streams_vec,  {"/vehicle/acceleration"}, {"/vehicle/velocity"}));
+  }
+  metadata_builder_ = base_metadata_builder;
+  metadata_ptr_ = metadata_builder_.GetData();
+  is_need_update_metadata_ = true;
+}
+
+xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
+  XVIZMetadataBuilder xviz_metadata_builder;
+    xviz_metadata_builder
+        .Stream("/vehicle_pose").Category(Category::StreamMetadata_Category_POSE)
         .Stream("/object/vehicles")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
@@ -201,9 +256,6 @@ std::string CarlaProxy::GetMetaData() {
               "\"fill_color\": \"#00FF00\","
               "\"height\": 0.1"
             "}")
-        .Stream("/camera/images")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Type(Primitive::StreamMetadata_PrimitiveType_IMAGE)
         .Stream("/lidar/points")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_POINT)
@@ -229,48 +281,29 @@ std::string CarlaProxy::GetMetaData() {
         .Stream("/drawing/texts")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_TEXT)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
-        .UI(GetUIs());
-        
-  metadata_ptr_ = xviz_metadata_builder.GetData();
-  auto json = xviz_metadata_builder.GetMessage().ToObject();
-  // auto v = ;
-  AddMap(json, map_geojson);
-  metadata_str_ = json.dump();
-  // return xviz_metadata_builder.GetMessage().ToObjectString();
-  return metadata_str_;
+          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY);
+  return xviz_metadata_builder;
 }
 
-// std::string CarlaProxy::GetMetaData() {
-//   return metadata_str_;
-// }
+std::string CarlaProxy::GetMapString() {
+  return utils::XodrGeojsonConverter::GetGeoJsonFromCarlaMap(world_ptr_->GetMap());
+}
 
-// XVIZBuilder CarlaProxy::GetUpdateData() {
-//   // auto world_snapshots = world_ptr_->WaitForTick(2s);
-//   // return GetUpdateData(world_snapshots);
-//   // auto lock_start = std::chrono::high_resolution_clock::now();
-//   std::lock_guard lock_guard(internal_update_builder_lock_);
-//   // auto lock_end = std::chrono::high_resolution_clock::now();
-//   xviz::XVIZBuilder builder(nullptr);
-//   builder.DeepCopyFrom(internal_update_builder_);
-//   // auto copy_end = std::chrono::high_resolution_clock::now();
-//   // LOG_INFO("Lock time: %.3fms, copy time: %.3f", std::chrono::duration<double, std::milli>(lock_end - lock_start).count(),
-//     // std::chrono::duration<double, std::milli>(copy_end - lock_end).count());
-//   return builder;
-// }
+std::string CarlaProxy::GetMetadata() {
+  auto xviz_metadata_builder = GetBaseMetadataBuilder();
+  metadata_ptr_ = xviz_metadata_builder.GetData();
+  return xviz_metadata_builder.GetMessage().ToObjectString();
+}
+
+void CarlaProxy::UpdateMetadata() {
+  LOG_INFO("Update metadata");
+  frontend_proxy_update_metadata_callback_(metadata_builder_.GetMessage().ToObjectString());
+}
 
 XVIZBuilder CarlaProxy::GetUpdateData() {
   auto world_snapshots = world_ptr_->WaitForTick(2s);
   return GetUpdateData(world_snapshots);
 }
-
-// void CarlaProxy::UpdateData() {
-//   while (true) {
-//     auto world_snapshots = world_ptr_->WaitForTick(2s);
-//     std::lock_guard lock_guard(internal_update_builder_lock_);
-//     internal_update_builder_ = GetUpdateData(world_snapshots);
-//   }
-// }
 
 XVIZBuilder CarlaProxy::GetUpdateData(
     const carla::client::WorldSnapshot& world_snapshots) {
@@ -329,6 +362,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         if (dummy_sensor == nullptr) {
           continue;
         }
+        if (utils::Utils::IsStartWith(actor_ptr->GetTypeId(),
+              "sensor.camera")) {
+          AddCameraStream(id, "/camera/" + actor_ptr->GetTypeId().substr(14) + "/" + std::to_string(id));
+        }
         auto dummy_id = dummy_sensor->GetId();
         recorded_dummy_sensor_ids_.insert(dummy_id);
         dummy_sensors_.insert({id, dummy_sensor});
@@ -350,9 +387,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
               auto image_data =
                   boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
               if (image_data != nullptr) {
-                auto encoded_image = this->GetEncodedImage(*image_data);
+                auto encoded_image = this->GetEncodedRGBImage(*image_data);
                 image_data_lock_.lock();
-                is_image_received_ = true;
+                is_image_received_[id] = true;
                 image_data_queues_[id] = std::move(encoded_image);
                 image_data_lock_.unlock();
                 return;
@@ -384,7 +421,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   }
 
-
   actors_ = std::move(tmp_actors);
 
   std::vector<uint32_t> to_delete_sensor_ids;
@@ -405,8 +441,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
     image_data_lock_.lock();
     if (image_data_queues_.find(id) != image_data_queues_.end()) {
+      RemoveCameraStream(id);
       image_data_queues_.erase(id);
-      is_image_received_ = true;
+      is_image_received_[id] = true;
     }
     image_data_lock_.unlock();
 
@@ -415,6 +452,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     lidar_data_lock_.unlock();
   }
   real_sensors_ = std::move(tmp_real_sensors);
+
 
   point_3d_t ego_position(0, 0, 0);
   point_3d_t ego_orientation(0, 0, 0);
@@ -433,6 +471,11 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
     display_velocity = Utils::ComputeSpeed(ego_actor_->GetVelocity());
     display_acceleration = Utils::ComputeSpeed(ego_actor_->GetAcceleration());
+  }
+
+  if (is_need_update_metadata_) {
+    is_need_update_metadata_ = false;
+    UpdateMetadata();
   }
 
   xviz_builder.Pose("/vehicle_pose")
@@ -512,25 +555,26 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   }
 
   image_data_lock_.lock();
-  if (is_image_received_) {
-    last_received_images_.clear();
-    is_image_received_ = false;
-    std::vector<uint32_t> to_delete_image_ids;
-    for (const auto& [camera_id, image] : image_data_queues_) {
-      if (real_dummy_sensors_relation_.find(camera_id) !=
-          real_dummy_sensors_relation_.end()) {
-        last_received_images_.push_back(image.GetData());
-      } else {
-        to_delete_sensor_ids.push_back(camera_id);
-      }
+  std::vector<uint32_t> to_delete_image_ids;
+  for (const auto [camera_id, is_received] : is_image_received_) {
+    if (real_dummy_sensors_relation_.find(camera_id) ==
+        real_dummy_sensors_relation_.end()) {
+      to_delete_image_ids.push_back(camera_id);
     }
-    for (auto image_id : to_delete_image_ids) {
-      image_data_queues_.erase(image_id);
+    if (!is_received) {
+      continue;
     }
+    is_image_received_[camera_id] = true;
+    last_received_images_[camera_id] = image_data_queues_[camera_id].GetData();
+  }
+
+  for (auto image_id : to_delete_image_ids) {
+    image_data_queues_.erase(image_id);
+    last_received_images_.erase(image_id);
   }
   image_data_lock_.unlock();
-  for (auto& image_data : last_received_images_) {
-    xviz_builder.Primitive("/camera/images").Image(image_data);
+  for (auto& [camera_id, image_data] : last_received_images_) {
+    xviz_builder.Primitive(camera_streams_[camera_id]).Image(image_data);
   }
 
   lidar_data_lock_.lock();
@@ -754,7 +798,7 @@ utils::PointCloud CarlaProxy::GetPointCloud(
   return utils::PointCloud(lidar_measurement.GetTimestamp(), std::move(points));
 }
 
-utils::Image CarlaProxy::GetEncodedImage(
+utils::Image CarlaProxy::GetEncodedRGBImage(
     const carla::sensor::data::Image& image) {
   // LOG_INFO("Receive image %.3f", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1e9);
   std::vector<unsigned char> pixel_data;

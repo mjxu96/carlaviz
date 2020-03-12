@@ -21,16 +21,23 @@ public:
   std::shared_ptr<websocketpp::connection<websocketpp::config::asio>> conn_ptr) override;
 
   std::string GetUpdateData();
-  std::string GetMetaData();
+  std::string GetMetadata();
+  std::string GetMetadataWithMap();
+  void UpdateMetadata(const std::string& metadata_str);
 private:
   void StartReadData();
+
+  std::unordered_map<size_t, std::shared_ptr<xviz::XVIZBaseSession>> children_sessions_{};
+  size_t cnt_ = 0u;
 
   std::shared_ptr<CarlaProxy> carla_proxy_ptr_{nullptr};
   std::shared_ptr<DrawingProxy> drawing_proxy_ptr_{nullptr};
   uint64_t interval_ms_{100u};
 
   std::mutex metadata_lock_{};
-  std::string metadata_str_{};
+  std::string updated_metadata_with_map_{};
+  std::string updated_metadata_without_map_{};
+  std::string map_string_{};
 
   std::mutex update_lock_{};
   std::string update_str_{};

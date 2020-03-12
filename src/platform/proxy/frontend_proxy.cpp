@@ -29,7 +29,13 @@ void FrontendClient::Write(const boost::beast::multi_buffer& data) {
 void FrontendClient::ChangeMetadataSendStatus(bool new_status) {
   is_metadata_sent_ = new_status;
 }
+void FrontendClient::ChangeMapStringSendStatus(bool new_status) {
+  is_map_string_sent_ = new_status;
+}
 bool FrontendClient::IsMetadataSend() const { return is_metadata_sent_; }
+bool FrontendClient::IsMapSend() const {
+  return is_map_string_sent_;
+}
 
 bool FrontendClient::SetBinary(bool is_binary) {
   frontend_client_ptr_->binary(true);
@@ -38,9 +44,13 @@ bool FrontendClient::SetBinary(bool is_binary) {
 FrontendProxy::FrontendProxy(uint16_t frontend_listen_port)
     : frontend_listen_port_(frontend_listen_port) {}
 
-void FrontendProxy::UpdateMetadata(std::string updated_metadata) {
+void FrontendProxy::UpdateMetadata(const std::string& updated_metadata) {
   update_metadata_lock_.lock();
-  updated_metadata_ = std::move(updated_metadata);
+  updated_metadata_without_map_ = updated_metadata;
+  updated_metadata_with_map_ = updated_metadata;
+  updated_metadata_with_map_.pop_back();
+  updated_metadata_with_map_ += ",\"map\": " + map_string_;
+  updated_metadata_with_map_ += "}";
   update_metadata_lock_.unlock();
 
   std::lock_guard<std::mutex> lock_guard(add_client_lock_);
@@ -48,6 +58,10 @@ void FrontendProxy::UpdateMetadata(std::string updated_metadata) {
     auto client_ptr = client_pair.second;
     client_ptr->ChangeMetadataSendStatus(false);
   }
+}
+
+void FrontendProxy::SetMapString(const std::string& map_string) {
+  map_string_ = map_string;
 }
 
 void FrontendProxy::StartListen() {
@@ -131,12 +145,18 @@ void FrontendProxy::SendMetadata(
     const boost::shared_ptr<FrontendClient>& client) {
   boost::beast::multi_buffer buffer;
   update_metadata_lock_.lock();
-  if (updated_metadata_.size() == 0) {
+  if (updated_metadata_with_map_.size() == 0 ||
+      updated_metadata_without_map_.size() == 0) {
     update_metadata_lock_.unlock();
     return;
   }
-  boost::beast::ostream(buffer) << updated_metadata_;
+  if (client->IsMapSend()) {
+    boost::beast::ostream(buffer) << updated_metadata_without_map_;
+  } else {
+    boost::beast::ostream(buffer) << updated_metadata_with_map_;
+  }
   update_metadata_lock_.unlock();
   client->Write(buffer);
   client->ChangeMetadataSendStatus(true);
+  client->ChangeMapStringSendStatus(true);
 }

@@ -15,13 +15,15 @@ CarlaSession::CarlaSession(std::shared_ptr<websocketpp::connection<websocketpp::
 }
 
 void CarlaSession::OnConnect() {
-  auto err_code = conn_ptr_->send(handler_weak_ptr_.lock()->GetMetaData());
+  auto err_code = conn_ptr_->send(handler_weak_ptr_.lock()->GetMetadataWithMap());
   if (err_code) {
     LOG_INFO("Cannot send metadata");
     is_error_ = true;
     return;
   }
   LOG_INFO("Frontend connected");
+  std::lock_guard lock_g(send_lock_);
+  is_metadata_send_ = true;
 }
 
 void CarlaSession::Main() {
@@ -29,20 +31,36 @@ void CarlaSession::Main() {
     return;
   }
   while (true) {
-    // auto start = std::chrono::high_resolution_clock::now();
-    auto data = handler_weak_ptr_.lock()->GetUpdateData();
-    // LOG_INFO("Send %ud data", data.length());
-    auto err_code = conn_ptr_->send(std::move(data), websocketpp::frame::opcode::BINARY);
+    send_lock_.lock();
+    if (!is_metadata_send_) {
+      is_metadata_send_ = true;
+      auto err_c = conn_ptr_->send(handler_weak_ptr_.lock()->GetMetadata());
+      if (err_c) {
+        LOG_INFO("Cannot send metadata without map");
+        send_lock_.unlock();
+        is_error_ = true;
+        return;
+      }
+    }
+    send_lock_.unlock();
+
+    auto err_code = conn_ptr_->send(handler_weak_ptr_.lock()->GetUpdateData(), websocketpp::frame::opcode::BINARY);
     if (err_code) {
       LOG_ERROR("Cannot send update data");
+      is_error_ = true;
       return;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms_));
-    // auto end = std::chrono::high_resolution_clock::now();
-    // LOG_INFO("All spend %.3f", std::chrono::duration<double, std::milli>(end - start).count());
   }
 }
 
 void CarlaSession::OnDisconnect() {
+  is_error_ = true;
   LOG_INFO("Frontend disconnected");
+}
+
+bool CarlaSession::SetSendStatus(bool new_status) {
+  std::lock_guard lock_g(send_lock_);
+  is_metadata_send_ = new_status;
+  return is_error_;
 }

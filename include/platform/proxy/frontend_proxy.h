@@ -30,11 +30,14 @@ class FrontendClient {
   void Write(const std::string& data);
   void Write(const boost::beast::multi_buffer& data);
   void ChangeMetadataSendStatus(bool new_status);
+  void ChangeMapStringSendStatus(bool new_status);
   bool IsMetadataSend() const;
+  bool IsMapSend() const;
   bool SetBinary(bool is_binary);
 
  private:
   bool is_metadata_sent_ = false;
+  bool is_map_string_sent_ = false;
   boost::shared_ptr<
       boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
       frontend_client_ptr_ = nullptr;
@@ -44,7 +47,8 @@ class FrontendProxy {
  public:
   FrontendProxy() = default;
   FrontendProxy(uint16_t frontend_listen_port);
-  void UpdateMetadata(std::string updated_metadata);
+  void UpdateMetadata(const std::string& updated_metadata);
+  void SetMapString(const std::string& map_string);
   void StartListen();
   void SendToAllClients(std::string&& message);
 
@@ -55,7 +59,9 @@ class FrontendProxy {
 
   uint16_t frontend_listen_port_ = 8081u;
   std::mutex update_metadata_lock_{};
-  std::string updated_metadata_{""};
+  std::string updated_metadata_with_map_{""};
+  std::string updated_metadata_without_map_{""};
+  std::string map_string_{};
 
   std::mutex add_client_lock_{};
   uint32_t frontend_max_id_ = 0u;
