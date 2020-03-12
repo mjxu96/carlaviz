@@ -100,6 +100,9 @@ class CarlaProxy {
 
   void UpdateMetadataBuilder();
 
+  void HandleSensorData(uint32_t id, double rotation_frequency, 
+    const std::string& type_id, const std::string& parent_name, carla::SharedPtr<carla::sensor::SensorData> data);
+
   std::unordered_map<uint32_t, std::vector<std::vector<double>>> traffic_lights_{};
 
   std::string carla_host_{"localhost"};

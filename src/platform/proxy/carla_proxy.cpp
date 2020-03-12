@@ -425,71 +425,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
             }
           }
         }
-        dummy_sensor->Listen(
-            [this, id, rotation_frequency, type_id, parent_name] (
-                carla::SharedPtr<carla::sensor::SensorData> data) {
-              if (data == nullptr) {
-                return;
-              }
-              auto image_data =
-                  boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
-              if (image_data != nullptr) {
-                utils::Image encoded_image;
-                if (type_id == "sensor.camera.rgb") {
-                  encoded_image = this->GetEncodedRGBImage(*image_data);
-                } else if (type_id == "sensor.camera.depth") {
-                  encoded_image = this->GetEncodedDepthImage(*image_data);
-                } else if (type_id == "sensor.camera.semantic_segmentation") {
-                  encoded_image = this->GetEncodedLabelImage(*image_data);
-                } else {
-                  LOG_ERROR("Unknown camera type: %s", type_id.c_str());
-                }
-                image_data_lock_.lock();
-                is_image_received_[id] = true;
-                image_data_queues_[id] = std::move(encoded_image);
-                image_data_lock_.unlock();
-                return;
-              }
-              auto lidar_data = boost::dynamic_pointer_cast<
-                  carla::sensor::data::LidarMeasurement>(data);
-              if (lidar_data != nullptr) {
-                auto point_cloud = this->GetPointCloud(*(lidar_data));
-                lidar_data_lock_.lock();
-                if (lidar_data_queues_.find(id) == lidar_data_queues_.end()) {
-                  lidar_data_queues_[id] = std::deque<utils::PointCloud>();
-                }
-                if (!lidar_data_queues_[id].empty() &&
-                    point_cloud.GetTimestamp() -
-                            lidar_data_queues_[id].front().GetTimestamp() >
-                        1.0 / rotation_frequency) {
-                  lidar_data_queues_[id].pop_front();
-                }
-                lidar_data_queues_[id].push_back(std::move(point_cloud));
-                lidar_data_lock_.unlock();
-                return;
-              }
-
-              // collision
-              auto collision_data = boost::dynamic_pointer_cast<
-                  carla::sensor::data::CollisionEvent>(data);
-              if (collision_data != nullptr) {
-                auto collision_event = this->GetCollision(*collision_data, parent_name);
-                collision_lock_.lock();
-                collision_events_[id] = std::move(collision_event);
-                collision_lock_.unlock();
-              }
-
-              // gnss event
-              auto gnss_data = boost::dynamic_pointer_cast<
-                  carla::sensor::data::GnssEvent>(data);
-              if (gnss_data != nullptr) {
-                auto gnss_info = this->GetGNSSInfo(*gnss_data, parent_name);
-                gnss_lock_.lock();
-                gnss_infos_[id] = std::move(gnss_info);
-                gnss_lock_.unlock();
-              }
-
-            });
+        dummy_sensor->Listen(std::bind(
+          &CarlaProxy::HandleSensorData, this, id, rotation_frequency, type_id, parent_name, std::placeholders::_1
+        ));
         real_dummy_sensors_relation_.insert({id, dummy_id});
       }
       if (recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
@@ -885,6 +823,95 @@ carla::geom::Transform CarlaProxy::GetRelativeTransform(
                             child_rotation.yaw - parent_rotation.yaw,
                             child_rotation.roll - parent_rotation.roll);
   return carla::geom::Transform(relative_location, relative_rotation);
+}
+
+
+void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency, 
+  const std::string& type_id, const std::string& parent_name, carla::SharedPtr<carla::sensor::SensorData> data) {
+  if (data == nullptr) {
+    return;
+  }
+  
+  // image
+  if (Utils::IsStartWith(type_id, "sensor.camera")) {
+    auto image_data =
+      boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
+    if (image_data == nullptr) {
+      LOG_WARNING("Data received from %s is not image data", type_id.c_str());
+      return;
+    }
+    utils::Image encoded_image;
+    if (type_id == "sensor.camera.rgb") {
+      encoded_image = GetEncodedRGBImage(*image_data);
+    } else if (type_id == "sensor.camera.depth") {
+      encoded_image = GetEncodedDepthImage(*image_data);
+    } else if (type_id == "sensor.camera.semantic_segmentation") {
+      encoded_image = GetEncodedLabelImage(*image_data);
+    } else {
+      LOG_ERROR("Unknown camera type: %s", type_id.c_str());
+    }
+    image_data_lock_.lock();
+    is_image_received_[id] = true;
+    image_data_queues_[id] = std::move(encoded_image);
+    image_data_lock_.unlock();
+    return;
+  }
+
+  // lidar
+  if (type_id == "sensor.lidar.ray_cast") {
+    auto lidar_data = boost::dynamic_pointer_cast<
+      carla::sensor::data::LidarMeasurement>(data);
+    if (lidar_data == nullptr) {
+      LOG_WARNING("Data received from %s is not lidar data", type_id.c_str());
+      return;
+    }
+    auto point_cloud = GetPointCloud(*(lidar_data));
+    lidar_data_lock_.lock();
+    if (lidar_data_queues_.find(id) == lidar_data_queues_.end()) {
+      lidar_data_queues_[id] = std::deque<utils::PointCloud>();
+    }
+    if (!lidar_data_queues_[id].empty() &&
+        point_cloud.GetTimestamp() -
+                lidar_data_queues_[id].front().GetTimestamp() >
+            1.0 / rotation_frequency) {
+      lidar_data_queues_[id].pop_front();
+    }
+    lidar_data_queues_[id].push_back(std::move(point_cloud));
+    lidar_data_lock_.unlock();
+    return;
+  }
+
+  // collision
+  if (type_id == "sensor.other.collision") {
+    auto collision_data = boost::dynamic_pointer_cast<
+      carla::sensor::data::CollisionEvent>(data);
+    if (collision_data == nullptr) {
+      LOG_WARNING("Data received from %s is not collision data", type_id.c_str());
+      return;
+    }
+    auto collision_event = GetCollision(*collision_data, parent_name);
+    collision_lock_.lock();
+    collision_events_[id] = std::move(collision_event);
+    collision_lock_.unlock();
+    return;
+  }
+
+  // gnss event
+  if (type_id == "sensor.other.gnss") {
+    auto gnss_data = boost::dynamic_pointer_cast<
+      carla::sensor::data::GnssEvent>(data);
+    if (gnss_data == nullptr) {
+      LOG_WARNING("Data received from %s is not gnss data", type_id.c_str());
+      return;
+    }
+    auto gnss_info = this->GetGNSSInfo(*gnss_data, parent_name);
+    gnss_lock_.lock();
+    gnss_infos_[id] = std::move(gnss_info);
+    gnss_lock_.unlock();
+    return;
+  }
+
+  LOG_WARNING("Receive unhandled data %s", type_id.c_str());
 }
 
 std::pair<std::string, boost::shared_ptr<carla::client::Sensor>> CarlaProxy::CreateDummySensor(
