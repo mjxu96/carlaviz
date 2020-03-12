@@ -18,6 +18,22 @@ using namespace std::string_literals;
 using tcp = boost::asio::ip::tcp;
 namespace websocket = boost::beast::websocket;
 
+std::unordered_map<uint8_t, std::vector<unsigned char>> label_color_map = {
+  {0, {0, 0, 0}},
+  {1, {70, 70, 70}},
+  {2, {190, 153, 153}},
+  {3, {250, 170, 160}},
+  {4, {220, 20, 60}},
+  {5, {153, 153, 153}},
+  {6,	{157, 234, 50}},
+  {7, {128, 64, 128}},
+  {8, {244, 35, 232}},
+  {9, {107, 142, 35}},
+  {10, {0, 0, 142}},
+  {11, {102, 102, 156}},
+  {12, {220, 220, 0}}
+};
+ 
 void FlatVector(std::vector<double>& v, const std::vector<double>& to_add, int neg_factor = 1) {
   v.push_back(to_add[0]);
   v.push_back(neg_factor * to_add[1]);
@@ -182,13 +198,8 @@ void CarlaProxy::UpdateMetadataBuilder() {
         .Type(Primitive::StreamMetadata_PrimitiveType_IMAGE);
     camera_streams_vec.push_back(s_name);
   }
-  if (ego_actor_ != nullptr) {
-    base_metadata_builder
-      .UI(GetUIs(camera_streams_vec,  {}, {}));
-  } else {
-    base_metadata_builder
-      .UI(GetUIs(camera_streams_vec,  {"/vehicle/acceleration"}, {"/vehicle/velocity"}));
-  }
+  base_metadata_builder
+    .UI(GetUIs(camera_streams_vec,  {"/vehicle/acceleration"}, {"/vehicle/velocity"}));
   metadata_builder_ = base_metadata_builder;
   metadata_ptr_ = metadata_builder_.GetData();
   is_need_update_metadata_ = true;
@@ -356,15 +367,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         if (!sensor_ptr->IsAlive()) {
           continue;
         }
+        auto type_id = actor_ptr->GetTypeId();
         LOG_INFO("Listen sensor: %u, type is: %s", id,
-                 actor_ptr->GetTypeId().c_str());
+                 type_id.c_str());
         auto dummy_sensor = CreateDummySensor(sensor_ptr);
         if (dummy_sensor == nullptr) {
           continue;
         }
-        if (utils::Utils::IsStartWith(actor_ptr->GetTypeId(),
+        if (utils::Utils::IsStartWith(type_id,
               "sensor.camera")) {
-          AddCameraStream(id, "/camera/" + actor_ptr->GetTypeId().substr(14) + "/" + std::to_string(id));
+          AddCameraStream(id, "/camera/" + type_id.substr(14) + "/" + std::to_string(id));
         }
         auto dummy_id = dummy_sensor->GetId();
         recorded_dummy_sensor_ids_.insert(dummy_id);
@@ -379,7 +391,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           }
         }
         dummy_sensor->Listen(
-            [this, id, rotation_frequency](
+            [this, id, rotation_frequency, type_id](
                 carla::SharedPtr<carla::sensor::SensorData> data) {
               if (data == nullptr) {
                 return;
@@ -387,7 +399,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
               auto image_data =
                   boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
               if (image_data != nullptr) {
-                auto encoded_image = this->GetEncodedRGBImage(*image_data);
+                utils::Image encoded_image;
+                if (type_id == "sensor.camera.rgb") {
+                  encoded_image = this->GetEncodedRGBImage(*image_data);
+                } else if (type_id == "sensor.camera.depth") {
+                  encoded_image = this->GetEncodedDepthImage(*image_data);
+                } else if (type_id == "sensor.camera.semantic_segmentation") {
+                  encoded_image = this->GetEncodedLabelImage(*image_data);
+                } else {
+                  LOG_ERROR("Unknown camera type: %s", type_id.c_str());
+                }
                 image_data_lock_.lock();
                 is_image_received_[id] = true;
                 image_data_queues_[id] = std::move(encoded_image);
@@ -800,7 +821,6 @@ utils::PointCloud CarlaProxy::GetPointCloud(
 
 utils::Image CarlaProxy::GetEncodedRGBImage(
     const carla::sensor::data::Image& image) {
-  // LOG_INFO("Receive image %.3f", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1e9);
   std::vector<unsigned char> pixel_data;
   for (const auto& p : image) {
     pixel_data.emplace_back(p.r);
@@ -818,7 +838,60 @@ utils::Image CarlaProxy::GetEncodedRGBImage(
   for (const auto& c : image_data) {
     data_str += (char)c;
   }
-  // LOG_INFO("Get image %.3f", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1e9);
+  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
+}
 
+utils::Image CarlaProxy::GetEncodedDepthImage(
+    const carla::sensor::data::Image& image) {
+  std::vector<unsigned char> pixel_data;
+  for (const auto& p : image) {
+    auto depth = (unsigned char)((p.r + p.g * 256.0 + p.b * 256.0 * 256.0) / (256.0 * 256.0 * 256.0 - 1.0) * 255.0);
+    pixel_data.emplace_back(depth);
+    pixel_data.emplace_back(depth);
+    pixel_data.emplace_back(depth);
+    pixel_data.emplace_back(255);
+  }
+  std::vector<unsigned char> image_data;
+  unsigned int error = lodepng::encode(image_data, pixel_data, image.GetWidth(),
+                                       image.GetHeight());
+  if (error) {
+    LOG_ERROR("Encoding png error");
+  }
+  std::string data_str;
+  for (const auto& c : image_data) {
+    data_str += (char)c;
+  }
+  return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
+}
+
+utils::Image CarlaProxy::GetEncodedLabelImage(
+    const carla::sensor::data::Image& image) {
+  std::vector<unsigned char> pixel_data;
+  for (const auto& p : image) {
+    if (label_color_map.find(p.r) == label_color_map.end()) {
+      LOG_WARNING("Unknown tag: %u", p.r);
+      auto& color = label_color_map[0];
+      pixel_data.emplace_back(color[0]);
+      pixel_data.emplace_back(color[1]);
+      pixel_data.emplace_back(color[2]);
+      pixel_data.emplace_back(255);
+    } else {
+      auto& color = label_color_map[p.r];
+      pixel_data.emplace_back(color[0]);
+      pixel_data.emplace_back(color[1]);
+      pixel_data.emplace_back(color[2]);
+      pixel_data.emplace_back(255);
+    }
+  }
+  std::vector<unsigned char> image_data;
+  unsigned int error = lodepng::encode(image_data, pixel_data, image.GetWidth(),
+                                       image.GetHeight());
+  if (error) {
+    LOG_ERROR("Encoding png error");
+  }
+  std::string data_str;
+  for (const auto& c : image_data) {
+    data_str += (char)c;
+  }
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight());
 }
