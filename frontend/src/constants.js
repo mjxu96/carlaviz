@@ -19,9 +19,6 @@
 // THE SOFTWARE.
 import { CarMesh } from "streetscape.gl";
 
-//import {load} from '@loaders.gl/core';
-//import {OBJLoader} from '@loaders.gl/obj';
-
 export const UI_THEME = {
   extends: "dark",
   background: "rgba(51,51,51,0.9)",
@@ -47,9 +44,6 @@ export const UI_THEME = {
 };
 
 /* eslint-disable camelcase */
-export const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
-
-export const MAP_STYLE = "mapbox://styles/mapbox/dark-v10";
 
 export const CAR = CarMesh.sedan({
   origin: [1.08, 0, 0],

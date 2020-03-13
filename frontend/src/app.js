@@ -35,14 +35,7 @@ import {
 } from "streetscape.gl";
 import { Form, ThemeProvider } from "@streetscape.gl/monochrome";
 
-import {
-  APP_SETTINGS,
-  MAPBOX_TOKEN,
-  MAP_STYLE,
-  XVIZ_STYLE,
-  CAR,
-  UI_THEME
-} from "./constants";
+import { APP_SETTINGS, XVIZ_STYLE, CAR, UI_THEME } from "./constants";
 
 const carlaLog = new XVIZLiveLoader({
   logGuid: "mock",
@@ -134,8 +127,7 @@ class CarlaViz extends PureComponent {
           <div id="map-view">
             <LogViewer
               log={log}
-              mapboxApiAccessToken={MAPBOX_TOKEN}
-              mapStyle={MAP_STYLE}
+              showMap={false}
               car={CAR}
               xvizStyles={XVIZ_STYLE}
               showTooltip={settings.showTooltip}
