@@ -57,13 +57,13 @@ class Image {
  public:
   Image() = default;
   Image(std::string&& encoded_str, size_t width, size_t height, double timestamp);
-  std::string GetData() const;
+  std::string& GetData();
   size_t GetWidth() const;
   size_t GetHeight() const;
   double GetTimestamp() const;
 
- private:
   std::string encoded_str_{};
+ private:
   int width_ = 0;
   int height_ = 0;
   double timestamp_ = 0;

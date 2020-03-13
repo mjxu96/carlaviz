@@ -115,8 +115,9 @@ CarlaProxy::CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr)
   world_ptr_ =
       boost::make_shared<carla::client::World>(client_ptr_->GetWorld());
 }
-CarlaProxy::CarlaProxy(const std::string& carla_host, uint16_t carla_port)
-    : carla_host_(carla_host), carla_port_(carla_port) {}
+CarlaProxy::CarlaProxy(const std::string& carla_host, uint16_t carla_port, bool is_experimental_server_enabled)
+    : carla_host_(carla_host), carla_port_(carla_port), 
+      is_experimental_server_enabled_(is_experimental_server_enabled) {}
 
 
 void CarlaProxy::Init() {
@@ -342,7 +343,7 @@ void CarlaProxy::UpdateMetadata() {
 }
 
 XVIZBuilder CarlaProxy::GetUpdateData() {
-  auto world_snapshots = world_ptr_->WaitForTick(2s);
+  auto world_snapshots = world_ptr_->WaitForTick(30s);
   return GetUpdateData(world_snapshots);
 }
 
@@ -612,18 +613,23 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       .Classes({"walker"});
   }
 
-  image_data_lock_.lock();
   std::vector<uint32_t> to_delete_image_ids;
+  image_data_lock_.lock();
   for (const auto [camera_id, is_received] : is_image_received_) {
     if (real_dummy_sensors_relation_.find(camera_id) ==
         real_dummy_sensors_relation_.end()) {
       to_delete_image_ids.push_back(camera_id);
+      continue;
     }
     if (!is_received) {
       continue;
     }
-    is_image_received_[camera_id] = true;
-    last_received_images_[camera_id] = image_data_queues_[camera_id].GetData();
+    is_image_received_[camera_id] = false;
+    if (is_experimental_server_enabled_) {
+      last_received_images_[camera_id] = std::move(image_data_queues_[camera_id].GetData());
+    } else {
+      xviz_builder.Primitive(camera_streams_[camera_id]).Image(std::move(image_data_queues_[camera_id].GetData()));
+    }
   }
 
   for (auto image_id : to_delete_image_ids) {
@@ -631,9 +637,13 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     last_received_images_.erase(image_id);
   }
   image_data_lock_.unlock();
-  for (auto& [camera_id, image_data] : last_received_images_) {
-    xviz_builder.Primitive(camera_streams_[camera_id]).Image(image_data);
+
+  if (is_experimental_server_enabled_) {
+    for (const auto& [camera_id, image_str] : last_received_images_) {
+      xviz_builder.Primitive(camera_streams_[camera_id]).Image(image_str);
+    }
   }
+
 
   lidar_data_lock_.lock();
   XVIZPrimitiveBuilder& point_cloud_builder = xviz_builder.Primitive("/lidar/points");
@@ -1045,10 +1055,10 @@ utils::Image CarlaProxy::GetEncodedRGBImage(
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  std::string data_str;
-  for (const auto& c : image_data) {
-    data_str += (char)c;
-  }
+  std::string data_str(image_data.begin(), image_data.end());
+  // for (const auto& c : image_data) {
+  //   data_str += (char)c;
+  // }
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 
@@ -1068,10 +1078,7 @@ utils::Image CarlaProxy::GetEncodedDepthImage(
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  std::string data_str;
-  for (const auto& c : image_data) {
-    data_str += (char)c;
-  }
+  std::string data_str(image_data.begin(), image_data.end());
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 
@@ -1100,10 +1107,7 @@ utils::Image CarlaProxy::GetEncodedLabelImage(
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  std::string data_str;
-  for (const auto& c : image_data) {
-    data_str += (char)c;
-  }
+  std::string data_str(image_data.begin(), image_data.end());
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 

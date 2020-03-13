@@ -66,7 +66,7 @@ namespace carlaviz {
 class CarlaProxy {
  public:
   CarlaProxy() = default;
-  CarlaProxy(const std::string& carla_host, uint16_t carla_port);
+  CarlaProxy(const std::string& carla_host, uint16_t carla_port, bool is_experimental_server_enabled);
   CarlaProxy(boost::shared_ptr<carla::client::Client> client_ptr);
   void Init();
   void Clear();
@@ -87,6 +87,9 @@ class CarlaProxy {
       xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
       boost::shared_ptr<carla::client::TrafficLight> traffic_light);
   void AddTrafficLightAreas();
+
+  // experimental
+  bool is_experimental_server_enabled_{false};
 
   // Metadata related
   xviz::XVIZMetadataBuilder GetBaseMetadataBuilder();
@@ -127,9 +130,9 @@ class CarlaProxy {
   // Carla sensor related
   std::mutex image_data_lock_;
   // bool is_image_received_{false};
+  std::unordered_map<uint32_t, std::string> last_received_images_{};
   std::unordered_map<uint32_t, bool> is_image_received_{};
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};
-  std::unordered_map<uint32_t, std::string> last_received_images_{};
   std::mutex lidar_data_lock_;
   std::unordered_map<uint32_t, std::deque<utils::PointCloud>>
       lidar_data_queues_{};

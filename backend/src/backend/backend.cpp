@@ -58,14 +58,13 @@ void Backend::Clear() {
 }
 
 void Backend::Init() {
+
+  carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u, is_experimental_);
+  carla_proxy_->Init();
+
   drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
   drawing_proxy_->StartListen();
 
-  carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u);
-  carla_proxy_->Init();
-
-  // if (!is_experimental_) {
-  // }
   if (is_experimental_) {
     std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
     auto carla_handler = std::make_shared<carlaviz::CarlaHandler>(carla_proxy_, drawing_proxy_, time_interval_); 

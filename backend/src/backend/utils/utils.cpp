@@ -60,7 +60,7 @@ std::vector<double>& PointCloud::GetPoints() { return points_; }
 Image::Image(std::string&& encoded_str, size_t width, size_t height, double timestamp)
     : encoded_str_(std::move(encoded_str)), width_(width), height_(height), timestamp_(timestamp) {}
 
-std::string Image::GetData() const { return encoded_str_; }
+std::string& Image::GetData() { return encoded_str_; }
 size_t Image::GetWidth() const { return width_; }
 size_t Image::GetHeight() const { return height_; }
 double Image::GetTimestamp() const { return timestamp_; }
