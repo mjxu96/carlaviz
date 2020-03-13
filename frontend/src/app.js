@@ -30,6 +30,7 @@ import {
   StreamSettingsPanel,
   MeterWidget,
   XVIZPanel,
+  XVIZLiveLoader,
   VIEW_MODE
 } from "streetscape.gl";
 import { Form, ThemeProvider } from "@streetscape.gl/monochrome";
@@ -43,16 +44,25 @@ import {
   UI_THEME
 } from "./constants";
 
-const exampleLog = require("./log-from-live").default;
+const carlaLog = new XVIZLiveLoader({
+  logGuid: "mock",
+  bufferLength: 10,
+  serverConfig: {
+    defaultLogLength: 50,
+    serverUrl: "ws://" + __HOST_IP__ + ":8081"
+  },
+  worker: true,
+  maxConcurrency: 10
+});
 
 const tableComponentProps = {
   table: {
     height: 120
   }
 };
-class Example extends PureComponent {
+class CarlaViz extends PureComponent {
   state = {
-    log: exampleLog,
+    log: carlaLog,
     settings: {
       viewMode: "PERSPECTIVE",
       showTooltip: true
@@ -159,7 +169,7 @@ class Example extends PureComponent {
 
 render(
   <ThemeProvider theme={UI_THEME}>
-    <Example />
+    <CarlaViz />
   </ThemeProvider>,
   document.getElementById("app")
 );

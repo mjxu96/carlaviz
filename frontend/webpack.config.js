@@ -76,10 +76,5 @@ module.exports = (env = {}) => {
     new webpack.DefinePlugin({__HOST_IP__: JSON.stringify(process.env.CARLA_DISPLAY_HOST_IP || 'localhost')})
   ]);
 
-  if (env.local) {
-    // This line enables bundling against src in this repo rather than installed module
-    config = require('../webpack.config.local')(config)(env);
-  }
-
   return config;
 };

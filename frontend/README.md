@@ -1,5 +1,3 @@
-# streetscape.gl Starter Kit
+## Carlaviz Frontend
 
-This is a minimal example that uses the components from streetscape.gl to display a XVIZ log.
-
-[Instructions for running this application](../../docs/get-started/starter-kit.md)
+This frontend is modified from [streetscape.gl Starter Kit](https://github.com/uber/streetscape.gl/tree/master/examples/get-started)
