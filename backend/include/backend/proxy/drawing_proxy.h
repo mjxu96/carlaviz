@@ -4,12 +4,12 @@
  * File Created: Monday, 7th October 2019 5:54:33 pm
  */
 
-#ifndef MELLOCOLATE_DRAWING_PROXY_H_
-#define MELLOCOLATE_DRAWING_PROXY_H_
+#ifndef CARLAVIZ_DRAWING_PROXY_H_
+#define CARLAVIZ_DRAWING_PROXY_H_
 
-#include "platform/utils/def.h"
-#include "platform/utils/json.hpp"
-#include "platform/utils/macrologger.h"
+#include "backend/utils/def.h"
+#include "backend/utils/json.hpp"
+#include "backend/utils/macrologger.h"
 
 #include "builder/xviz_builder.h"
 
@@ -25,7 +25,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace mellocolate {
+namespace carlaviz {
 
 enum class DrawingType {
   LINE = 0u,
@@ -78,6 +78,6 @@ class DrawingProxy {
   uint32_t client_max_id_{0u};
 };
 
-}  // namespace mellocolate
+}  // namespace carlaviz
 
 #endif

@@ -29,7 +29,7 @@ The manual and changelog are in the header file "lodepng.h"
 Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for C.
 */
 
-#include "platform/utils/lodepng.h"
+#include "backend/utils/lodepng.h"
 
 #ifdef LODEPNG_COMPILE_DISK
 #include <limits.h> /* LONG_MAX */
@@ -64,7 +64,7 @@ with the "LODEPNG_COMPILE_" #defines divide this up further in an intermixed way
 
 /*The malloc, realloc and free functions defined here with "lodepng_" in front
 of the name, so that you can easily change them to others related to your
-platform if needed. Everything else in the code calls these. Pass
+backend if needed. Everything else in the code calls these. Pass
 -DLODEPNG_NO_COMPILE_ALLOCATORS to the compiler, or comment out
 #define LODEPNG_COMPILE_ALLOCATORS in the header, to disable the ones here and
 define them in your own project's source files without needing to change
@@ -112,7 +112,7 @@ void lodepng_free(void* ptr);
 #define LODEPNG_RESTRICT /* not available */
 #endif
 
-/* Replacements for C library functions memcpy and strlen, to support those platforms
+/* Replacements for C library functions memcpy and strlen, to support those backends
 where a full C library is not available. The compiler can recognize them and compile
 to something as fast. */
 

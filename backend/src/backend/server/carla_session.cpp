@@ -4,13 +4,13 @@
  * File Created: Thursday, 20th February 2020 2:52:50 pm
  */
 
-#include "platform/server/carla_session.h"
+#include "backend/server/carla_session.h"
 
-using namespace mellocolate;
+using namespace carlaviz;
 using namespace xviz;
 
 CarlaSession::CarlaSession(std::shared_ptr<websocketpp::connection<websocketpp::config::asio>> conn_ptr,
-    std::weak_ptr<mellocolate::CarlaHandler> handler_weak_ptr, uint64_t interval_ms) : 
+    std::weak_ptr<carlaviz::CarlaHandler> handler_weak_ptr, uint64_t interval_ms) : 
     XVIZBaseSession(conn_ptr), handler_weak_ptr_(handler_weak_ptr), interval_ms_(interval_ms) {
 }
 

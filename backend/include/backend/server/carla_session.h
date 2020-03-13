@@ -5,17 +5,17 @@
  */
 
 
-#ifndef MELLOCOLATE_SERVER_CARLA_SESSION_H_
-#define MELLOCOLATE_SERVER_CARLA_SESSION_H_
+#ifndef CARLAVIZ_SERVER_CARLA_SESSION_H_
+#define CARLAVIZ_SERVER_CARLA_SESSION_H_
 
 #include "server/xviz_session.h"
 #include "io/glb_writer.h"
-#include "platform/proxy/carla_proxy.h"
-#include "platform/proxy/drawing_proxy.h"
+#include "backend/proxy/carla_proxy.h"
+#include "backend/proxy/drawing_proxy.h"
 
 #include "carla_handler.h"
 
-namespace mellocolate {
+namespace carlaviz {
 
 class CarlaSession : public xviz::XVIZBaseSession {
 public:
@@ -36,7 +36,7 @@ private:
   bool is_metadata_send_{false};
 };
   
-} // namespace mellocolate
+} // namespace carlaviz
 
 
 #endif

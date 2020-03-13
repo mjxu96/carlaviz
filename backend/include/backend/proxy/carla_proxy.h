@@ -4,12 +4,12 @@
  * File Created: Saturday, 6th July 2019 10:10:14 pm
  */
 
-#ifndef MELLOCOLATE_PROXY_H_
-#define MELLOCOLATE_PROXY_H_
+#ifndef CARLAVIZ_PROXY_H_
+#define CARLAVIZ_PROXY_H_
 
-#include "platform/utils/def.h"
-#include "platform/utils/lodepng.h"
-#include "platform/utils/utils.h"
+#include "backend/utils/def.h"
+#include "backend/utils/lodepng.h"
+#include "backend/utils/utils.h"
 #include "builder/xviz_builder.h"
 #include "builder/metadata.h"
 #include "builder/declarative_ui/ui_builder.h"
@@ -61,7 +61,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace mellocolate {
+namespace carlaviz {
 
 class CarlaProxy {
  public:
@@ -177,6 +177,6 @@ class CarlaProxy {
       ws_ptrs_;
 };
 
-}  // namespace mellocolate
+}  // namespace carlaviz
 
 #endif

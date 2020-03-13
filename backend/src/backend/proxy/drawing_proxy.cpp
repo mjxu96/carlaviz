@@ -4,9 +4,9 @@
  * File Created: Monday, 7th October 2019 5:53:57 pm
  */
 
-#include "platform/proxy/drawing_proxy.h"
+#include "backend/proxy/drawing_proxy.h"
 
-using namespace mellocolate;
+using namespace carlaviz;
 using namespace xviz;
 using tcp = boost::asio::ip::tcp;
 namespace websocket = boost::beast::websocket;

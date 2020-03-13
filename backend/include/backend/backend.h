@@ -1,27 +1,27 @@
 /*
- * File: platform.h
+ * File: backend.h
  * Author: Minjun Xu (mjxu96@gmail.com)
  * File Created: Monday, 7th October 2019 3:19:54 pm
  */
 
-#ifndef MELLOCOLATE_PLATFORM_H_
-#define MELLOCOLATE_PLATFORM_H_
+#ifndef CARLAVIZ_BACKEND_H_
+#define CARLAVIZ_BACKEND_H_
 
-#include "platform/proxy/carla_proxy.h"
-#include "platform/proxy/drawing_proxy.h"
+#include "backend/proxy/carla_proxy.h"
+#include "backend/proxy/drawing_proxy.h"
 #include "server/carla_handler.h"
 #include "server/carla_session.h"
 #include "server/xviz_server.h"
-#include "platform/proxy/frontend_proxy.h"
+#include "backend/proxy/frontend_proxy.h"
 
 
 #include "io/glb_writer.h"
 
-namespace mellocolate {
+namespace carlaviz {
 
-class Platform {
+class Backend {
  public:
-  Platform() = default;
+  Backend() = default;
   void Init();
   void Run();
   void Clear();
@@ -37,6 +37,6 @@ class Platform {
   uint32_t time_interval_{100u};
 };
 
-}  // namespace mellocolate
+}  // namespace carlaviz
 
 #endif

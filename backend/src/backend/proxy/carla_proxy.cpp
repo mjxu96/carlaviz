@@ -4,10 +4,10 @@
  * File Created: Saturday, 6th July 2019 10:11:52 pm
  */
 
-#include "platform/proxy/carla_proxy.h"
+#include "backend/proxy/carla_proxy.h"
 
-using namespace mellocolate;
-using namespace mellocolate::utils;
+using namespace carlaviz;
+using namespace carlaviz::utils;
 using namespace xviz;
 
 // For readable seconds

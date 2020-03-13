@@ -4,10 +4,10 @@
  * File Created: Monday, 7th October 2019 3:22:53 pm
  */
 
-#ifndef MELLOCOLATE_FRONTEND_PROXY_H_
-#define MELLOCOLATE_FRONTEND_PROXY_H_
+#ifndef CARLAVIZ_FRONTEND_PROXY_H_
+#define CARLAVIZ_FRONTEND_PROXY_H_
 
-#include "platform/utils/macrologger.h"
+#include "backend/utils/macrologger.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -20,7 +20,7 @@
 #include <thread>
 #include <unordered_set>
 
-namespace mellocolate {
+namespace carlaviz {
 
 class FrontendClient {
  public:
@@ -69,6 +69,6 @@ class FrontendProxy {
       frontend_clients_{};
 };
 
-}  // namespace mellocolate
+}  // namespace carlaviz
 
 #endif

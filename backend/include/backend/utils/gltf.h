@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "platform/utils/json.hpp"
+#include "backend/utils/json.hpp"
 
 #if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && (_MSVC_LANG >= 201703L) && (_MSC_VER >= 1911))
 #define FX_GLTF_HAS_CPP_17

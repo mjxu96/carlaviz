@@ -4178,7 +4178,7 @@ class binary_reader
 
                 // code from RFC 7049, Appendix D, Figure 3:
                 // As half-precision floating-point numbers were only added
-                // to IEEE 754 in 2008, today's programming platforms often
+                // to IEEE 754 in 2008, today's programming backends often
                 // still only have limited support for them. It is very
                 // easy to include at least decoding support for them even
                 // without such support. An example of a small decoder for
@@ -13098,7 +13098,7 @@ class basic_json
     @brief returns version information on the library
 
     This function returns a JSON object with information about the library,
-    including the version number and information on the platform and compiler.
+    including the version number and information on the backend and compiler.
 
     @return JSON object holding version information
     key         | description
@@ -13106,7 +13106,7 @@ class basic_json
     `compiler`  | Information on the used compiler. It is an object with the following keys: `c++` (the used C++ standard), `family` (the compiler family; possible values are `clang`, `icc`, `gcc`, `ilecpp`, `msvc`, `pgcpp`, `sunpro`, and `unknown`), and `version` (the compiler version).
     `copyright` | The copyright line for the library as string.
     `name`      | The name of the library as string.
-    `platform`  | The used platform as string. Possible values are `win32`, `linux`, `apple`, `unix`, and `unknown`.
+    `backend`  | The used backend as string. Possible values are `win32`, `linux`, `apple`, `unix`, and `unknown`.
     `url`       | The URL of the project as string.
     `version`   | The version of the library. It is an object with the following keys: `major`, `minor`, and `patch` as defined by [Semantic Versioning](http://semver.org), and `string` (the version string).
 
@@ -13137,15 +13137,15 @@ class basic_json
         result["version"]["patch"] = NLOHMANN_JSON_VERSION_PATCH;
 
 #ifdef _WIN32
-        result["platform"] = "win32";
+        result["backend"] = "win32";
 #elif defined __linux__
-        result["platform"] = "linux";
+        result["backend"] = "linux";
 #elif defined __APPLE__
-        result["platform"] = "apple";
+        result["backend"] = "apple";
 #elif defined __unix__
-        result["platform"] = "unix";
+        result["backend"] = "unix";
 #else
-        result["platform"] = "unknown";
+        result["backend"] = "unknown";
 #endif
 
 #if defined(__ICC) || defined(__INTEL_COMPILER)

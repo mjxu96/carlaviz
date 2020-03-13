@@ -4,14 +4,14 @@
  * File Created: Thursday, 20th February 2020 2:53:00 pm
  */
 
-#ifndef MELLOCOLATE_SERVER_CARLA_HANDLER_H_
-#define MELLOCOLATE_SERVER_CARLA_HANDLER_H_
+#ifndef CARLAVIZ_SERVER_CARLA_HANDLER_H_
+#define CARLAVIZ_SERVER_CARLA_HANDLER_H_
 
 #include "server/xviz_handler.h"
-#include "platform/proxy/carla_proxy.h"
-#include "platform/proxy/drawing_proxy.h"
+#include "backend/proxy/carla_proxy.h"
+#include "backend/proxy/drawing_proxy.h"
 
-namespace mellocolate {
+namespace carlaviz {
 
 class CarlaHandler : public xviz::XVIZBaseHandler, public std::enable_shared_from_this<CarlaHandler> {
 public:
@@ -43,7 +43,7 @@ private:
   std::string update_str_{};
 };
   
-} // namespace mellocolate
+} // namespace carlaviz
 
 
 

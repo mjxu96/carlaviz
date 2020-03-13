@@ -1066,7 +1066,7 @@ TODO:
 [ ] let the C++ wrapper catch exceptions coming from the standard library and return LodePNG error codes
 [ ] allow user to provide custom color conversion functions, e.g. for premultiplied alpha, padding bits or not, ...
 [ ] allow user to give data (void*) to custom allocator
-[ ] provide alternatives for C library functions not present on some platforms (memcpy, ...)
+[ ] provide alternatives for C library functions not present on some backends (memcpy, ...)
 [ ] rename "grey" to "gray" everywhere since "color" also uses US spelling (keep "grey" copies for backwards compatibility)
 */
 
@@ -1801,7 +1801,7 @@ https://github.com/lvandeve/lodepng
 *) 14 jan 2018: allow optionally ignoring a few more recoverable errors
 *) 17 sep 2017: fix memory leak for some encoder input error cases
 *) 27 nov 2016: grey+alpha auto color model detection bugfix
-*) 18 apr 2016: Changed qsort to custom stable sort (for platforms w/o qsort).
+*) 18 apr 2016: Changed qsort to custom stable sort (for backends w/o qsort).
 *) 09 apr 2016: Fixed colorkey usage detection, and better file loading (within
    the limits of pure C90).
 *) 08 dec 2015: Made load_file function return error if file can't be opened.

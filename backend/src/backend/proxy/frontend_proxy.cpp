@@ -4,9 +4,9 @@
  * File Created: Monday, 7th October 2019 3:22:45 pm
  */
 
-#include "platform/proxy/frontend_proxy.h"
+#include "backend/proxy/frontend_proxy.h"
 
-using namespace mellocolate;
+using namespace carlaviz;
 using tcp = boost::asio::ip::tcp;
 namespace websocket = boost::beast::websocket;
 

@@ -4,10 +4,10 @@
  * File Created: Thursday, 20th February 2020 2:52:39 pm
  */
 
-#include "platform/server/carla_session.h"
-#include "platform/server/carla_handler.h"
+#include "backend/server/carla_session.h"
+#include "backend/server/carla_handler.h"
 
-using namespace mellocolate;
+using namespace carlaviz;
 using namespace xviz;
 
 

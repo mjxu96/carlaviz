@@ -21,4 +21,4 @@ include("third_party/LibCarla/cmake/CMakeLists.txt.in")
 add_subdirectory("third_party/LibCarla/cmake")
 
 add_subdirectory("third_party/xviz")
-add_subdirectory("src/platform")
+add_subdirectory("src/backend")

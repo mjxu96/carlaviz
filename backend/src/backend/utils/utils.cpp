@@ -4,9 +4,9 @@
  * File Created: Sunday, 7th July 2019 8:36:02 pm
  */
 
-#include "platform/utils/utils.h"
+#include "backend/utils/utils.h"
 
-using namespace mellocolate::utils;
+using namespace carlaviz::utils;
 using point_3d_t =
     boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>;
 

@@ -4,11 +4,11 @@
  * File Created: Sunday, 7th July 2019 3:18:48 pm
  */
 
-#ifndef MELLOCOLATE_UTILS_H_
-#define MELLOCOLATE_UTILS_H_
+#ifndef CARLAVIZ_UTILS_H_
+#define CARLAVIZ_UTILS_H_
 
-#include "platform/utils/def.h"
-#include "platform/utils/json.hpp"
+#include "backend/utils/def.h"
+#include "backend/utils/json.hpp"
 
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
@@ -27,7 +27,7 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace mellocolate {
+namespace carlaviz {
 namespace utils {
 
 class Utils {
@@ -149,6 +149,6 @@ class XodrGeojsonConverter {
 };
 
 }  // namespace utils
-}  // namespace mellocolate
+}  // namespace carlaviz
 
 #endif

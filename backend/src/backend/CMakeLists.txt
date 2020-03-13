@@ -40,15 +40,15 @@ add_library(proxy
 
 
 # add_executable(proxy proxy_starter.cpp)
-add_executable(platform platform.cpp)
+add_executable(backend backend.cpp)
 
 #target_link_libraries(carla-base carla_client rpc boost_filesystem)
 target_link_libraries(proxy-utils carla_client rpc boost_filesystem)
 #target_link_libraries(connector converter connector-utils websocket-server xviz)
 target_link_libraries(proxy proxy-utils proxy-server xviz)
 # target_link_libraries(proxy proxy-lib)
-target_link_libraries(platform proxy)
-target_include_directories(platform
+target_link_libraries(backend proxy)
+target_include_directories(backend
   PUBLIC
   ${CLIENT_ROOT_FOLDER}/include/lib ${CLIENT_ROOT_FOLDER}/include
 )
