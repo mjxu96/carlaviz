@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>streetscape.gl quick start</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+      }
+      #container {
+        position: fixed;
+        display: flex;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: #222222;
+      }
+      #control-panel {
+        box-sizing: border-box;
+        width: 400px;
+        padding: 12px;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 0 8px rgba(51, 51, 51, 0.9);
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        background: #333333;
+      }
+      #control-panel hr {
+        margin: 12px -12px;
+        opacity: 0.3;
+        background: #333333;
+      }
+      #control-panel h4 {
+        margin: 0px;
+        text-align: center;
+        margin-left: 100px;
+        margin-right: 100px;
+        color: white;
+      }
+      #control-panel .xviz-container > div {
+        margin-top: 20px;
+      }
+      #log-panel {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      #map-view {
+        flex-grow: 1;
+        position: relative;
+      }
+      #timeline {
+        padding: 24px 0;
+        position: relative;
+      }
+      #hud {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 8px rgba(51, 51, 51, 0.9);
+        background: #333333;
+      }
+      #hud hr {
+        margin: 0;
+        opacity: 0.3;
+        background: #333333;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="bundle.js"></script>
+  </body>
+</html>
