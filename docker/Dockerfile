@@ -21,7 +21,8 @@ RUN cd /home/carla/protoc/ && \
 
 # non-interactive setting for tzdata
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt install -y git build-essential gcc-7 cmake libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool rsync
+RUN apt update && \
+  apt install -y git build-essential gcc-7 cmake libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool rsync
 
 # install nodejs 10.x
 RUN curl -sL https://deb.nodesource.com/setup_10.x |  bash - && \
@@ -35,7 +36,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
 RUN cd /home/carla/ && \
   git clone --recurse-submodules https://github.com/wx9698/carlaviz.git && \
   cd carlaviz && \
-  ./setup/setup.sh
+  bash ./setup/setup.sh
 
 
 EXPOSE 8080-8081

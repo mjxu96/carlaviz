@@ -21,7 +21,7 @@ echo "Launching frontend"
 
 sleep 2
 cd ./carlaviz/frontend/
-yarn start-live &
+yarn start &
 sleep 10
 echo "Frontend launched. Please open your browser"
 sleep infinity

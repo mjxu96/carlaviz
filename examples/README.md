@@ -22,6 +22,8 @@ docker run -it --network="host" -e CARLAVIZ_HOST_IP=localhost mjxu96/carlaviz:0.
 
 # 3. run this script
 python3 example.py
+
+# 4. open your browser and go to localhost:8080 or CARLAVIZ_HOST_IP:8080
 ```
 
 ### Python API
