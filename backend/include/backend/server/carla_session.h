@@ -8,8 +8,8 @@
 #ifndef CARLAVIZ_SERVER_CARLA_SESSION_H_
 #define CARLAVIZ_SERVER_CARLA_SESSION_H_
 
-#include "server/xviz_session.h"
-#include "io/glb_writer.h"
+#include "xviz/server/xviz_session.h"
+#include "xviz/io/glb_writer.h"
 #include "backend/proxy/carla_proxy.h"
 #include "backend/proxy/drawing_proxy.h"
 

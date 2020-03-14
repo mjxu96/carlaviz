@@ -11,11 +11,11 @@
 #include "backend/proxy/drawing_proxy.h"
 #include "server/carla_handler.h"
 #include "server/carla_session.h"
-#include "server/xviz_server.h"
+#include "xviz/server/xviz_server.h"
 #include "backend/proxy/frontend_proxy.h"
 
 
-#include "io/glb_writer.h"
+#include "xviz/io/glb_writer.h"
 
 namespace carlaviz {
 

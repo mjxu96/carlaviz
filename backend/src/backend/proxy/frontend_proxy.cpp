@@ -68,6 +68,7 @@ bool FrontendClient::IsMapSend() const {
 
 bool FrontendClient::SetBinary(bool is_binary) {
   frontend_client_ptr_->binary(true);
+  return is_binary;
 }
 
 FrontendProxy::FrontendProxy(uint16_t frontend_listen_port)

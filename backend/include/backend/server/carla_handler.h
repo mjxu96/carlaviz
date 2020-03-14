@@ -7,7 +7,7 @@
 #ifndef CARLAVIZ_SERVER_CARLA_HANDLER_H_
 #define CARLAVIZ_SERVER_CARLA_HANDLER_H_
 
-#include "server/xviz_handler.h"
+#include "xviz/server/xviz_handler.h"
 #include "backend/proxy/carla_proxy.h"
 #include "backend/proxy/drawing_proxy.h"
 

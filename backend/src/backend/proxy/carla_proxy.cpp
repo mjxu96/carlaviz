@@ -388,7 +388,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
     bool need_continue = false;
     for (const auto& attribute : actor_ptr->GetAttributes()) {
-      if (attribute.GetId() == "role_name" && (attribute.GetValue() == "ego") || attribute.GetValue() == "hero") {
+      if (attribute.GetId() == "role_name" && (attribute.GetValue() == "ego" || attribute.GetValue() == "hero")) {
         ego_actor_ = actor_ptr;
         ego_id_ = ego_actor_->GetId();
         need_continue = true;
