@@ -1,0 +1,96 @@
+body {
+  margin: 0;
+}
+#container {
+  position: fixed;
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #222222;
+}
+#control-panel {
+  box-sizing: border-box;
+  width: 400px;
+  padding: 12px;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 0 8px rgba(51, 51, 51, 0.9);
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #333333;
+}
+#control-panel > #github {
+  display: inline-block;
+  width: 100%;
+  height: 40px;
+}
+#control-panel > #github > p {
+  float: left;
+  width: 80%;
+  text-align: center;
+  font-size: 35px;
+  font-weight: bold;
+  font-family: "Courier New", Courier, monospace;
+  color: white;
+  margin: 0px;
+  margin-top: 2px;
+}
+#control-panel > #github > p > a {
+  text-decoration: none;
+}
+#control-panel > #github a:visited {
+  color: white;
+}
+#control-panel > #github img {
+  width: 10%;
+  height: auto;
+  float: right;
+}
+#control-panel hr {
+  margin: 12px -12px;
+  opacity: 0.3;
+  background: #333333;
+}
+#control-panel > #github-hr {
+  margin: 0px -12px;
+}
+#control-panel h4 {
+  margin: 0px;
+  width: 350px;
+  text-align: center;
+  color: white;
+}
+#control-panel .xviz-container > div {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+#log-panel {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+#map-view {
+  flex-grow: 1;
+  position: relative;
+}
+#timeline {
+  padding: 24px 0;
+  position: relative;
+}
+#hud {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 8px rgba(51, 51, 51, 0.9);
+  background: #333333;
+}
+#hud hr {
+  margin: 0;
+  opacity: 0.3;
+  background: #333333;
+}

@@ -21,7 +21,7 @@ def main():
             synchronous_mode=True,
             fixed_delta_seconds=1.0 / 30.0))
 
-        # randomly spawn an ego vehicle and several other vehicles and pedestrians
+        # randomly spawn an ego vehicle and several other vehicles
         spawn_points = world.get_map().get_spawn_points()
         blueprints_vehicles = world.get_blueprint_library().filter("vehicle.*")
 
@@ -91,7 +91,6 @@ def main():
 
     finally:
         if previous_settings is not None:
-            print('here')
             world.apply_settings(previous_settings)
         if lidar is not None:
             lidar.stop()

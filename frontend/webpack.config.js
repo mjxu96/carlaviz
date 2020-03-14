@@ -52,6 +52,18 @@ const CONFIG = {
         ]
       },
       {
+        test: /\.(png|jpe?g|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+          },
+        ],
+      },
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"]
+      },
+      {
         // Unfortunately, webpack doesn't import library sourcemaps on its own...
         test: /\.js$/,
         use: ['source-map-loader'],

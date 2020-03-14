@@ -37,6 +37,10 @@ import { Form, ThemeProvider } from "@streetscape.gl/monochrome";
 
 import { APP_SETTINGS, XVIZ_STYLE, CAR, UI_THEME } from "./constants";
 
+import githubIcon from "../public/github_icon.png";
+
+import "./index.css";
+
 const carlaLog = new XVIZLiveLoader({
   logGuid: "mock",
   bufferLength: 10,
@@ -106,7 +110,7 @@ class CarlaViz extends PureComponent {
     } else {
       console.log("socket is closed");
     }
-  }
+  };
 
   render() {
     const { log, map, settings } = this.state;
@@ -115,6 +119,17 @@ class CarlaViz extends PureComponent {
     return (
       <div id="container">
         <div id="control-panel">
+          <div id="github">
+            <p>
+              <a href="https://github.com/wx9698/carlaviz" target="_blank">
+                CarlaViz
+              </a>
+            </p>
+            <a href="https://github.com/wx9698/carlaviz" target="_blank">
+              <img src={githubIcon}></img>
+            </a>
+          </div>
+          <hr id="github-hr" />
           <XVIZPanel log={log} name="Metrics" />
           <hr />
           <XVIZPanel log={log} name="Camera" />
@@ -130,7 +145,10 @@ class CarlaViz extends PureComponent {
             values={this.state.settings}
             onChange={this._onSettingsChange}
           />
-          <StreamSettingsPanel log={log} onSettingsChange={this._onStreamSettingChange} />
+          <StreamSettingsPanel
+            log={log}
+            onSettingsChange={this._onStreamSettingChange}
+          />
         </div>
         <div id="log-panel">
           <div id="map-view">
