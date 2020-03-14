@@ -11,7 +11,7 @@ carlaviz::Backend backend;
 
 void signal_handler(int signal_num) {
   backend.Clear();
-  exit(0);
+  std::abort();
 }
 
 using namespace carlaviz;

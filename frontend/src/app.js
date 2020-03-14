@@ -60,6 +60,7 @@ const tableComponentProps = {
 class CarlaViz extends PureComponent {
   state = {
     log: carlaLog,
+    metadataReceived: false,
     settings: {
       viewMode: "PERSPECTIVE",
       showTooltip: true
@@ -87,9 +88,15 @@ class CarlaViz extends PureComponent {
             getRadius: 0.00001,
             opacity: 10
           });
-          this.setState({ map: mapLayer });
+          this.setState({
+            map: mapLayer,
+            metadataReceived: true
+          });
           console.log("get map");
         } else {
+          this.setState({
+            metadataReceived: true
+          });
           console.log("receive metadata without map");
         }
       })
@@ -113,7 +120,7 @@ class CarlaViz extends PureComponent {
   };
 
   render() {
-    const { log, map, settings } = this.state;
+    const { log, map, metadataReceived, settings } = this.state;
     const customLayers = [map];
 
     return (
@@ -161,24 +168,28 @@ class CarlaViz extends PureComponent {
               viewMode={VIEW_MODE[settings.viewMode]}
               customLayers={customLayers}
             />
-            <div id="hud">
-              <MeterWidget
-                log={log}
-                streamName="/vehicle/acceleration"
-                label="Acceleration"
-                min={-10}
-                max={10}
-              />
-              <hr />
-              <MeterWidget
-                log={log}
-                streamName="/vehicle/velocity"
-                label="Speed"
-                getWarning={x => (x > 6 ? "FAST" : "")}
-                min={0}
-                max={20}
-              />
-            </div>
+            {metadataReceived ? (
+              <div id="hud">
+                <MeterWidget
+                  log={log}
+                  streamName="/vehicle/acceleration"
+                  label="Acceleration"
+                  min={-10}
+                  max={10}
+                />
+                <hr />
+                <MeterWidget
+                  log={log}
+                  streamName="/vehicle/velocity"
+                  label="Speed"
+                  getWarning={x => (x > 6 ? "FAST" : "")}
+                  min={0}
+                  max={20}
+                />
+              </div>
+            ) : (
+              <div></div>
+            )}
           </div>
         </div>
       </div>
