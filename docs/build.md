@@ -35,7 +35,8 @@ sudo apt-get update
 sudo apt-get install build-essential gcc-7 cmake libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
 
 # 3. run setup script from the repo's root
-./setup/setup.bash
+cd carlaviz
+./setup/setup.sh
 ```
 
 And you have successfully built it!
