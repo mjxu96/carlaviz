@@ -8,10 +8,15 @@
 
 using namespace carlaviz;
 using namespace xviz;
+using Json = nlohmann::json;
 
 CarlaSession::CarlaSession(std::shared_ptr<websocketpp::connection<websocketpp::config::asio>> conn_ptr,
-    std::weak_ptr<carlaviz::CarlaHandler> handler_weak_ptr, uint64_t interval_ms) : 
-    XVIZBaseSession(conn_ptr), handler_weak_ptr_(handler_weak_ptr), interval_ms_(interval_ms) {
+    std::weak_ptr<carlaviz::CarlaHandler> handler_weak_ptr, uint64_t interval_ms,
+    const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback) :
+    XVIZBaseSession(conn_ptr), handler_weak_ptr_(handler_weak_ptr), interval_ms_(interval_ms),
+    stream_settings_callback_(stream_settings_callback) {
+  conn_ptr_->set_message_handler(std::bind(&CarlaSession::OnMessage, this, std::placeholders::_1, 
+    std::placeholders::_2));
 }
 
 void CarlaSession::OnConnect() {
@@ -46,7 +51,9 @@ void CarlaSession::Main() {
 
     auto err_code = conn_ptr_->send(handler_weak_ptr_.lock()->GetUpdateData(), websocketpp::frame::opcode::BINARY);
     if (err_code) {
-      LOG_ERROR("Cannot send update data");
+      if (err_code.message() != "invalid state") {
+        LOG_ERROR("Cannot send update data, %s", err_code.message().c_str());
+      }
       is_error_ = true;
       return;
     }
@@ -57,6 +64,16 @@ void CarlaSession::Main() {
 void CarlaSession::OnDisconnect() {
   is_error_ = true;
   LOG_INFO("Frontend disconnected");
+}
+
+void CarlaSession::OnMessage(websocketpp::connection_hdl hdl, std::shared_ptr<websocketpp::config::core::message_type> msg_ptr) {
+  try {
+    Json setting_json = Json::parse(msg_ptr->get_payload());
+    stream_settings_callback_(setting_json.get<std::unordered_map<std::string, bool>>());
+  } catch (const std::exception& e) {
+    LOG_WARNING("When paring %s, get error: %s", msg_ptr->get_payload().c_str(),
+      e.what());
+  }
 }
 
 bool CarlaSession::SetSendStatus(bool new_status) {

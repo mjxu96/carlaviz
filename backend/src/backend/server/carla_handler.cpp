@@ -24,7 +24,7 @@ CarlaHandler::CarlaHandler(const std::shared_ptr<CarlaProxy>& carla_proxy_ptr,
 
 std::shared_ptr<xviz::XVIZBaseSession> CarlaHandler::GetSession(const std::unordered_map<std::string, std::string>& params,
   std::shared_ptr<websocketpp::connection<websocketpp::config::asio>> conn_ptr) {
-  auto session_ptr = std::make_shared<CarlaSession>(conn_ptr, weak_from_this(), interval_ms_);
+  auto session_ptr = std::make_shared<CarlaSession>(conn_ptr, weak_from_this(), interval_ms_, stream_settings_callback_);
   children_sessions_[cnt_] = session_ptr;
   cnt_++;
   return session_ptr;
@@ -88,4 +88,8 @@ void CarlaHandler::UpdateMetadata(const std::string& metadata_str) {
   for (const auto id : to_delete_children) {
     children_sessions_.erase(id);
   }
+}
+void CarlaHandler::SetStreamSettingsCallback(
+  const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback) {
+  stream_settings_callback_ = stream_settings_callback;
 }

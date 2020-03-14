@@ -162,6 +162,16 @@ void CarlaProxy::SetUpdateMetadataCallback(const std::function<void(const std::s
   frontend_proxy_update_metadata_callback_ = func;
 }
 
+void CarlaProxy::SetTransmissionStreams(const std::unordered_map<std::string, bool>& stream_settings) {
+  std::lock_guard lock_g(stream_settings_lock_);
+  stream_settings_ = stream_settings;
+}
+
+bool CarlaProxy::IsStreamAllowTransmission(const std::string& stream_name) {
+  std::lock_guard lock_g(stream_settings_lock_);
+  return (stream_settings_.find(stream_name) == stream_settings_.end() || stream_settings_[stream_name]);
+}
+
 void CarlaProxy::AddCameraStream(uint32_t camera_id, const std::string& stream_name) {
   std::string name = stream_name;
   if (name.empty()) {
@@ -543,15 +553,19 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     .Position(ego_position.get<0>(), ego_position.get<1>(), ego_position.get<2>())
     .Timestamp(now_time);
 
-  xviz_builder.TimeSeries("/vehicle/acceleration")
-    .Timestamp(now_time)
-    .Value(display_acceleration)
-    .Id("acceleration");
+  if (IsStreamAllowTransmission("/vehicle/acceleration")) {
+    xviz_builder.TimeSeries("/vehicle/acceleration")
+      .Timestamp(now_time)
+      .Value(display_acceleration)
+      .Id("acceleration");
+  }
 
-  xviz_builder.TimeSeries("/vehicle/velocity")
-    .Timestamp(now_time)
-    .Value(display_velocity)
-    .Id("velocity");
+  if (IsStreamAllowTransmission("/vehicle/velocity")) {
+    xviz_builder.TimeSeries("/vehicle/velocity")
+      .Timestamp(now_time)
+      .Value(display_velocity)
+      .Id("velocity");
+  }
 
 
   std::vector<std::vector<double>> vehicle_vector;
@@ -599,18 +613,22 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   }
 
-  for (auto i = 0; i < vehicle_vector.size(); i++) {
-    xviz_builder.Primitive("/object/vehicles")
-      .Polygon(std::move(vehicle_vector[i]))
-      .ObjectId(std::to_string(vehicle_ids[i]))
-      .Classes({"vehicle"});
+  if (IsStreamAllowTransmission("/object/vehicles")) {
+    for (auto i = 0; i < vehicle_vector.size(); i++) {
+      xviz_builder.Primitive("/object/vehicles")
+        .Polygon(std::move(vehicle_vector[i]))
+        .ObjectId(std::to_string(vehicle_ids[i]))
+        .Classes({"vehicle"});
+    }
   }
-
-  for (auto i = 0; i < walker_vector.size(); i++) {
-    xviz_builder.Primitive("/object/walkers")
-      .Polygon(std::move(walker_vector[i]))
-      .ObjectId(std::to_string(walker_ids[i]))
-      .Classes({"walker"});
+  
+  if (IsStreamAllowTransmission("/object/walkers")) {
+    for (auto i = 0; i < walker_vector.size(); i++) {
+      xviz_builder.Primitive("/object/walkers")
+        .Polygon(std::move(walker_vector[i]))
+        .ObjectId(std::to_string(walker_ids[i]))
+        .Classes({"walker"});
+    }
   }
 
   std::vector<uint32_t> to_delete_image_ids;
@@ -628,7 +646,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     if (is_experimental_server_enabled_) {
       last_received_images_[camera_id] = std::move(image_data_queues_[camera_id].GetData());
     } else {
-      xviz_builder.Primitive(camera_streams_[camera_id]).Image(std::move(image_data_queues_[camera_id].GetData()));
+      if (IsStreamAllowTransmission(camera_streams_[camera_id])) {
+        xviz_builder.Primitive(camera_streams_[camera_id]).Image(std::move(image_data_queues_[camera_id].GetData()));
+      }
     }
   }
 
@@ -640,7 +660,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   if (is_experimental_server_enabled_) {
     for (const auto& [camera_id, image_str] : last_received_images_) {
-      xviz_builder.Primitive(camera_streams_[camera_id]).Image(image_str);
+      if (IsStreamAllowTransmission(camera_streams_[camera_id])) {
+        xviz_builder.Primitive(camera_streams_[camera_id]).Image(image_str);
+      }
     }
   }
 
@@ -656,12 +678,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   lidar_data_lock_.unlock();
 
 
-  if (!points.empty()) {
+  if (!points.empty() && IsStreamAllowTransmission("/lidar/points")) {
     point_cloud_builder.Points(std::move(points));
   }
 
   collision_lock_.lock();
-  if (!collision_events_.empty()) {
+  if (!collision_events_.empty() && IsStreamAllowTransmission("/sensor/other/collision")) {
     XVIZUIPrimitiveBuilder& ui_primitive_builder = xviz_builder.UIPrimitive("/sensor/other/collision");
     ui_primitive_builder
       .Column("Self actor", TreeTableColumn::STRING)
@@ -679,7 +701,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   collision_lock_.unlock();
 
   gnss_lock_.lock();
-  if (!gnss_infos_.empty()) {
+  if (!gnss_infos_.empty() && IsStreamAllowTransmission("/sensor/other/gnss")) {
     XVIZUIPrimitiveBuilder& ui_primitive_builder = xviz_builder.UIPrimitive("/sensor/other/gnss");
     ui_primitive_builder
       .Column("Actor", TreeTableColumn::STRING)
@@ -699,7 +721,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   gnss_lock_.unlock();
 
   obstacle_lock_.lock();
-  if (!obstacle_infos_.empty()) {
+  if (!obstacle_infos_.empty() && IsStreamAllowTransmission("/sensor/other/obstacle")) {
     XVIZUIPrimitiveBuilder& ui_primitive_builder = xviz_builder.UIPrimitive("/sensor/other/obstacle");
     ui_primitive_builder
       .Column("Self actor", TreeTableColumn::STRING)

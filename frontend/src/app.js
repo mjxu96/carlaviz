@@ -99,6 +99,15 @@ class CarlaViz extends PureComponent {
     });
   };
 
+  _onStreamSettingChange = changedSettings => {
+    const { log } = this.state;
+    if (log && log.isOpen()) {
+      log.socket.send(JSON.stringify(changedSettings));
+    } else {
+      console.log("socket is closed");
+    }
+  }
+
   render() {
     const { log, map, settings } = this.state;
     const customLayers = [map];
@@ -121,7 +130,7 @@ class CarlaViz extends PureComponent {
             values={this.state.settings}
             onChange={this._onSettingsChange}
           />
-          <StreamSettingsPanel log={log} />
+          <StreamSettingsPanel log={log} onSettingsChange={this._onStreamSettingChange} />
         </div>
         <div id="log-panel">
           <div id="map-view">

@@ -8,6 +8,7 @@
 #define CARLAVIZ_FRONTEND_PROXY_H_
 
 #include "backend/utils/macrologger.h"
+#include "backend/utils/json.hpp"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -26,7 +27,8 @@ class FrontendClient {
  public:
   FrontendClient(boost::shared_ptr<
                  boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
-                     frontend_client_ptr);
+                     frontend_client_ptr,
+                 const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback);
   void Write(const std::string& data);
   void Write(const boost::beast::multi_buffer& data);
   void ChangeMetadataSendStatus(bool new_status);
@@ -36,8 +38,10 @@ class FrontendClient {
   bool SetBinary(bool is_binary);
 
  private:
+  void StartRead();
   bool is_metadata_sent_ = false;
   bool is_map_string_sent_ = false;
+  std::function<void(const std::unordered_map<std::string, bool>&)> stream_settings_callback_{};
   boost::shared_ptr<
       boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
       frontend_client_ptr_ = nullptr;
@@ -51,6 +55,7 @@ class FrontendProxy {
   void SetMapString(const std::string& map_string);
   void StartListen();
   void SendToAllClients(std::string&& message);
+  void SetStreamSettingsCallback(const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback);
 
  private:
   void Accept();
@@ -67,6 +72,7 @@ class FrontendProxy {
   uint32_t frontend_max_id_ = 0u;
   boost::unordered_map<uint32_t, boost::shared_ptr<FrontendClient>>
       frontend_clients_{};
+  std::function<void(const std::unordered_map<std::string, bool>&)> stream_settings_callback_{};
 };
 
 }  // namespace carlaviz

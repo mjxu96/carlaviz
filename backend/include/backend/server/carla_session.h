@@ -20,7 +20,8 @@ namespace carlaviz {
 class CarlaSession : public xviz::XVIZBaseSession {
 public:
   CarlaSession(std::shared_ptr<websocketpp::connection<websocketpp::config::asio>> conn_ptr,
-    std::weak_ptr<CarlaHandler> handler_weak_ptr, uint64_t interval_ms);
+    std::weak_ptr<CarlaHandler> handler_weak_ptr, uint64_t interval_ms,
+    const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback);
 
   void OnConnect() override;
   void Main() override;
@@ -28,9 +29,12 @@ public:
   
   bool SetSendStatus(bool new_status);
 private:
+
+  void OnMessage(websocketpp::connection_hdl hdl, std::shared_ptr<websocketpp::config::core::message_type> msg_ptr);
   bool is_error_{false};
   uint64_t interval_ms_{100};
 
+  std::function<void(const std::unordered_map<std::string, bool>&)> stream_settings_callback_{};
   std::weak_ptr<CarlaHandler> handler_weak_ptr_;
   std::mutex send_lock_{};
   bool is_metadata_send_{false};

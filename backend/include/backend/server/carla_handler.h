@@ -24,8 +24,11 @@ public:
   std::string GetMetadata();
   std::string GetMetadataWithMap();
   void UpdateMetadata(const std::string& metadata_str);
+  void SetStreamSettingsCallback(const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback);
 private:
   void StartReadData();
+
+  std::function<void(const std::unordered_map<std::string, bool>&)> stream_settings_callback_{};
 
   std::unordered_map<size_t, std::shared_ptr<xviz::XVIZBaseSession>> children_sessions_{};
   size_t cnt_ = 0u;

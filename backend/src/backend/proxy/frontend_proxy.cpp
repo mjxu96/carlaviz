@@ -9,12 +9,41 @@
 using namespace carlaviz;
 using tcp = boost::asio::ip::tcp;
 namespace websocket = boost::beast::websocket;
+using Json = nlohmann::json;
 
 FrontendClient::FrontendClient(
     boost::shared_ptr<
         boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>
-        frontend_client_ptr)
-    : frontend_client_ptr_(std::move(frontend_client_ptr)) {}
+        frontend_client_ptr,
+        const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback)
+    : frontend_client_ptr_(std::move(frontend_client_ptr)),
+      stream_settings_callback_(stream_settings_callback) {
+  std::thread t(&FrontendClient::StartRead, this);
+  t.detach();
+}
+
+void FrontendClient::StartRead() {
+  try {
+    while (true) {
+      boost::beast::multi_buffer buffer;
+      frontend_client_ptr_->read(buffer);
+      auto read_data = boost::beast::buffers_to_string(buffer.data());
+      try {
+        Json setting_json = Json::parse(read_data);
+        stream_settings_callback_(setting_json.get<std::unordered_map<std::string, bool>>());
+      } catch (const std::exception& e) {
+        LOG_WARNING("When paring %s, get error: %s", read_data.c_str(),
+          e.what());
+      }
+    }
+  } catch (const std::exception& e) {
+    if (std::strcmp(e.what(), "Operation canceled") != 0 &&
+        std::strcmp(e.what(), "Broken pipe") != 0 &&
+        std::strcmp(e.what(), "Connection reset by peer") != 0) {
+        LOG_ERROR("ERROR WHEN READING SETTING UPDATE %s", e.what());
+    }
+  }
+}
 
 void FrontendClient::Write(const std::string& data) {
   boost::beast::multi_buffer buffer;
@@ -69,6 +98,11 @@ void FrontendProxy::StartListen() {
   t.detach();
 }
 
+void FrontendProxy::SetStreamSettingsCallback(
+    const std::function<void(const std::unordered_map<std::string, bool>&)>& stream_settings_callback) {
+  stream_settings_callback_ = stream_settings_callback;
+}
+
 void FrontendProxy::SendToAllClients(std::string&& message) {
   boost::beast::multi_buffer buffer;
   boost::beast::ostream(buffer) << std::move(message);
@@ -88,6 +122,7 @@ void FrontendProxy::SendToAllClients(std::string&& message) {
       to_delete_ids.insert(client_pair.first);
       if (se.code() != websocket::error::closed &&
           std::strcmp(se.what(), "Broken pipe") != 0 &&
+          std::strcmp(se.what(), "Operation canceled") != 0 &&
           std::strcmp(se.what(), "Connection reset by peer")) {
         LOG_ERROR("ERROR WHEN SENDDING UPDATE %s", se.what());
       } else {
@@ -124,7 +159,8 @@ void FrontendProxy::AddClient(boost::asio::ip::tcp::socket socket) {
     client_ptr->accept();
     LOG_INFO("Frontend connected");
 
-    auto frontend_client = boost::make_shared<FrontendClient>(client_ptr);
+    auto frontend_client = boost::make_shared<FrontendClient>(client_ptr, 
+      stream_settings_callback_);
 
     frontend_client->SetBinary(true);
     SendMetadata(frontend_client);

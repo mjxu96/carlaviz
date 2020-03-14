@@ -74,6 +74,7 @@ class CarlaProxy {
   std::string GetMapString();
   xviz::XVIZBuilder GetUpdateData();
   void SetUpdateMetadataCallback(const std::function<void(const std::string&)>& func);
+  void SetTransmissionStreams(const std::unordered_map<std::string, bool>& stream_settings);
 
  private:
   xviz::XVIZBuilder GetUpdateData(
@@ -87,6 +88,12 @@ class CarlaProxy {
       xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
       boost::shared_ptr<carla::client::TrafficLight> traffic_light);
   void AddTrafficLightAreas();
+
+  bool IsStreamAllowTransmission(const std::string& stream_name);
+
+  // Stream settings
+  std::mutex stream_settings_lock_{};
+  std::unordered_map<std::string, bool> stream_settings_{};
 
   // experimental
   bool is_experimental_server_enabled_{false};

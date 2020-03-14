@@ -68,6 +68,9 @@ void Backend::Init() {
   if (is_experimental_) {
     std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
     auto carla_handler = std::make_shared<carlaviz::CarlaHandler>(carla_proxy_, drawing_proxy_, time_interval_); 
+    carla_handler->SetStreamSettingsCallback(std::bind(
+      &CarlaProxy::SetTransmissionStreams, carla_proxy_, std::placeholders::_1
+    ));
     handlers.push_back(carla_handler);
     server_ = std::make_shared<xviz::XVIZServer>(std::move(handlers));
     carla_proxy_->SetUpdateMetadataCallback(std::bind(
@@ -78,6 +81,9 @@ void Backend::Init() {
     frontend_proxy_->StartListen();
     frontend_proxy_->SetMapString(carla_proxy_->GetMapString());
     frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetadata());
+    frontend_proxy_->SetStreamSettingsCallback(std::bind(
+      &CarlaProxy::SetTransmissionStreams, carla_proxy_, std::placeholders::_1
+    ));
     carla_proxy_->SetUpdateMetadataCallback(std::bind(
       &FrontendProxy::UpdateMetadata, frontend_proxy_, std::placeholders::_1
     ));
