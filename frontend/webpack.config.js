@@ -85,7 +85,7 @@ module.exports = (env = {}) => {
   config.plugins = config.plugins.concat([
     new webpack.DefinePlugin({__IS_STREAMING__: JSON.stringify(Boolean(env.stream))}),
     new webpack.DefinePlugin({__IS_LIVE__: JSON.stringify(Boolean(env.live))}),
-    new webpack.DefinePlugin({__HOST_IP__: JSON.stringify(process.env.CARLA_DISPLAY_HOST_IP || 'localhost')})
+    new webpack.DefinePlugin({__HOST_IP__: JSON.stringify(process.env.CARLAVIZ_HOST_IP || 'localhost')})
   ]);
 
   return config;

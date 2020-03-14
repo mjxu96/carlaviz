@@ -121,7 +121,10 @@ class CarlaViz extends PureComponent {
 
   render() {
     const { log, map, metadataReceived, settings } = this.state;
-    const customLayers = [map];
+    let customLayers = []
+    if (map) {
+      customLayers = [map];
+    }
 
     return (
       <div id="container">

@@ -38,6 +38,7 @@ body {
   margin-top: 2px;
 }
 #control-panel > #github > p > a {
+  color: white;
   text-decoration: none;
 }
 #control-panel > #github a:visited {
@@ -63,8 +64,8 @@ body {
   color: white;
 }
 #control-panel .xviz-container > div {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 #log-panel {
   flex-grow: 1;
