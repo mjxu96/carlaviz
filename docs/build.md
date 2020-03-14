@@ -1,9 +1,8 @@
 # Building Instructions
 
-[The container image]() is also provided. It is more stable and has less prerequisites.
+[The docker image](https://github.com/wx9698/carlaviz#docker-image) is also provided. It is easy to use and has less prerequisites.
 
 ## Prerequisites
-
 #### Backend part
 1. Compiler: g++ (>=7) or clang++ (>=7)
 2. OS: ubuntu 18.04 (only tested on this os)
@@ -48,13 +47,13 @@ cd CARLA_SIMULATOR_PATH
 ./CarlaUE4.sh
 
 # 2. in another terminal, run backend
-cd backend
-./bin/backend
+./backend/bin/backend
 
 # 3. in another terminal, run frontend
 cd frontend
 yarn start
 
 # 4. in another terminal, run the python script
-python3 examples/example.py
+cd examples
+python3 example.py
 ```
