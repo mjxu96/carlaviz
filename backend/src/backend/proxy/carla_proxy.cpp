@@ -1085,24 +1085,22 @@ utils::PointCloud CarlaProxy::GetPointCloud(
 }
 
 utils::Image CarlaProxy::GetEncodedRGBImage(
-    const carla::sensor::data::Image& image) {
-  std::vector<unsigned char> pixel_data;
-  for (const auto& p : image) {
-    pixel_data.emplace_back(p.r);
-    pixel_data.emplace_back(p.g);
-    pixel_data.emplace_back(p.b);
-    pixel_data.emplace_back(p.a);
+    carla::sensor::data::Image& image) {
+  size_t pixel_size = image.size();
+  auto color_ptr = (unsigned char*) image.data();
+  std::vector<unsigned char> pixel_data(pixel_size * 3u);
+  for (auto i = 0; i < pixel_size; i++) {
+    pixel_data[3*i] = color_ptr[4*i + 2u];
+    pixel_data[3*i + 1u] = color_ptr[4*i + 1u];
+    pixel_data[3*i + 2u] = color_ptr[4*i];
   }
   std::vector<unsigned char> image_data;
   unsigned int error = lodepng::encode(image_data, pixel_data, image.GetWidth(),
-                                       image.GetHeight());
+                                       image.GetHeight(), LodePNGColorType::LCT_RGB);
   if (error) {
     LOG_ERROR("Encoding png error");
   }
   std::string data_str(image_data.begin(), image_data.end());
-  // for (const auto& c : image_data) {
-  //   data_str += (char)c;
-  // }
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 

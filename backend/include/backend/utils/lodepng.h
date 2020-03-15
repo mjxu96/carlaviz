@@ -27,6 +27,11 @@ freely, subject to the following restrictions:
 #ifndef LODEPNG_H
 #define LODEPNG_H
 
+#define LODEPNG_NO_COMPILE_ANCILLARY_CHUNKS
+#define LODEPNG_NO_COMPILE_DISK
+#define LODEPNG_NO_COMPILE_DECODER
+#define LODEPNG_NO_COMPILE_ERROR_TEXT
+
 #include <string.h> /*for size_t*/
 
 extern const char* LODEPNG_VERSION_STRING;

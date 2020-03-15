@@ -164,7 +164,7 @@ class CarlaProxy {
   carla::geom::Transform GetRelativeTransform(
       const carla::geom::Transform& child,
       const carla::geom::Transform& parent);
-  utils::Image GetEncodedRGBImage(const carla::sensor::data::Image& image);
+  utils::Image GetEncodedRGBImage(carla::sensor::data::Image& image);
   utils::Image GetEncodedDepthImage(const carla::sensor::data::Image& image);
   utils::Image GetEncodedLabelImage(const carla::sensor::data::Image& image);
 
