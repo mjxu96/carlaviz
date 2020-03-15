@@ -123,7 +123,7 @@ class CarlaProxy {
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>> actors_;
   boost::shared_ptr<carla::client::Actor> ego_actor_{nullptr};
-  int ego_id_{-1};
+  bool is_previous_ego_present_{false};
 
   std::shared_ptr<xviz::Metadata> metadata_ptr_{nullptr};
 

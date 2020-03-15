@@ -98,15 +98,15 @@ std::unordered_map<std::string, XVIZUIBuilder> GetUIs(const std::vector<std::str
     ui_builders["Metrics"].Child(container_builder);
   }
 
-  if (!table_streams.empty()) {
-    XVIZContainerBuilder container_builder("tables", LayoutType::VERTICAL);
-    for (const auto& stream_name : table_streams) {
-      auto table_stream = std::make_shared<XVIZTableBuilder>(stream_name, stream_name, stream_name, false);
-      container_builder.Child(table_stream);
-    }
-    ui_builders["Tables"] = XVIZUIBuilder();
-    ui_builders["Tables"].Child(container_builder);
+  XVIZContainerBuilder tables_container_builder("tables", LayoutType::VERTICAL);
+  auto game_time_stream = std::make_shared<XVIZTableBuilder>("Game", "Game time and frame", "/game/time", false);
+  tables_container_builder.Child(game_time_stream);
+  for (const auto& stream_name : table_streams) {
+    auto table_stream = std::make_shared<XVIZTableBuilder>(stream_name, stream_name, stream_name, false);
+    tables_container_builder.Child(table_stream);
   }
+  ui_builders["Tables"] = XVIZUIBuilder();
+  ui_builders["Tables"].Child(tables_container_builder);
   return ui_builders;
 }
 
@@ -228,15 +228,19 @@ void CarlaProxy::UpdateMetadataBuilder() {
   }
 
   std::vector<std::string> table_streams;
-  table_streams.push_back("/game/time");
   for (const auto& s_name : other_sensor_streams_) {
     base_metadata_builder
       .Stream(s_name)
         .Category(StreamMetadata::UI_PRIMITIVE);
     table_streams.push_back(s_name);
   }
-  base_metadata_builder
-    .UI(GetUIs(camera_streams_vec,  {"/vehicle/acceleration"}, {"/vehicle/velocity"}, table_streams));
+  if (ego_actor_ != nullptr) {
+    base_metadata_builder
+      .UI(GetUIs(camera_streams_vec,  {"/vehicle/acceleration"}, {"/vehicle/velocity"}, table_streams));
+  } else {
+    base_metadata_builder
+      .UI(GetUIs(camera_streams_vec,  {}, {}, table_streams));
+  }
   metadata_builder_ = base_metadata_builder;
   metadata_ptr_ = metadata_builder_.GetData();
   is_need_update_metadata_ = true;
@@ -332,7 +336,7 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_TEXT)
           .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
-        .UI(GetUIs({}, {}, {}, {"/game/time"}));
+        .UI(GetUIs({}, {}, {}, {}));
   return xviz_metadata_builder;
 }
 
@@ -370,8 +374,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       tmp_actors;
   std::unordered_set<uint32_t> tmp_real_sensors;
 
-  ego_actor_ = nullptr;
-  ego_id_ = -1;
+  bool is_ego_found = false;
 
   for (const auto& world_snapshot : world_snapshots) {
     uint32_t id = world_snapshot.id;
@@ -386,19 +389,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       LOG_WARNING("Actor pointer is null, actor id: %u", id);
       continue;
     }
-    bool need_continue = false;
-    for (const auto& attribute : actor_ptr->GetAttributes()) {
-      if (attribute.GetId() == "role_name" && (attribute.GetValue() == "ego" || attribute.GetValue() == "hero")) {
-        ego_actor_ = actor_ptr;
-        ego_id_ = ego_actor_->GetId();
-        need_continue = true;
-        break;
-      }
-    }
     tmp_actors.insert({id, actor_ptr});
-    if (need_continue) {
-      continue;
-    }
+    
     if (actor_ptr->GetTypeId().substr(0, 6) == "sensor") {
       auto sensor_ptr =
           boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
@@ -457,7 +449,23 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       if (recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
         tmp_real_sensors.insert(id);
       }
+      continue;
     }
+
+    if (is_ego_found) {
+      continue;
+    }
+    for (const auto& attribute : actor_ptr->GetAttributes()) {
+      if (attribute.GetId() == "role_name" && (attribute.GetValue() == "ego" || attribute.GetValue() == "hero")) {
+        ego_actor_ = actor_ptr;
+        is_ego_found = true;
+        break;
+      }
+    }
+  }
+
+  if (!is_ego_found) {
+    ego_actor_ = nullptr;
   }
 
   actors_ = std::move(tmp_actors);
@@ -523,6 +531,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   double display_acceleration = 0;
 
   if (ego_actor_ != nullptr) {
+    if (!is_previous_ego_present_) {
+      UpdateMetadataBuilder();
+      is_previous_ego_present_ = true;
+    }
     auto location = ego_actor_->GetLocation();
     auto orientation = ego_actor_->GetTransform().rotation;
     ego_position.set<0>(location.x);
@@ -534,6 +546,11 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
     display_velocity = Utils::ComputeSpeed(ego_actor_->GetVelocity());
     display_acceleration = Utils::ComputeSpeed(ego_actor_->GetAcceleration());
+  } else {
+    if (is_previous_ego_present_) {
+      UpdateMetadataBuilder();
+      is_previous_ego_present_ = false;
+    }
   }
 
   if (is_need_update_metadata_) {
@@ -574,7 +591,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   std::vector<uint32_t> walker_ids;
 
   for (const auto& actor_pair : actors_) {
-    if (ego_id_ == actor_pair.first) {
+    if (ego_actor_ != nullptr && ego_actor_->GetId() == actor_pair.first) {
       continue;
     }
     auto actor_ptr = actor_pair.second;
@@ -632,6 +649,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   }
 
   std::vector<uint32_t> to_delete_image_ids;
+  std::unordered_map<uint32_t, std::string> tmp_non_experimental_server_images_;
   image_data_lock_.lock();
   for (const auto [camera_id, is_received] : is_image_received_) {
     if (real_dummy_sensors_relation_.find(camera_id) ==
@@ -647,7 +665,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       last_received_images_[camera_id] = std::move(image_data_queues_[camera_id].GetData());
     } else {
       if (IsStreamAllowTransmission(camera_streams_[camera_id])) {
-        xviz_builder.Primitive(camera_streams_[camera_id]).Image(std::move(image_data_queues_[camera_id].GetData()));
+        tmp_non_experimental_server_images_[camera_id] = std::move(image_data_queues_[camera_id].encoded_str_);
       }
     }
   }
@@ -663,6 +681,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       if (IsStreamAllowTransmission(camera_streams_[camera_id])) {
         xviz_builder.Primitive(camera_streams_[camera_id]).Image(image_str);
       }
+    }
+  } else {
+    for (auto& [camera_id, image_str] : tmp_non_experimental_server_images_) {
+        xviz_builder.Primitive(camera_streams_[camera_id]).Image(std::move(image_str));
     }
   }
 
