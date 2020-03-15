@@ -33,6 +33,26 @@ std::unordered_map<uint8_t, std::vector<unsigned char>> label_color_map = {
   {11, {102, 102, 156}},
   {12, {220, 220, 0}}
 };
+
+void InitialLodePNGSettings(LodePNGState& state, LodePNGColorType colortype=LodePNGColorType::LCT_RGB, unsigned int bitdepth=8u) {
+  lodepng_state_init(&state);
+  state.info_raw.colortype = colortype;
+  state.info_raw.bitdepth = bitdepth;
+  state.info_png.color.colortype = colortype;
+  state.info_png.color.bitdepth = bitdepth;
+
+  auto settings = &(state.encoder.zlibsettings);
+  settings->btype = 2;
+  settings->use_lz77 = 0;
+  settings->windowsize = 32;
+  settings->minmatch = 3;
+  settings->nicematch = 16;
+  settings->lazymatching = 0;
+
+  settings->custom_zlib = 0;
+  settings->custom_deflate = 0;
+  settings->custom_context = 0;
+}
  
 void FlatVector(std::vector<double>& v, const std::vector<double>& to_add, int neg_factor = 1) {
   v.push_back(to_add[0]);
@@ -92,8 +112,8 @@ std::unordered_map<std::string, XVIZUIBuilder> GetUIs(const std::vector<std::str
 
   if (!acceleration_stream.empty() && !velocity_stream.empty()) {
     XVIZContainerBuilder container_builder("metrics", LayoutType::VERTICAL);
-    container_builder.Child(acceleration_stream, "acceleration", "acceleration");
-    container_builder.Child(velocity_stream, "velocity", "velocity");
+    container_builder.Child<XVIZMetricBuilder>(acceleration_stream, "acceleration", "acceleration");
+    container_builder.Child<XVIZMetricBuilder>(velocity_stream, "velocity", "velocity");
     ui_builders["Metrics"] = XVIZUIBuilder();
     ui_builders["Metrics"].Child(container_builder);
   }
@@ -1084,6 +1104,7 @@ utils::PointCloud CarlaProxy::GetPointCloud(
   return utils::PointCloud(lidar_measurement.GetTimestamp(), std::move(points));
 }
 
+
 utils::Image CarlaProxy::GetEncodedRGBImage(
     carla::sensor::data::Image& image) {
   size_t pixel_size = image.size();
@@ -1094,62 +1115,63 @@ utils::Image CarlaProxy::GetEncodedRGBImage(
     pixel_data[3*i + 1u] = color_ptr[4*i + 1u];
     pixel_data[3*i + 2u] = color_ptr[4*i];
   }
-  std::vector<unsigned char> image_data;
-  unsigned int error = lodepng::encode(image_data, pixel_data, image.GetWidth(),
-                                       image.GetHeight(), LodePNGColorType::LCT_RGB);
+  std::string data_str;
+  lodepng::State state;
+  InitialLodePNGSettings(state);
+  unsigned int error = lodepng::encode(data_str, pixel_data, image.GetWidth(),
+                                       image.GetHeight(), state);
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  std::string data_str(image_data.begin(), image_data.end());
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 
 utils::Image CarlaProxy::GetEncodedDepthImage(
     const carla::sensor::data::Image& image) {
-  std::vector<unsigned char> pixel_data;
-  for (const auto& p : image) {
+  size_t pixel_size = image.size();
+  std::vector<unsigned char> pixel_data(pixel_size);
+  for (auto i = 0; i < pixel_size; i++) {
+    auto p = image[i];
     auto depth = (unsigned char)((p.r + p.g * 256.0 + p.b * 256.0 * 256.0) / (256.0 * 256.0 * 256.0 - 1.0) * 255.0);
-    pixel_data.emplace_back(depth);
-    pixel_data.emplace_back(depth);
-    pixel_data.emplace_back(depth);
-    pixel_data.emplace_back(255);
+    pixel_data[i] = depth;
   }
-  std::vector<unsigned char> image_data;
-  unsigned int error = lodepng::encode(image_data, pixel_data, image.GetWidth(),
-                                       image.GetHeight());
+  std::string data_str;
+  lodepng::State state;
+  InitialLodePNGSettings(state, LodePNGColorType::LCT_GREY);
+  unsigned int error = lodepng::encode(data_str, pixel_data, image.GetWidth(),
+                                       image.GetHeight(), state);
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  std::string data_str(image_data.begin(), image_data.end());
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 
 utils::Image CarlaProxy::GetEncodedLabelImage(
     const carla::sensor::data::Image& image) {
-  std::vector<unsigned char> pixel_data;
-  for (const auto& p : image) {
+  std::vector<unsigned char> pixel_data(image.size() * 3u);
+  for (auto i = 0; i < image.size(); i++) {
+    auto p = image[i];
     if (label_color_map.find(p.r) == label_color_map.end()) {
       LOG_WARNING("Unknown tag: %u", p.r);
       auto& color = label_color_map[0];
-      pixel_data.emplace_back(color[0]);
-      pixel_data.emplace_back(color[1]);
-      pixel_data.emplace_back(color[2]);
-      pixel_data.emplace_back(255);
+      pixel_data[i * 3] = (color[0]);
+      pixel_data[i * 3 + 1] = (color[1]);
+      pixel_data[i * 3 + 2] = (color[2]);
     } else {
       auto& color = label_color_map[p.r];
-      pixel_data.emplace_back(color[0]);
-      pixel_data.emplace_back(color[1]);
-      pixel_data.emplace_back(color[2]);
-      pixel_data.emplace_back(255);
+      pixel_data[i * 3] = (color[0]);
+      pixel_data[i * 3 + 1] = (color[1]);
+      pixel_data[i * 3 + 2] = (color[2]);
     }
   }
-  std::vector<unsigned char> image_data;
-  unsigned int error = lodepng::encode(image_data, pixel_data, image.GetWidth(),
-                                       image.GetHeight());
+  std::string data_str;
+  lodepng::State state;
+  InitialLodePNGSettings(state, LodePNGColorType::LCT_RGB);
+  unsigned int error = lodepng::encode(data_str, pixel_data, image.GetWidth(),
+                                       image.GetHeight(), state);
   if (error) {
     LOG_ERROR("Encoding png error");
   }
-  std::string data_str(image_data.begin(), image_data.end());
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
 

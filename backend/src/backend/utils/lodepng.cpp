@@ -6274,6 +6274,26 @@ unsigned encode(std::vector<unsigned char>& out,
   return encode(out, in.empty() ? 0 : &in[0], w, h, colortype, bitdepth);
 }
 
+unsigned encode(std::string& out,
+                const unsigned char* in, unsigned w, unsigned h,
+                LodePNGColorType colortype, unsigned bitdepth) {
+  unsigned char* buffer;
+  size_t buffersize;
+  unsigned error = lodepng_encode_memory(&buffer, &buffersize, in, w, h, colortype, bitdepth);
+  if(buffer) {
+    out.insert(out.end(), &buffer[0], &buffer[buffersize]);
+    lodepng_free(buffer);
+  }
+  return error;
+}
+
+unsigned encode(std::string& out,
+                const std::vector<unsigned char>& in, unsigned w, unsigned h,
+                LodePNGColorType colortype, unsigned bitdepth) {
+  if(lodepng_get_raw_size_lct(w, h, colortype, bitdepth) > in.size()) return 84;
+  return encode(out, in.empty() ? 0 : &in[0], w, h, colortype, bitdepth);
+}
+
 unsigned encode(std::vector<unsigned char>& out,
                 const unsigned char* in, unsigned w, unsigned h,
                 State& state) {
@@ -6288,6 +6308,26 @@ unsigned encode(std::vector<unsigned char>& out,
 }
 
 unsigned encode(std::vector<unsigned char>& out,
+                const std::vector<unsigned char>& in, unsigned w, unsigned h,
+                State& state) {
+  if(lodepng_get_raw_size(w, h, &state.info_raw) > in.size()) return 84;
+  return encode(out, in.empty() ? 0 : &in[0], w, h, state);
+}
+
+unsigned encode(std::string& out,
+                const unsigned char* in, unsigned w, unsigned h,
+                State& state) {
+  unsigned char* buffer;
+  size_t buffersize;
+  unsigned error = lodepng_encode(&buffer, &buffersize, in, w, h, &state);
+  if(buffer) {
+    out.insert(out.end(), &buffer[0], &buffer[buffersize]);
+    lodepng_free(buffer);
+  }
+  return error;
+}
+
+unsigned encode(std::string& out,
                 const std::vector<unsigned char>& in, unsigned w, unsigned h,
                 State& state) {
   if(lodepng_get_raw_size(w, h, &state.info_raw) > in.size()) return 84;

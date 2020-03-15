@@ -136,6 +136,7 @@ class CarlaProxy {
 
   // Carla sensor related
   std::mutex image_data_lock_;
+  std::mutex image_processing_lock_;
   // bool is_image_received_{false};
   std::unordered_map<uint32_t, std::string> last_received_images_{};
   std::unordered_map<uint32_t, bool> is_image_received_{};
