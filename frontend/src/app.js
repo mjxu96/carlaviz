@@ -72,6 +72,11 @@ class CarlaViz extends PureComponent {
     log
       .on("ready", () => {
         const metadata = log.getMetadata();
+        log.socket.onclose = () => {
+          this.setState({
+            metadataReceived: false
+          });
+        };
         if (metadata.map) {
           const mapLayer = new GeoJsonLayer({
             coordinateSystem: COORDINATE_SYSTEM.METER_OFFSETS,
@@ -121,7 +126,7 @@ class CarlaViz extends PureComponent {
 
   render() {
     const { log, map, metadataReceived, settings } = this.state;
-    let customLayers = []
+    let customLayers = [];
     if (map) {
       customLayers = [map];
     }
@@ -139,26 +144,34 @@ class CarlaViz extends PureComponent {
               <img src={githubIcon}></img>
             </a>
           </div>
-          <hr id="github-hr" />
-          <XVIZPanel log={log} name="Metrics" />
-          <hr />
-          <XVIZPanel log={log} name="Camera" />
-          <hr />
-          <XVIZPanel
-            log={log}
-            name="Tables"
-            componentProps={tableComponentProps}
-          />
-          <hr />
-          <Form
-            data={APP_SETTINGS}
-            values={this.state.settings}
-            onChange={this._onSettingsChange}
-          />
-          <StreamSettingsPanel
-            log={log}
-            onSettingsChange={this._onStreamSettingChange}
-          />
+          {metadataReceived ? (
+            <div>
+              <hr id="github-hr" />
+              <XVIZPanel log={log} name="Metrics" />
+              <hr />
+              <XVIZPanel log={log} name="Camera" />
+              <hr />
+              <XVIZPanel
+                log={log}
+                name="Tables"
+                componentProps={tableComponentProps}
+              />
+              <hr />
+              <Form
+                data={APP_SETTINGS}
+                values={this.state.settings}
+                onChange={this._onSettingsChange}
+              />
+              <StreamSettingsPanel
+                log={log}
+                onSettingsChange={this._onStreamSettingChange}
+              />
+            </div>
+          ) : (
+            <div>
+              <h4>Launch the backend and refresh</h4>
+            </div>
+          )}
         </div>
         <div id="log-panel">
           <div id="map-view">

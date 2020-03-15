@@ -72,8 +72,7 @@ const CONFIG = {
     ]
   },
   plugins: [
-    new webpack.HotModuleReplacementPlugin(),
-    new webpack.EnvironmentPlugin(['MapboxAccessToken'])
+    new webpack.HotModuleReplacementPlugin()
   ]
 };
 
