@@ -1,5 +1,5 @@
 
-# CarlaViz
+# CarlaViz [![Build Status](https://travis-ci.com/wx9698/carlaviz.svg?branch=master)](https://travis-ci.com/wx9698/carlaviz)
 Visualize carla in the web browser.
 
 Now support Carla 0.9.6

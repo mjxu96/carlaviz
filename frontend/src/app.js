@@ -208,6 +208,9 @@ class CarlaViz extends PureComponent {
             )}
           </div>
         </div>
+        <div id="author-info">
+          <p>Author: Minjun Xu</p>
+        </div>
       </div>
     );
   }
