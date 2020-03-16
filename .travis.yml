@@ -3,15 +3,18 @@ compiler: gcc
 
 dist: bionic
 
+services:
+  - docker
+
 before_install:
   - sudo apt-get update 
+
+  # test docker
+  - docker run hello-world
 
 install: 
   # building tool
   - sudo apt-get install -y cmake make libgtest-dev clang build-essential gcc-7 cmake libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool
-
-  # docker
-  - sudo apt-get install -y docker.io
 
   # protobuf 3.11.2
   - wget https://github.com/protocolbuffers/protobuf/releases/download/v3.11.2/protobuf-cpp-3.11.2.tar.gz
@@ -29,4 +32,4 @@ script:
   - pushd backend/build && cmake ../ -DBUILD_TEST=ON && make xviz-test example-server example -j2 && ../third_party/xviz/bin/xviz-test && popd
 
   # docker build
-  - pushd docker && docker build -t carlaviz:latest . && popd
+  - pushd docker && docker build -t carlaviz:0.9.6 . && popd
