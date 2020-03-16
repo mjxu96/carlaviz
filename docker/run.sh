@@ -1,6 +1,5 @@
 cleanup() {
     echo "Cleaning up... Don't forcefully exit"
-    sleep 2
     echo "All clear! Exit"
     exit
 }

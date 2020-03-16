@@ -1,6 +1,6 @@
 # Building Instructions
 
-[The docker image](https://github.com/wx9698/carlaviz#docker-image) is also provided. It is easy to use and has less prerequisites.
+Before start, the [docker image](https://github.com/wx9698/carlaviz#docker-image) is also provided. It is easier to use and has fewer prerequisites than building from source files.
 
 ## Prerequisites
 #### Backend part
@@ -57,4 +57,6 @@ yarn start
 # 4. in another terminal, run the python script
 cd examples
 python3 example.py
+
+# 5. go to the browser and type localhost:8080
 ```

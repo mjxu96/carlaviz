@@ -18,7 +18,7 @@ docker pull mjxu96/carlaviz:0.9.6
 ### How to run it?
 Here is a simple [example](https://github.com/wx9698/carlaviz/tree/master/examples) to run it. This example also includes the [Python API](https://github.com/wx9698/carlaviz/blob/master/examples/carla_painter.py) to draw extra lines, points and texts in the web browser.
 
-### Build from sources
+### Build from source
 Although the container image is out-of-box to use, you are also welcome to build on your own!
 
 Refer to this [page](https://github.com/wx9698/carlaviz/blob/master/docs/build.md) for building instructions.
