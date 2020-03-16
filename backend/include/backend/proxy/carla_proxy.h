@@ -90,10 +90,16 @@ class CarlaProxy {
   void AddTrafficLightAreas();
 
   bool IsStreamAllowTransmission(const std::string& stream_name);
+  bool IsSensorAllowListen(uint32_t sensor_id);
+  bool SensorAllowListenStatus(uint32_t sensor_id);
+  void AddStreamNameSensorIdRelation(const std::string& stream_name, uint32_t sensor_id);
 
   // Stream settings
   std::mutex stream_settings_lock_{};
   std::unordered_map<std::string, bool> stream_settings_{};
+  std::unordered_map<std::string, std::unordered_set<uint32_t>> stream_name_sensor_id_map_{};
+  std::unordered_map<uint32_t, bool> is_sensor_allow_listen_{};
+  std::unordered_map<uint32_t, bool> sensor_allow_listen_status_{};
 
   // experimental
   bool is_experimental_server_enabled_{false};
@@ -136,8 +142,7 @@ class CarlaProxy {
 
   // Carla sensor related
   std::mutex image_data_lock_;
-  std::mutex image_processing_lock_;
-  // bool is_image_received_{false};
+  std::unordered_map<uint32_t, std::string> real_sensor_type_{};
   std::unordered_map<uint32_t, std::string> last_received_images_{};
   std::unordered_map<uint32_t, bool> is_image_received_{};
   std::unordered_map<uint32_t, utils::Image> image_data_queues_{};

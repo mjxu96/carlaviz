@@ -16,6 +16,11 @@ void signal_handler(int signal_num) {
 
 using namespace carlaviz;
 
+double GetTime(std::chrono::high_resolution_clock::time_point& t1, 
+  std::chrono::high_resolution_clock::time_point& t2) {
+  return std::chrono::duration<double, std::milli>(t2 - t1).count();
+}
+
 void Backend::SetIsExperimental(bool is_experimental) {
   is_experimental_ = is_experimental;
 }
@@ -31,15 +36,28 @@ void Backend::Run() {
       server_->Serve();
     } else {
       while (true) {
+        // auto start = std::chrono::high_resolution_clock::now();
         auto xviz = carla_proxy_->GetUpdateData();
+        // auto data_end = std::chrono::high_resolution_clock::now();
 
         drawing_proxy_->AddDrawings(xviz);
+        // auto drawing_end = std::chrono::high_resolution_clock::now();
 
         std::string output;
         xviz::XVIZGLBWriter writer;
         writer.WriteMessage(output, xviz.GetMessage());
+        // auto write_end = std::chrono::high_resolution_clock::now();
 
         frontend_proxy_->SendToAllClients(std::move(output));
+        // auto send_end = std::chrono::high_resolution_clock::now();
+        /*
+        LOG_INFO("DATA TIME: %.3f", GetTime(start, data_end));
+        LOG_INFO("DRAWING TIME: %.3f", GetTime(data_end, drawing_end));
+        LOG_INFO("WRITER TIME: %.3f", GetTime(drawing_end, write_end));
+        LOG_INFO("SEND TIME: %.3f", GetTime(write_end, send_end));
+        LOG_INFO("TOTAL TIME: %.3f", GetTime(start, send_end));
+        LOG_INFO("-----------------------");
+        */
       }
     }
   } catch (const std::exception& e) {

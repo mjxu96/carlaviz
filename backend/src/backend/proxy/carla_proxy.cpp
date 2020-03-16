@@ -185,6 +185,15 @@ void CarlaProxy::SetUpdateMetadataCallback(const std::function<void(const std::s
 void CarlaProxy::SetTransmissionStreams(const std::unordered_map<std::string, bool>& stream_settings) {
   std::lock_guard lock_g(stream_settings_lock_);
   stream_settings_ = stream_settings;
+  for (const auto& [stream_name, is_on] : stream_settings_) {
+    if (stream_name_sensor_id_map_.find(stream_name) == stream_name_sensor_id_map_.end()) {
+      // LOG_WARNING("Stream %s does not have a matching sensor", stream_name.c_str());
+      continue;
+    }
+    for (auto sensor_id : stream_name_sensor_id_map_[stream_name]) {
+      is_sensor_allow_listen_[sensor_id] = is_on;
+    }
+  }
 }
 
 bool CarlaProxy::IsStreamAllowTransmission(const std::string& stream_name) {
@@ -192,10 +201,32 @@ bool CarlaProxy::IsStreamAllowTransmission(const std::string& stream_name) {
   return (stream_settings_.find(stream_name) == stream_settings_.end() || stream_settings_[stream_name]);
 }
 
+bool CarlaProxy::IsSensorAllowListen(uint32_t sensor_id) {
+  std::lock_guard lock_g(stream_settings_lock_);
+  return is_sensor_allow_listen_.find(sensor_id) == is_sensor_allow_listen_.end() || is_sensor_allow_listen_[sensor_id];
+}
+bool CarlaProxy::SensorAllowListenStatus(uint32_t sensor_id) {
+  return sensor_allow_listen_status_.find(sensor_id) != sensor_allow_listen_status_.end() && 
+    sensor_allow_listen_status_[sensor_id];
+}
+
+void CarlaProxy::AddStreamNameSensorIdRelation(const std::string& stream_name, uint32_t sensor_id) {
+  std::lock_guard lock_g(stream_settings_lock_);
+  if (stream_name_sensor_id_map_.find(stream_name) == stream_name_sensor_id_map_.end()) {
+    stream_name_sensor_id_map_[stream_name] = std::unordered_set<uint32_t>();
+  }
+  stream_name_sensor_id_map_[stream_name].insert(sensor_id);
+  sensor_allow_listen_status_[sensor_id] = true;
+}
+
 void CarlaProxy::AddCameraStream(uint32_t camera_id, const std::string& stream_name) {
   std::string name = stream_name;
   if (name.empty()) {
     name = "/camera/" + std::to_string(camera_id);
+  }
+  if (camera_streams_.find(camera_id) != camera_streams_.end() &&
+    camera_streams_[camera_id] == stream_name) {
+    return;
   }
   LOG_INFO("Add camera stream %u - %s", camera_id, name.c_str());
   camera_streams_[camera_id] = name; 
@@ -221,6 +252,9 @@ void CarlaProxy::RemoveVehicleMetricStreams() {
 }
 
 void CarlaProxy::AddTableStreams(const std::string& sensor_type_name) {
+  if (other_sensor_streams_.find(sensor_type_name) != other_sensor_streams_.end()) {
+    return;
+  }
   LOG_INFO("Add sensor stream %s", sensor_type_name.c_str());
   other_sensor_streams_.insert(sensor_type_name);
   UpdateMetadataBuilder();
@@ -396,6 +430,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   bool is_ego_found = false;
 
+  std::unordered_set<uint32_t> to_stop_listen_sensors{};
+
   for (const auto& world_snapshot : world_snapshots) {
     uint32_t id = world_snapshot.id;
     auto actor_it = actors_.find(id);
@@ -416,58 +452,73 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
       // if (real_sensors_.find(id) == real_sensors_.end() &&
       //     dummy_sensors_.find(id) == dummy_sensors_.end()) {
-      if (real_sensors_.find(id) == real_sensors_.end() &&
+      auto is_this_sensor_allow_listen = IsSensorAllowListen(id);
+      if ((real_sensors_.find(id) == real_sensors_.end() || !SensorAllowListenStatus(id)) &&
              recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
         if (!sensor_ptr->IsAlive()) {
           continue;
         }
-        auto type_id = actor_ptr->GetTypeId();
-        LOG_INFO("Listen sensor: %u, type is: %s", id,
-                 type_id.c_str());
-        auto dummy_sensor_with_parent_name = CreateDummySensor(sensor_ptr);
-        auto parent_name = dummy_sensor_with_parent_name.first;
-        auto dummy_sensor = dummy_sensor_with_parent_name.second;
-        if (dummy_sensor == nullptr) {
-          continue;
-        }
-        if (utils::Utils::IsStartWith(type_id,
-              "sensor.camera")) {
-          AddCameraStream(id, "/camera/" + type_id.substr(14) + "/" + std::to_string(id));
-        }
-        if (utils::Utils::IsStartWith(type_id, "sensor.other.collision")) {
-          AddTableStreams("/sensor/other/collision");
-          collision_lock_.lock();
-          collision_events_[id] = CollisionEvent(0u, 0u, parent_name, "no collision", -1, 0u);
-          collision_lock_.unlock();
-        }
-        if (utils::Utils::IsStartWith(type_id, "sensor.other.gnss")) {
-          AddTableStreams("/sensor/other/gnss");
-        }
-        if (type_id == "sensor.other.obstacle") {
-          AddTableStreams("/sensor/other/obstacle");
-          obstacle_lock_.lock();
-          obstacle_infos_[id] = ObstacleInfo(parent_name, "no obstacle", -1.0, -1.0, 0u);
-          obstacle_lock_.unlock();
-        }
-        auto dummy_id = dummy_sensor->GetId();
-        recorded_dummy_sensor_ids_.insert(dummy_id);
-        dummy_sensors_.insert({id, dummy_sensor});
-        double rotation_frequency = 10.0;
-        if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
-                                      "sensor.lidar")) {
-          for (const auto& attribute : sensor_ptr->GetAttributes()) {
-            if (attribute.GetId() == "rotation_frequency") {
-              rotation_frequency = std::stod(attribute.GetValue());
+        if (is_this_sensor_allow_listen && !SensorAllowListenStatus(id)) {
+          auto type_id = actor_ptr->GetTypeId();
+          real_sensor_type_[id] = type_id;
+          auto dummy_sensor_with_parent_name = CreateDummySensor(sensor_ptr);
+          auto parent_name = dummy_sensor_with_parent_name.first;
+          auto dummy_sensor = dummy_sensor_with_parent_name.second;
+          if (dummy_sensor == nullptr) {
+            continue;
+          }
+          LOG_INFO("Listen sensor: %u, type is: %s. Create dummy sensor: %u", id,
+                  type_id.c_str(), dummy_sensor->GetId());
+          if (utils::Utils::IsStartWith(type_id,
+                "sensor.lidar")) {
+            AddStreamNameSensorIdRelation("/lidar/points", id);
+          }
+          if (utils::Utils::IsStartWith(type_id,
+                "sensor.camera")) {
+            AddCameraStream(id, "/camera/" + type_id.substr(14) + "/" + std::to_string(id));
+            AddStreamNameSensorIdRelation("/camera/" + type_id.substr(14) + "/" + std::to_string(id), id);
+          }
+          if (utils::Utils::IsStartWith(type_id, "sensor.other.collision")) {
+            AddTableStreams("/sensor/other/collision");
+            AddStreamNameSensorIdRelation("/sensor/other/collision", id);
+            collision_lock_.lock();
+            collision_events_[id] = CollisionEvent(0u, 0u, parent_name, "no collision", -1, 0u);
+            collision_lock_.unlock();
+          }
+          if (utils::Utils::IsStartWith(type_id, "sensor.other.gnss")) {
+            AddTableStreams("/sensor/other/gnss");
+            AddStreamNameSensorIdRelation("/sensor/other/gnss", id);
+          }
+          if (type_id == "sensor.other.obstacle") {
+            AddTableStreams("/sensor/other/obstacle");
+            AddStreamNameSensorIdRelation("/sensor/other/obstacle", id);
+            obstacle_lock_.lock();
+            obstacle_infos_[id] = ObstacleInfo(parent_name, "no obstacle", -1.0, -1.0, 0u);
+            obstacle_lock_.unlock();
+          }
+          auto dummy_id = dummy_sensor->GetId();
+          recorded_dummy_sensor_ids_.insert(dummy_id);
+          dummy_sensors_.insert({id, dummy_sensor});
+          double rotation_frequency = 10.0;
+          if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
+                                        "sensor.lidar")) {
+            for (const auto& attribute : sensor_ptr->GetAttributes()) {
+              if (attribute.GetId() == "rotation_frequency") {
+                rotation_frequency = std::stod(attribute.GetValue());
+              }
             }
           }
+          dummy_sensor->Listen(std::bind(
+            &CarlaProxy::HandleSensorData, this, id, rotation_frequency, type_id, parent_name, std::placeholders::_1
+          ));
+          real_dummy_sensors_relation_.insert({id, dummy_id});
         }
-        dummy_sensor->Listen(std::bind(
-          &CarlaProxy::HandleSensorData, this, id, rotation_frequency, type_id, parent_name, std::placeholders::_1
-        ));
-        real_dummy_sensors_relation_.insert({id, dummy_id});
       }
       if (recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
         tmp_real_sensors.insert(id);
+      }
+      if (!is_this_sensor_allow_listen && SensorAllowListenStatus(id)) {
+        to_stop_listen_sensors.insert(id);
       }
       continue;
     }
@@ -497,52 +548,95 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   }
   for (const auto& id : to_delete_sensor_ids) {
-    LOG_INFO("Stop listening sensor: %u", id);
+    if (dummy_sensors_.find(id) != dummy_sensors_.end()) {
+      LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
+      dummy_sensors_[id]->Stop();
+      dummy_sensors_[id]->Destroy();
+    }
+    // LOG_INFO("NORMAL DELETE SENSOR");
     // auto dummy_id = real_dummy_sensors_relation_[id];
     // recorded_dummy_sensor_ids_.erase(dummy_id);
-    dummy_sensors_[id]->Stop();
-    dummy_sensors_[id]->Destroy();
     dummy_sensors_.erase(id);
     real_dummy_sensors_relation_.erase(id);
     real_sensors_.erase(id);
 
-    image_data_lock_.lock();
-    if (image_data_queues_.find(id) != image_data_queues_.end()) {
+    stream_settings_lock_.lock();
+    is_sensor_allow_listen_.erase(id);
+    sensor_allow_listen_status_.erase(id);
+    stream_settings_lock_.unlock();
+
+    auto type_id = real_sensor_type_[id];
+    real_sensor_type_.erase(id);
+
+    if (utils::Utils::IsStartWith(type_id, "sensor.camera")) {
+      image_data_lock_.lock();
       RemoveCameraStream(id);
-      image_data_queues_.erase(id);
-      is_image_received_[id] = true;
+      if (image_data_queues_.find(id) != image_data_queues_.end()) {
+        image_data_queues_.erase(id);
+        is_image_received_.erase(id);
+      }
+      image_data_lock_.unlock();
+      continue;
     }
-    image_data_lock_.unlock();
+ 
 
-    lidar_data_lock_.lock();
-    lidar_data_queues_.erase(id);
-    lidar_data_lock_.unlock();
-
-    collision_lock_.lock();
-    bool is_previous_empty = collision_events_.empty();
-    collision_events_.erase(id);
-    if (collision_events_.empty() && !is_previous_empty) {
-      RemoveTableStreams("/sensor/other/collision");
+    if (utils::Utils::IsStartWith(type_id, "sensor.lidar")) {
+      lidar_data_lock_.lock();
+      lidar_data_queues_.erase(id);
+      lidar_data_lock_.unlock();
+      continue;
     }
-    collision_lock_.unlock();
+    
 
-    gnss_lock_.lock();
-    is_previous_empty = gnss_infos_.empty();
-    gnss_infos_.erase(id);
-    if (gnss_infos_.empty() && !is_previous_empty) {
-      RemoveTableStreams("/sensor/other/gnss");
+    if (type_id == "sensor.other.collision") {
+      collision_lock_.lock();
+      bool is_previous_empty = collision_events_.empty();
+      collision_events_.erase(id);
+      if (collision_events_.empty() && !is_previous_empty) {
+        RemoveTableStreams("/sensor/other/collision");
+      }
+      collision_lock_.unlock();
+      continue;
     }
-    gnss_lock_.unlock();
 
-    obstacle_lock_.lock();
-    is_previous_empty = obstacle_infos_.empty();
-    obstacle_infos_.erase(id);
-    if (obstacle_infos_.empty() && !is_previous_empty) {
-      RemoveTableStreams("/sensor/other/obstacle");
+
+    if (type_id == "sensor.other.gnss") {
+      gnss_lock_.lock();
+      auto is_previous_empty = gnss_infos_.empty();
+      gnss_infos_.erase(id);
+      if (gnss_infos_.empty() && !is_previous_empty) {
+        RemoveTableStreams("/sensor/other/gnss");
+      }
+      gnss_lock_.unlock();
+      continue;
     }
-    obstacle_lock_.unlock();
+
+    if (type_id == "sensor.other.obstacle") {
+      obstacle_lock_.lock();
+      auto is_previous_empty = obstacle_infos_.empty();
+      obstacle_infos_.erase(id);
+      if (obstacle_infos_.empty() && !is_previous_empty) {
+        RemoveTableStreams("/sensor/other/obstacle");
+      }
+      obstacle_lock_.unlock();
+      continue;
+    }
   }
+
   real_sensors_ = std::move(tmp_real_sensors);
+
+  for (const auto id : to_stop_listen_sensors) {
+    if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
+      LOG_WARNING("Sensor %u does not have matching dummy sensor.", id);
+      continue;
+    }
+    sensor_allow_listen_status_[id] = false;
+    LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
+    dummy_sensors_[id]->Stop();
+    dummy_sensors_[id]->Destroy();
+    dummy_sensors_.erase(id);
+    real_dummy_sensors_relation_.erase(id);
+  }
 
 
   point_3d_t ego_position(0, 0, 0);
@@ -692,6 +786,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   for (auto image_id : to_delete_image_ids) {
     image_data_queues_.erase(image_id);
+    is_image_received_.erase(image_id);
     last_received_images_.erase(image_id);
   }
   image_data_lock_.unlock();
@@ -704,21 +799,29 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   } else {
     for (auto& [camera_id, image_str] : tmp_non_experimental_server_images_) {
-        xviz_builder.Primitive(camera_streams_[camera_id]).Image(std::move(image_str));
+      xviz_builder.Primitive(camera_streams_[camera_id]).Image(std::move(image_str));
     }
   }
 
 
-  lidar_data_lock_.lock();
   XVIZPrimitiveBuilder& point_cloud_builder = xviz_builder.Primitive("/lidar/points");
   std::vector<double> points;
+  std::vector<uint32_t> to_delete_lidar_ids;
+  lidar_data_lock_.lock();
   for (auto& [lidar_id, point_cloud_queue] : lidar_data_queues_) {
+    if (real_dummy_sensors_relation_.find(lidar_id) == real_dummy_sensors_relation_.end()) {
+      to_delete_lidar_ids.push_back(lidar_id);
+      continue;
+    }
     for (auto& point_cloud : point_cloud_queue) {
       points.insert(points.end(), point_cloud.GetPoints().begin(), point_cloud.GetPoints().end());
     }
   }
-  lidar_data_lock_.unlock();
 
+  for (const auto lidar_id : to_delete_lidar_ids) {
+    lidar_data_queues_.erase(lidar_id);
+  }
+  lidar_data_lock_.unlock();
 
   if (!points.empty() && IsStreamAllowTransmission("/lidar/points")) {
     point_cloud_builder.Points(std::move(points));
