@@ -87,7 +87,18 @@ class CarlaProxy {
   void AddTrafficLights(
       xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
       boost::shared_ptr<carla::client::TrafficLight> traffic_light);
-  void AddTrafficLightAreas();
+  void AddStopSigns(
+      xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
+      boost::shared_ptr<carla::client::Actor> stop_sign);
+  void AddSpeedLimit(
+      xviz::XVIZPrimitiveBuilder& xviz_primitive_builder,
+      boost::shared_ptr<carla::client::Actor> speed_limit);
+
+  void AddTrafficElements();
+  void AddTrafficLightAreas(boost::shared_ptr<carla::client::Actor> tl,
+    carla::SharedPtr<carla::client::Map> map_ptr);
+  void AddStopSignAreas(boost::shared_ptr<carla::client::Actor> stop_sign,
+    carla::SharedPtr<carla::client::Map> map_ptr);
 
   bool IsStreamAllowTransmission(const std::string& stream_name);
   bool IsSensorAllowListen(uint32_t sensor_id);
@@ -121,6 +132,8 @@ class CarlaProxy {
     const std::string& type_id, const std::string& parent_name, carla::SharedPtr<carla::sensor::SensorData> data);
 
   std::unordered_map<uint32_t, std::vector<std::vector<double>>> traffic_lights_{};
+  std::unordered_map<uint32_t, std::vector<std::vector<double>>> stop_signs_{};
+  std::unordered_map<uint32_t, bool> is_stop_sign_vertical_{};
 
   std::string carla_host_{"localhost"};
   uint16_t carla_port_{2000u};
@@ -191,6 +204,14 @@ class CarlaProxy {
   boost::unordered_set<boost::shared_ptr<
       boost::beast::websocket::stream<boost::asio::ip::tcp::socket>>>
       ws_ptrs_;
+
+
+  // drawing pixels
+  const static std::vector<std::vector<carla::geom::Vector3D>> stop_word_pixels_;
+  const static std::vector<carla::geom::Vector3D> stop_sign_border_;
+  const static std::vector<carla::geom::Vector3D> stop_sign_line_;
+  const static double stop_word_pixels_scale_;
+  const static double stop_word_pixels_shift_;
 };
 
 }  // namespace carlaviz
