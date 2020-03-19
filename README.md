@@ -4,7 +4,7 @@ Visualize carla in the web browser.
 
 Now support Carla 0.9.6
 
-<img src="https://github.com/wx9698/carlaviz/raw/master/docs/images/demo.png" style="width: 80%; margin-left: 10%"></img>
+<img src="https://github.com/wx9698/carlaviz/raw/master/docs/images/demo1.png"></img>
 
 ## Instructions
 ### Docker image

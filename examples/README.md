@@ -1,7 +1,7 @@
 
 ## CarlaViz example
 
-This example spawns one ego vehicle with two other vehicles and attaches a camera and a lidar to the ego vehicle. It also draws the trajectory and velocity of the ego vehicle as shown [here](https://github.com/wx9698/carlaviz#carlaviz).
+This example spawns one ego vehicle with two other vehicles and attaches a camera and a lidar to the ego vehicle. It also draws the trajectory and velocity of the ego vehicle as shown [here](https://github.com/wx9698/carlaviz#carlaviz-).
 
 ### Prerequisite:
 1. python3

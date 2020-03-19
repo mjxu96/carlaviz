@@ -3,14 +3,8 @@ compiler: gcc
 
 dist: bionic
 
-services:
-  - docker
-
 before_install:
   - sudo apt-get update 
-
-  # test docker
-  - docker run hello-world
 
 install: 
   # building tool
@@ -31,5 +25,3 @@ script:
   # build xviz test
   - pushd backend/build && cmake ../ -DBUILD_TEST=ON && make xviz-test example-server example -j2 && ../third_party/xviz/bin/xviz-test && popd
 
-  # docker build
-  - pushd docker && docker build -t carlaviz:0.9.6 . && popd
