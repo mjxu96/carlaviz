@@ -183,6 +183,9 @@ class CarlaProxy {
   std::mutex imu_lock_;
   std::unordered_map<uint32_t, utils::IMUInfo> imu_infos_{};
 
+  std::mutex radar_lock_;
+  std::unordered_map<uint32_t, utils::RadarInfo> radar_infos_{};
+
   // Carla sensor data related
   std::pair<std::string, boost::shared_ptr<carla::client::Sensor>>  CreateDummySensor(
       boost::shared_ptr<carla::client::Sensor> real_sensor);
@@ -208,7 +211,7 @@ class CarlaProxy {
   utils::IMUInfo GetIMUInfo(const carla::sensor::data::IMUMeasurement& imu_measurement,
     const std::string& parent_name);
 
-  utils::RadarInfo GetRadarInfo(const carla::sensor::data::IMUMeasurement& imu_measurement);
+  utils::RadarInfo GetRadarInfo(const carla::sensor::data::RadarMeasurement& radar_measurement);
 
   // Websocket related
   std::mutex clients_addition_lock_;

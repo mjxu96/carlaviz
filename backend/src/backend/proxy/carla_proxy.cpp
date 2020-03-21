@@ -102,6 +102,13 @@ void InitialLodePNGSettings(LodePNGState& state, LodePNGColorType colortype=Lode
   settings->custom_deflate = 0;
   settings->custom_context = 0;
 }
+
+carla::geom::Vector3D GetXYZFromRadarData(double altitude, double azimuth, double depth) {
+  double z = depth * std::sin(altitude);
+  double y = depth * std::cos(altitude) * std::sin(azimuth);
+  double x = depth * std::cos(altitude) * std::cos(azimuth);
+  return carla::geom::Vector3D(x, y, z);
+}
  
 void FlatVector(std::vector<double>& v, const std::vector<double>& to_add, int neg_factor = 1) {
   v.push_back(to_add[0]);
@@ -421,6 +428,14 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
               "\"point_color_mode\": \"ELEVATION\","
               "\"radius_pixels\": 2.0"
             "}")
+        .Stream("/radar/points")
+          .Category(xviz::StreamMetadata::PRIMITIVE)
+          .Type(xviz::StreamMetadata::POINT)
+          .Coordinate(xviz::StreamMetadata::IDENTITY)
+          .StreamStyle(
+            "{"
+              "\"radius_pixels\": 2.0"
+            "}")
         .Stream("/drawing/polylines")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
           .Type(Primitive::StreamMetadata_PrimitiveType_POLYLINE)
@@ -520,6 +535,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           if (utils::Utils::IsStartWith(type_id,
                 "sensor.lidar")) {
             AddStreamNameSensorIdRelation("/lidar/points", id);
+          }
+          if (type_id == "sensor.other.radar") {
+            AddStreamNameSensorIdRelation("/radar/points", id);
           }
           if (utils::Utils::IsStartWith(type_id,
                 "sensor.camera")) {
@@ -637,6 +655,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       lidar_data_queues_.erase(id);
       lidar_data_lock_.unlock();
       continue;
+    }
+
+    if (type_id == "sensor.other.radar") {
+      radar_lock_.lock();
+      radar_infos_.erase(id);
+      radar_lock_.unlock();
     }
     
 
@@ -898,6 +922,23 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   if (!points.empty() && IsStreamAllowTransmission("/lidar/points")) {
     point_cloud_builder.Points(std::move(points));
   }
+
+  std::vector<double> radar_points;
+  std::vector<uint8_t> radar_colors;
+  radar_lock_.lock();
+  if (IsStreamAllowTransmission("/radar/points")) {
+    for (auto& [id, radar_info] : radar_infos_) {
+      radar_points.insert(radar_points.end(), radar_info.points.begin(), radar_info.points.end());
+      radar_colors.insert(radar_colors.end(), radar_info.colors.begin(), radar_info.colors.end());
+    }
+  }
+  radar_lock_.unlock();
+
+  if (!radar_points.empty()) {
+    xviz_builder.Primitive("/radar/points").Points(std::move(radar_points))
+      .Colors(std::move(radar_colors));
+  }
+
 
   collision_lock_.lock();
   if (!collision_events_.empty() && IsStreamAllowTransmission("/sensor/other/collision")) {
@@ -1304,6 +1345,20 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     return;
   }
 
+  if (type_id == "sensor.other.radar") {
+    auto radar_data = boost::dynamic_pointer_cast<
+      carla::sensor::data::RadarMeasurement>(data);
+    if (radar_data == nullptr) {
+      LOG_WARNING("Data received from %s is not data data", type_id.c_str());
+      return;
+    }
+    auto radar_info = GetRadarInfo(*radar_data);
+    radar_lock_.lock();
+    radar_infos_[id] = std::move(radar_info);
+    radar_lock_.unlock();
+    return;
+  }
+
   // collision
   if (type_id == "sensor.other.collision") {
     auto collision_data = boost::dynamic_pointer_cast<
@@ -1523,6 +1578,34 @@ utils::IMUInfo CarlaProxy::GetIMUInfo(const carla::sensor::data::IMUMeasurement&
     imu_measurement.GetCompass(), {gyroscope.x, gyroscope.y, gyroscope.z});
 }
 
-utils::RadarInfo CarlaProxy::GetRadarInfo(const carla::sensor::data::IMUMeasurement& imu_measurement) {
-
+utils::RadarInfo CarlaProxy::GetRadarInfo(const carla::sensor::data::RadarMeasurement& radar_measurement) {
+  std::vector<double> points(radar_measurement.GetDetectionAmount() * 3u);
+  std::vector<uint8_t> colors(radar_measurement.GetDetectionAmount() * 4u);
+  auto transform = radar_measurement.GetSensorTransform();
+  size_t i = 0u;
+  for (const auto& radar_point : radar_measurement) {
+    auto xyz = GetXYZFromRadarData(radar_point.altitude, radar_point.azimuth, radar_point.depth);
+    transform.TransformPoint(xyz);
+    points[3*i] = xyz.x;
+    points[3*i + 1] = -xyz.y;
+    points[3*i + 2] = xyz.z;
+    if (std::abs(radar_point.velocity) < 0.01) {
+      colors[4 * i] = 255u;
+      colors[4 * i + 1] = 255u;
+      colors[4 * i + 2] = 255u;
+      colors[4 * i + 3] = 255u;
+    } else if (radar_point.velocity < 0) {
+      colors[4 * i] = 255u;
+      colors[4 * i + 1] = 0u;
+      colors[4 * i + 2] = 0u;
+      colors[4 * i + 3] = 255u;
+    } else {
+      colors[4 * i] = 0u;
+      colors[4 * i + 1] = 0u;
+      colors[4 * i + 2] = 255u;
+      colors[4 * i + 3] = 255u;
+    }
+    i++;
+  }
+  return RadarInfo(std::move(points), std::move(colors));
 }
