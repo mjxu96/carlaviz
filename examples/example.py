@@ -66,9 +66,7 @@ def main():
         lidar.listen(lambda data: do_something(data))
 
         # tick to generate these actors in the game world
-        print('before tick')
         world.tick()
-        print('tick')
 
         # save vehicles' trajectories to draw in the frontend
         trajectories = [[], []]
