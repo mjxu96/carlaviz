@@ -405,13 +405,12 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
           .StyleClass(std::string("yellow_state"), std::string("{\"fill_color\": \"#FFFF00\"}"))
           .StyleClass(std::string("green_state"), std::string("{\"fill_color\": \"#00FF00\"}"))
           .StyleClass(std::string("unknown"), std::string("{\"fill_color\": \"#FFFFFF\"}"))
-        // .Stream("/traffic/speed_limits")
+        // .Stream("/traffic/cross_walks")
         //   .Category(xviz::StreamMetadata::PRIMITIVE)
-        //   .Type(xviz::StreamMetadata::TEXT)
+        //   .Type(xviz::StreamMetadata::CIRCLE)
         //   .StreamStyle(
         //     "{"
-        //       "\"fill_color\": \"#FFFFFF\","
-        //       "\"text_size\": 25"
+        //       "\"fill_color\": \"#FFFFFF\""
         //     "}")
         .Stream("/lidar/points")
           .Category(Category::StreamMetadata_Category_PRIMITIVE)
@@ -545,6 +544,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
             obstacle_infos_[id] = ObstacleInfo(parent_name, "no obstacle", -1.0, -1.0, 0u);
             obstacle_lock_.unlock();
           }
+          if (type_id == "sensor.other.imu") {
+            AddTableStreams("/sensor/other/imu");
+            AddStreamNameSensorIdRelation("/sensor/other/imu", id);
+          }
           auto dummy_id = dummy_sensor->GetId();
           recorded_dummy_sensor_ids_.insert(dummy_id);
           dummy_sensors_.insert({id, dummy_sensor});
@@ -670,6 +673,17 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       obstacle_lock_.unlock();
       continue;
     }
+
+    if (type_id == "sensor.other.imu") {
+      imu_lock_.lock();
+      auto is_previous_empty = imu_infos_.empty();
+      imu_infos_.erase(id);
+      if (imu_infos_.empty() && is_previous_empty) {
+        RemoveTableStreams("/sensor/other/imu");
+      }
+      imu_lock_.unlock();
+      continue;
+    }
   }
 
   real_sensors_ = std::move(tmp_real_sensors);
@@ -753,6 +767,19 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   std::vector<std::vector<double>> walker_vector;
   std::vector<uint32_t> walker_ids;
 
+  bool is_traffic_lights_allow_transmission = 
+    IsStreamAllowTransmission("/traffic/traffic_lights");
+  bool is_stop_signs_allow_transmission = 
+    IsStreamAllowTransmission("/traffic/stop_signs");
+
+  // auto map_ptr = world_ptr_->GetMap();
+  // auto cross_walks = map_ptr->GetAllCrosswalkZones();
+  // std::cout << map_ptr->GetName() << " cross: " << cross_walks.size() << std::endl;
+  // for (auto& point : cross_walks) {
+  //   xviz_builder.Primitive("/traffic/cross_walks")
+  //     .Circle({point.x, -point.y, point.z}, 4.0);
+  // }
+
   for (const auto& actor_pair : actors_) {
     if (ego_actor_ != nullptr && ego_actor_->GetId() == actor_pair.first) {
       continue;
@@ -769,14 +796,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       walker_ids.push_back(actor_pair.first);
       continue;
     }
-    if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")) {
+    if (Utils::IsStartWith(actor_ptr->GetTypeId(), "traffic.traffic_light")
+        && is_traffic_lights_allow_transmission) {
       auto traffic_light =
           boost::static_pointer_cast<carla::client::TrafficLight>(actor_ptr);
       AddTrafficLights(xviz_builder.Primitive("/traffic/traffic_lights"),
                         traffic_light);
       continue;
     }
-    if (actor_ptr->GetTypeId() == "traffic.stop") {
+    if (actor_ptr->GetTypeId() == "traffic.stop" && 
+        is_stop_signs_allow_transmission) {
       AddStopSigns(xviz_builder.Primitive("/traffic/stop_signs"),
                     actor_ptr);
       continue;
@@ -914,7 +943,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     ui_primitive_builder
       .Column("Self actor", TreeTableColumn::STRING)
       .Column("Other actor", TreeTableColumn::STRING)
-      .Column("Detection distance", TreeTableColumn::DOUBLE)
+      .Column("Distance", TreeTableColumn::DOUBLE)
       .Column("Timestamp", TreeTableColumn::DOUBLE)
       .Column("Frame", TreeTableColumn::INT32);
     size_t row_id = 0u;
@@ -928,6 +957,29 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   }
   obstacle_lock_.unlock();
+
+  imu_lock_.lock();
+  if (!imu_infos_.empty() && IsStreamAllowTransmission("/sensor/other/imu")) {
+    XVIZUIPrimitiveBuilder& ui_primitive_builder = xviz_builder.UIPrimitive("/sensor/other/imu");
+    ui_primitive_builder
+      .Column("Actor", TreeTableColumn::STRING)
+      .Column("Accelerometer", TreeTableColumn::STRING)
+      .Column("Gyroscope", TreeTableColumn::STRING)
+      .Column("Compass", TreeTableColumn::DOUBLE);
+    size_t row_id = 0u;
+    size_t current_frame = world_snapshots.GetFrame();
+    for (auto& [id, info] : imu_infos_) {
+      std::stringstream ss_acc, ss_gyro;
+      ss_acc << "[" << std::fixed << std::setprecision(2) << info.accelerometer[0]
+        << ", " << info.accelerometer[1] << ", " << info.accelerometer[2] << "]";
+      ss_gyro << "[" << std::fixed << std::setprecision(2) << info.gyroscope[0]
+        << ", " << info.gyroscope[1] << ", " << info.gyroscope[2] << "]";
+      ui_primitive_builder
+        .Row(row_id, {info.self_actor_name, ss_acc.str(), ss_gyro.str(), std::to_string(info.compass)});
+        row_id++;
+    }
+  }
+  imu_lock_.unlock();
 
   return xviz_builder;  //.GetData();
 }
@@ -1297,6 +1349,20 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     return;
   }
 
+  if (type_id == "sensor.other.imu") {
+    auto imu_data = boost::dynamic_pointer_cast<
+      carla::sensor::data::IMUMeasurement>(data);
+    if (imu_data == nullptr) {
+      LOG_WARNING("Data received from %s is not imu data", type_id.c_str());
+      return;
+    }
+    auto imu_info = GetIMUInfo(*imu_data, parent_name);
+    imu_lock_.lock();
+    imu_infos_[id] = std::move(imu_info);
+    imu_lock_.unlock();
+    return;
+  }
+
   LOG_WARNING("Receive unhandled data %s", type_id.c_str());
 }
 
@@ -1447,4 +1513,16 @@ utils::ObstacleInfo CarlaProxy::GetObstacleInfo(const carla::sensor::data::Obsta
     other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
   }
   return ObstacleInfo(parent_name, other_actor_name, obs_event.GetDistance(), obs_event.GetTimestamp(), obs_event.GetFrame());
+}
+
+utils::IMUInfo CarlaProxy::GetIMUInfo(const carla::sensor::data::IMUMeasurement& imu_measurement,
+    const std::string& parent_name) {
+  auto accelerometer = imu_measurement.GetAccelerometer();
+  auto gyroscope = imu_measurement.GetGyroscope();
+  return IMUInfo(parent_name, {accelerometer.x, accelerometer.y, accelerometer.z}, 
+    imu_measurement.GetCompass(), {gyroscope.x, gyroscope.y, gyroscope.z});
+}
+
+utils::RadarInfo CarlaProxy::GetRadarInfo(const carla::sensor::data::IMUMeasurement& imu_measurement) {
+
 }

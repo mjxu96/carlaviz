@@ -111,6 +111,13 @@ double ObstacleInfo::GetTimestamp() const {
   return timestamp_;
 }
 
+IMUInfo::IMUInfo(const std::string& actor_name, const std::vector<double>& acce, double comp,
+    const std::vector<double>& gyro) : self_actor_name(actor_name), accelerometer(acce), compass(comp),
+      gyroscope(gyro) {}
+
+RadarInfo::RadarInfo(std::vector<double>&& p, std::vector<uint8_t>&& c) :
+  points(std::move(p)), colors(std::move(c)) {}
+
 std::string XodrGeojsonConverter::Convert(std::string xodr) {
   carla::client::Map map("map", xodr);
 

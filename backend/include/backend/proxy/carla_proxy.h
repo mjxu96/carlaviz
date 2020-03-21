@@ -33,11 +33,14 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Transform.h"
 #include "carla/image/ImageView.h"
+
 #include "carla/sensor/data/Image.h"
 #include "carla/sensor/data/LidarMeasurement.h"
 #include "carla/sensor/data/CollisionEvent.h"
 #include "carla/sensor/data/GnssMeasurement.h"
 #include "carla/sensor/data/ObstacleDetectionEvent.h"
+#include "carla/sensor/data/IMUMeasurement.h"
+#include "carla/sensor/data/RadarMeasurement.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
@@ -177,6 +180,9 @@ class CarlaProxy {
   std::mutex obstacle_lock_;
   std::unordered_map<uint32_t, utils::ObstacleInfo> obstacle_infos_{};
 
+  std::mutex imu_lock_;
+  std::unordered_map<uint32_t, utils::IMUInfo> imu_infos_{};
+
   // Carla sensor data related
   std::pair<std::string, boost::shared_ptr<carla::client::Sensor>>  CreateDummySensor(
       boost::shared_ptr<carla::client::Sensor> real_sensor);
@@ -198,6 +204,11 @@ class CarlaProxy {
 
   utils::ObstacleInfo GetObstacleInfo(const carla::sensor::data::ObstacleDetectionEvent& obs_event,
     const std::string& parent_name);
+
+  utils::IMUInfo GetIMUInfo(const carla::sensor::data::IMUMeasurement& imu_measurement,
+    const std::string& parent_name);
+
+  utils::RadarInfo GetRadarInfo(const carla::sensor::data::IMUMeasurement& imu_measurement);
 
   // Websocket related
   std::mutex clients_addition_lock_;

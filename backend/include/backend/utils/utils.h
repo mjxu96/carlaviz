@@ -124,6 +124,23 @@ class ObstacleInfo {
   size_t frame_{0u};
 };
 
+struct IMUInfo {
+  IMUInfo() = default;
+  IMUInfo(const std::string& actor_name, const std::vector<double>& acce, double comp,
+    const std::vector<double>& gyro);
+  std::string self_actor_name;
+  std::vector<double> accelerometer;
+  double compass;
+  std::vector<double> gyroscope;
+};
+
+struct RadarInfo {
+  RadarInfo() = default;
+  RadarInfo(std::vector<double>&& p, std::vector<uint8_t>&& c);
+  std::vector<double> points;
+  std::vector<uint8_t> colors;
+};
+
 class XodrGeojsonConverter {
  public:
   static std::string Convert(std::string xodr);
