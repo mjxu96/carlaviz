@@ -43,7 +43,7 @@ def main():
         ego_vehicle.set_autopilot(True)
         for i in range(3):
             other_vehicles[i].set_autopilot(True)
-        
+
         # attach a camera and a lidar to the ego vehicle
         blueprint_camera = world.get_blueprint_library().find('sensor.camera.rgb')
         blueprint_camera.set_attribute('image_size_x', '640')
@@ -55,7 +55,7 @@ def main():
         camera.listen(lambda data: do_something(data))
 
         blueprint_lidar = world.get_blueprint_library().find('sensor.lidar.ray_cast')
-        blueprint_lidar.set_attribute('range', '3000')
+        blueprint_lidar.set_attribute('range', '30')
         blueprint_lidar.set_attribute('rotation_frequency', '10')
         blueprint_lidar.set_attribute('channels', '32')
         blueprint_lidar.set_attribute('lower_fov', '-30')
@@ -66,7 +66,9 @@ def main():
         lidar.listen(lambda data: do_something(data))
 
         # tick to generate these actors in the game world
+        print('before tick')
         world.tick()
+        print('tick')
 
         # save vehicles' trajectories to draw in the frontend
         trajectories = [[], []]
@@ -85,9 +87,9 @@ def main():
             ego_velocity = ego_vehicle.get_velocity()
             velocity_str = "{:.2f}, ".format(ego_velocity.x) + "{:.2f}".format(ego_velocity.y) \
                     + ", {:.2f}".format(ego_velocity.z)
-            painter.draw_texts([velocity_str], 
+            painter.draw_texts([velocity_str],
                         [[ego_location.x, ego_location.y, ego_location.z + 10.0]], size=20)
-        
+
 
     finally:
         if previous_settings is not None:

@@ -18,15 +18,15 @@ class CarlaPainter(object):
 
     def draw_polylines(self, lines, color='#00FF00', width=2.5):
         """Draw several polylines in the CarlaViz frontend
-        
+
         Args:
-            lines (list): list of polylines to draw. Should be in the format of 
+            lines (list): list of polylines to draw. Should be in the format of
                           [line_1, line_2, line_3...]. Every line should be in the
                           format of [point_1, point_2, point_3...]. Every point should
                           be in the format of [p_x, p_y, p_z].
             color (str, optional): color represented in str. Defaults to '#00FF00'.
             width (float, optional): line width. Defaults to 2.5.
-        
+
         Raises:
             Exception: ValueError raised when the input format is not correct.
         """
@@ -47,15 +47,15 @@ class CarlaPainter(object):
                 self._logger.warning(e)
         else:
             self._draw_polylines(lines, color, width)
-    
+
     def draw_points(self, points):
         """Draw several points in the CarlaViz frontend
-        
+
         Args:
-            points (list): list of point to draw. Should be in the format of 
+            points (list): list of point to draw. Should be in the format of
                            [point_1, point_2, point_3...]. Every point should
-                           be in the format of [p_x, p_y, p_z]. 
-        
+                           be in the format of [p_x, p_y, p_z].
+
         Raises:
             Exception: ValueError raised when the input format is not correct.
         """
@@ -68,10 +68,10 @@ class CarlaPainter(object):
             self._draw_points([points])
         else:
             self._draw_points(points)
-    
+
     def draw_texts(self, messages, positions, color='#fff', size=13):
         """Draw several texts in the CarlaViz frontend
-        
+
         Args:
             messages (list): list of texts to draw. Should be in the format of
                              [str1, str2, str3...].
@@ -85,7 +85,7 @@ class CarlaPainter(object):
             self._draw_texts([messages], [positions], color, size)
         else:
             self._draw_texts(messages, positions, color, size)
-    
+
     def _draw_texts(self, messages, positions, color='#fff', size=13):
         if not isinstance(messages, list) or not isinstance(positions, list):
             raise ValueError('input messages and positions should be a list')
@@ -108,7 +108,7 @@ class CarlaPainter(object):
         except Exception as e:
             self._logger.error(e)
 
-        
+
     def _draw_points(self, points):
         data_dict = {}
         data_dict['type'] = 'point'
@@ -134,7 +134,7 @@ class CarlaPainter(object):
     def _set_up_logger(self, log_level=logging.INFO):
         stream_handler = logging.StreamHandler()
         log_formatter = logging.Formatter(
-            '[%(levelname)s] [RUNNER] [%(asctime)s] : %(message)s')
+            '[%(levelname)s] [PAINTER] [%(asctime)s] : %(message)s')
         stream_handler.setFormatter(log_formatter)
         stream_handler.setLevel(log_level)
         self._logger = logging.getLogger(__name__)
