@@ -1270,7 +1270,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
   // gnss event
   if (type_id == "sensor.other.gnss") {
     auto gnss_data = boost::dynamic_pointer_cast<
-      carla::sensor::data::GnssEvent>(data);
+      carla::sensor::data::GnssMeasurement>(data);
     if (gnss_data == nullptr) {
       LOG_WARNING("Data received from %s is not gnss data", type_id.c_str());
       return;
@@ -1431,10 +1431,10 @@ CollisionEvent CarlaProxy::GetCollision(const carla::sensor::data::CollisionEven
   return CollisionEvent(0u, 0u, parent_name, other_actor_name, collision_event.GetTimestamp(), collision_event.GetFrame());
 }
 
-utils::GNSSInfo CarlaProxy::GetGNSSInfo(const carla::sensor::data::GnssEvent& gnss_event,
+utils::GNSSInfo CarlaProxy::GetGNSSInfo(const carla::sensor::data::GnssMeasurement& gnss_measurement,
     const std::string& parent_name) {
-  return GNSSInfo(parent_name, gnss_event.GetLatitude(), gnss_event.GetLongitude(),
-                gnss_event.GetAltitude(), gnss_event.GetTimestamp());
+  return GNSSInfo(parent_name, gnss_measurement.GetLatitude(), gnss_measurement.GetLongitude(),
+                gnss_measurement.GetAltitude(), gnss_measurement.GetTimestamp());
 }
 
 utils::ObstacleInfo CarlaProxy::GetObstacleInfo(const carla::sensor::data::ObstacleDetectionEvent& obs_event,

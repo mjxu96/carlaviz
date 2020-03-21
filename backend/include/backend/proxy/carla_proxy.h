@@ -36,7 +36,7 @@
 #include "carla/sensor/data/Image.h"
 #include "carla/sensor/data/LidarMeasurement.h"
 #include "carla/sensor/data/CollisionEvent.h"
-#include "carla/sensor/data/GnssEvent.h"
+#include "carla/sensor/data/GnssMeasurement.h"
 #include "carla/sensor/data/ObstacleDetectionEvent.h"
 
 #include <boost/asio/ip/tcp.hpp>
@@ -193,7 +193,7 @@ class CarlaProxy {
   utils::CollisionEvent GetCollision(const carla::sensor::data::CollisionEvent& collision_event,
     const std::string& parent_name);
 
-  utils::GNSSInfo GetGNSSInfo(const carla::sensor::data::GnssEvent& gnss_event,
+  utils::GNSSInfo GetGNSSInfo(const carla::sensor::data::GnssMeasurement& gnss_measurement,
     const std::string& parent_name);
 
   utils::ObstacleInfo GetObstacleInfo(const carla::sensor::data::ObstacleDetectionEvent& obs_event,

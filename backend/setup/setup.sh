@@ -140,8 +140,11 @@ unset RPCLIB_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
-RECAST_BASENAME=recast-${CXX_TAG}
+# RECAST_COMMIT="c40188c796f089f89a42e0b939d934178dbcfc5c"
+# RECAST_BASENAME=recast-${CXX_TAG}
+RECAST_HASH=cdce4e
+RECAST_COMMIT=cdce4e1a270fdf1f3942d4485954cc5e136df1df
+RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
 
 RECAST_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
 RECAST_LIBPATH=${CARLA_BUILD_FOLDER}
@@ -156,7 +159,8 @@ rm -Rf \
 
 log "Retrieving Recast & Detour"
 
-git clone https://github.com/recastnavigation/recastnavigation.git ${RECAST_BASENAME}-source
+# git clone https://github.com/recastnavigation/recastnavigation.git ${RECAST_BASENAME}-source
+git clone https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
 
 pushd ${RECAST_BASENAME}-source >/dev/null
 
