@@ -15,7 +15,7 @@ source ${CARLA_FOLDER}/setup/environment.sh
 unset CARLA_FOLDER
 
 log "clean up previous build files"
-rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build 
+rm -rf ${CARLA_BUILD_FOLDER} ${CARLA_ROOT_FOLDER}/build
 rm -rf ${CARLA_ROOT_FOLDER}/include/lib/boost ${CARLA_ROOT_FOLDER}/include/lib/rpc ${CARLA_ROOT_FOLDER}/include/lib/gtest ${CARLA_ROOT_FOLDER}/include/lib/recast
 rm -rf ${CARLA_ROOT_FOLDER}/include/system
 rm -rf ${CARLA_ROOT_FOLDER}/include/lib
@@ -46,7 +46,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.69.0
+BOOST_VERSION=1.72.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
@@ -84,7 +84,7 @@ rm -Rf ${BOOST_BASENAME}-source
 rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
 cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}/boost
-cp ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
+cp -r ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
 
 rm -Rf ${BOOST_BASENAME}-install
 

@@ -14,6 +14,7 @@
 #include "carla/road/Road.h"
 #include "carla/road/RoadTypes.h"
 #include "carla/road/element/RoadInfo.h"
+#include "carla/road/Signal.h"
 
 #include <boost/iterator/transform_iterator.hpp>
 
@@ -49,6 +50,8 @@ namespace road {
 
     Junction *GetJunction(JuncId id);
 
+    const Junction *GetJunction(JuncId id) const;
+
     template <typename T>
     auto GetRoadInfo(const RoadId id, const double s) {
       return GetRoad(id).template GetInfo<T>(s);
@@ -67,6 +70,10 @@ namespace road {
       return _roads.size();
     }
 
+    const std::unordered_map<SignId, std::unique_ptr<Signal>> &GetSignals() const {
+      return _signals;
+    }
+
   private:
 
     friend class MapBuilder;
@@ -78,6 +85,8 @@ namespace road {
     std::unordered_map<RoadId, Road> _roads;
 
     std::unordered_map<JuncId, Junction> _junctions;
+
+    std::unordered_map<SignId, std::unique_ptr<Signal>> _signals;
   };
 
 } // namespace road

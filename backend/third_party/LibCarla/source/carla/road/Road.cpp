@@ -155,37 +155,15 @@ namespace road {
     return nullptr;
   }
 
-  carla::road::signal::Signal *Road::GetSignal(const SignId id) {
-    auto search = _signals.find(id);
-    if (search != _signals.end()) {
-      return &search->second;
-    }
-    return nullptr;
-  }
-
-  carla::road::signal::SignalReference *Road::GetSignalRef(const SignRefId id) {
-    const auto search = _sign_ref.find(id);
-    if (search != _sign_ref.end()) {
-      return &search->second;
-    }
-    return nullptr;
-  }
-
-  std::unordered_map<SignId, signal::Signal> *Road::getSignals() {
-    return &_signals;
-  }
-
-  std::unordered_map<SignId, signal::SignalReference> *Road::getSignalReferences() {
-    return &_sign_ref;
-  }
-
   element::DirectedPoint Road::GetDirectedPointIn(const double s) const {
     const auto clamped_s = geom::Math::Clamp(s, 0.0, _length);
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
 
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
-    const auto offset = static_cast<float>(lane_offset->GetPolynomial().Evaluate(clamped_s));
-
+    float offset = 0;
+    if(lane_offset){
+      offset = static_cast<float>(lane_offset->GetPolynomial().Evaluate(clamped_s));
+    }
     // Apply road's lane offset record
     element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
     // Unreal's Y axis hack (the minus on the offset)

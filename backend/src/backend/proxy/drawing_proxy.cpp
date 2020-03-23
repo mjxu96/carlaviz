@@ -98,14 +98,15 @@ void DrawingProxy::AddClient(
         CleanUpDrawing(id);
         return;
       }
-      std::ostringstream os;
-      os << boost::beast::buffers(buffer.data());
+      // std::ostringstream os;
+      // os << boost::beast::buffers(buffer.data());
+      std::string str = boost::beast::buffers_to_string(buffer.data());
 
       // auto polyline = DecodeToPolylines(os.str());
       // polyline_update_lock_.lock();
       // polylines_[id] = polyline;
       // polyline_update_lock_.unlock();
-      Decode(os.str(), id);
+      Decode(str, id);
     }
 
   } catch (boost::system::system_error const& se) {
