@@ -32,7 +32,7 @@ void FrontendClient::StartRead() {
         Json setting_json = Json::parse(read_data);
         stream_settings_callback_(setting_json.get<std::unordered_map<std::string, bool>>());
       } catch (const std::exception& e) {
-        LOG_WARNING("When paring %s, get error: %s", read_data.c_str(),
+        CARLAVIZ_LOG_WARNING("When paring %s, get error: %s", read_data.c_str(),
           e.what());
       }
     }
@@ -40,7 +40,7 @@ void FrontendClient::StartRead() {
     if (std::strcmp(e.what(), "Operation canceled") != 0 &&
         std::strcmp(e.what(), "Broken pipe") != 0 &&
         std::strcmp(e.what(), "Connection reset by peer") != 0) {
-        LOG_ERROR("ERROR WHEN READING SETTING UPDATE %s", e.what());
+        CARLAVIZ_LOG_ERROR("ERROR WHEN READING SETTING UPDATE %s", e.what());
     }
   }
 }
@@ -109,7 +109,7 @@ void FrontendProxy::SendToAllClients(std::string&& message) {
   boost::beast::ostream(buffer) << std::move(message);
 
   std::unordered_set<uint32_t> to_delete_ids;
-  // LOG_INFO("string size %ld, sent size %ld", message.size(), buffer.size());
+  // CARLAVIZ_LOG_INFO("string size %ld, sent size %ld", message.size(), buffer.size());
 
   std::lock_guard<std::mutex> lock_guard(add_client_lock_);
   for (const auto& client_pair : frontend_clients_) {
@@ -125,9 +125,9 @@ void FrontendProxy::SendToAllClients(std::string&& message) {
           std::strcmp(se.what(), "Broken pipe") != 0 &&
           std::strcmp(se.what(), "Operation canceled") != 0 &&
           std::strcmp(se.what(), "Connection reset by peer")) {
-        LOG_ERROR("ERROR WHEN SENDDING UPDATE %s", se.what());
+        CARLAVIZ_LOG_ERROR("ERROR WHEN SENDDING UPDATE %s", se.what());
       } else {
-        LOG_INFO("Frontend connection closed");
+        CARLAVIZ_LOG_INFO("Frontend connection closed");
       }
     }
   }
@@ -137,7 +137,7 @@ void FrontendProxy::SendToAllClients(std::string&& message) {
 }
 
 void FrontendProxy::Accept() {
-  LOG_INFO("Waiting for a frontend to connect. Listening to port %u....",
+  CARLAVIZ_LOG_INFO("Waiting for a frontend to connect. Listening to port %u....",
            frontend_listen_port_);
   try {
     boost::asio::io_context ioc{1};
@@ -149,7 +149,7 @@ void FrontendProxy::Accept() {
       AddClient(std::move(socket));
     }
   } catch (const std::exception& e) {
-    LOG_ERROR("%s", e.what());
+    CARLAVIZ_LOG_ERROR("%s", e.what());
   }
 }
 
@@ -158,7 +158,7 @@ void FrontendProxy::AddClient(boost::asio::ip::tcp::socket socket) {
       boost::make_shared<websocket::stream<tcp::socket>>(std::move(socket));
   try {
     client_ptr->accept();
-    LOG_INFO("Frontend connected");
+    CARLAVIZ_LOG_INFO("Frontend connected");
 
     auto frontend_client = boost::make_shared<FrontendClient>(client_ptr, 
       stream_settings_callback_);
@@ -173,7 +173,7 @@ void FrontendProxy::AddClient(boost::asio::ip::tcp::socket socket) {
     if (se.code() != websocket::error::closed) {
       throw se;
     } else {
-      LOG_INFO("Frontend connection closed");
+      CARLAVIZ_LOG_INFO("Frontend connection closed");
     }
   }
 }

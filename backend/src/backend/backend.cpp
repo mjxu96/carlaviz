@@ -32,7 +32,7 @@ void Backend::SetTimeInterval(uint32_t time_interval) {
 void Backend::Run() {
   try {
     if (is_experimental_) {
-      LOG_INFO("Using experimental server");
+      CARLAVIZ_LOG_INFO("Using experimental server");
       server_->Serve();
     } else {
       while (true) {
@@ -51,28 +51,28 @@ void Backend::Run() {
         frontend_proxy_->SendToAllClients(std::move(output));
         // auto send_end = std::chrono::high_resolution_clock::now();
         /*
-        LOG_INFO("DATA TIME: %.3f", GetTime(start, data_end));
-        LOG_INFO("DRAWING TIME: %.3f", GetTime(data_end, drawing_end));
-        LOG_INFO("WRITER TIME: %.3f", GetTime(drawing_end, write_end));
-        LOG_INFO("SEND TIME: %.3f", GetTime(write_end, send_end));
-        LOG_INFO("TOTAL TIME: %.3f", GetTime(start, send_end));
-        LOG_INFO("-----------------------");
+        CARLAVIZ_LOG_INFO("DATA TIME: %.3f", GetTime(start, data_end));
+        CARLAVIZ_LOG_INFO("DRAWING TIME: %.3f", GetTime(data_end, drawing_end));
+        CARLAVIZ_LOG_INFO("WRITER TIME: %.3f", GetTime(drawing_end, write_end));
+        CARLAVIZ_LOG_INFO("SEND TIME: %.3f", GetTime(write_end, send_end));
+        CARLAVIZ_LOG_INFO("TOTAL TIME: %.3f", GetTime(start, send_end));
+        CARLAVIZ_LOG_INFO("-----------------------");
         */
       }
     }
   } catch (const std::exception& e) {
-    LOG_ERROR("%s", e.what());
+    CARLAVIZ_LOG_ERROR("%s", e.what());
     backend.Clear();
   }
 
 }
 
 void Backend::Clear() {
-  LOG_INFO("Start to clean all resources. Don't forcefully exit unless it takes too long!");
+  CARLAVIZ_LOG_INFO("Start to clean all resources. Don't forcefully exit unless it takes too long!");
   if (carla_proxy_ != nullptr) {
     carla_proxy_->Clear();
   }
-  LOG_INFO("All clear, exit! You may now forcefully exit if this program does not exit normally.");
+  CARLAVIZ_LOG_INFO("All clear, exit! You may now forcefully exit if this program does not exit normally.");
 }
 
 void Backend::Init() {
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
     backend.SetIsExperimental(true);
     uint32_t ti = std::stoi(std::string(argv[1]));
     if (ti < 50u) {
-      LOG_WARNING("The value %u is too small, reset to 50", ti);
+      CARLAVIZ_LOG_WARNING("The value %u is too small, reset to 50", ti);
       ti = 50u;
     }
     backend.SetTimeInterval(ti);

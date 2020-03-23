@@ -198,17 +198,17 @@ CarlaProxy::CarlaProxy(const std::string& carla_host, uint16_t carla_port, bool 
 
 void CarlaProxy::Init() {
   try {
-    LOG_INFO("Connecting to Carla Server on %s:%u...", carla_host_.c_str(),
+    CARLAVIZ_LOG_INFO("Connecting to Carla Server on %s:%u...", carla_host_.c_str(),
              carla_port_);
     client_ptr_ =
         boost::make_shared<carla::client::Client>(carla_host_, carla_port_);
     if (client_ptr_ == nullptr) {
-      LOG_ERROR("Carla client ptr is null. Exiting");
+      CARLAVIZ_LOG_ERROR("Carla client ptr is null. Exiting");
       return;
     } else {
       client_ptr_->SetTimeout(10s);
       std::string server_version = client_ptr_->GetServerVersion();
-      LOG_INFO("Connected to Carla Server, Server version is: %s",
+      CARLAVIZ_LOG_INFO("Connected to Carla Server, Server version is: %s",
                server_version.c_str());
     }
 
@@ -218,7 +218,7 @@ void CarlaProxy::Init() {
     AddTrafficElements();
 
   } catch (const std::exception& e) {
-    LOG_ERROR("%s", e.what());
+    CARLAVIZ_LOG_ERROR("%s", e.what());
     exit(1);
   }
 }
@@ -227,11 +227,11 @@ void CarlaProxy::Clear() {
   client_ptr_->SetTimeout(500ms);
   for (const auto&[id, dummy_sensor] : dummy_sensors_) {
     if (dummy_sensor->IsAlive()) {
-      LOG_INFO("Stop listening sensor: %u", id);
+      CARLAVIZ_LOG_INFO("Stop listening sensor: %u", id);
       dummy_sensor->Destroy();
     }
   }
-  LOG_INFO("Carla proxy clear!");
+  CARLAVIZ_LOG_INFO("Carla proxy clear!");
 }
 
 void CarlaProxy::SetUpdateMetadataCallback(const std::function<void(const std::string&)>& func) {
@@ -243,7 +243,7 @@ void CarlaProxy::SetTransmissionStreams(const std::unordered_map<std::string, bo
   stream_settings_ = stream_settings;
   for (const auto& [stream_name, is_on] : stream_settings_) {
     if (stream_name_sensor_id_map_.find(stream_name) == stream_name_sensor_id_map_.end()) {
-      // LOG_WARNING("Stream %s does not have a matching sensor", stream_name.c_str());
+      // CARLAVIZ_LOG_WARNING("Stream %s does not have a matching sensor", stream_name.c_str());
       continue;
     }
     for (auto sensor_id : stream_name_sensor_id_map_[stream_name]) {
@@ -284,17 +284,17 @@ void CarlaProxy::AddCameraStream(uint32_t camera_id, const std::string& stream_n
     camera_streams_[camera_id] == stream_name) {
     return;
   }
-  LOG_INFO("Add camera stream %u - %s", camera_id, name.c_str());
+  CARLAVIZ_LOG_INFO("Add camera stream %u - %s", camera_id, name.c_str());
   camera_streams_[camera_id] = name; 
   UpdateMetadataBuilder();
 }
 
 void CarlaProxy::RemoveCameraStream(uint32_t camera_id) {
   if (camera_streams_.find(camera_id) == camera_streams_.end()) {
-    LOG_WARNING("Remove invalid camera stream %u", camera_id);
+    CARLAVIZ_LOG_WARNING("Remove invalid camera stream %u", camera_id);
     return;
   }
-  LOG_INFO("Remove camera stream %u - %s", camera_id, camera_streams_[camera_id].c_str());
+  CARLAVIZ_LOG_INFO("Remove camera stream %u - %s", camera_id, camera_streams_[camera_id].c_str());
   camera_streams_.erase(camera_id);
   UpdateMetadataBuilder();
 }
@@ -311,17 +311,17 @@ void CarlaProxy::AddTableStreams(const std::string& sensor_type_name) {
   if (other_sensor_streams_.find(sensor_type_name) != other_sensor_streams_.end()) {
     return;
   }
-  LOG_INFO("Add sensor stream %s", sensor_type_name.c_str());
+  CARLAVIZ_LOG_INFO("Add sensor stream %s", sensor_type_name.c_str());
   other_sensor_streams_.insert(sensor_type_name);
   UpdateMetadataBuilder();
 }
 
 void CarlaProxy::RemoveTableStreams(const std::string& sensor_type_name) {
   if (other_sensor_streams_.find(sensor_type_name) == other_sensor_streams_.end()) {
-    LOG_WARNING("Remove invalid sensor stream %s", sensor_type_name.c_str());
+    CARLAVIZ_LOG_WARNING("Remove invalid sensor stream %s", sensor_type_name.c_str());
     return;
   }
-  LOG_INFO("Remove sensor stream %s", sensor_type_name.c_str());
+  CARLAVIZ_LOG_INFO("Remove sensor stream %s", sensor_type_name.c_str());
   other_sensor_streams_.erase(sensor_type_name);
   UpdateMetadataBuilder();
 }
@@ -469,7 +469,7 @@ std::string CarlaProxy::GetMetadata() {
 }
 
 void CarlaProxy::UpdateMetadata() {
-  LOG_INFO("Update metadata");
+  CARLAVIZ_LOG_INFO("Update metadata");
   frontend_proxy_update_metadata_callback_(metadata_builder_.GetMessage().ToObjectString());
 }
 
@@ -505,7 +505,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       actor_ptr = actor_it->second;
     }
     if (actor_ptr == nullptr) {
-      LOG_WARNING("Actor pointer is null, actor id: %u", id);
+      CARLAVIZ_LOG_WARNING("Actor pointer is null, actor id: %u", id);
       continue;
     }
     tmp_actors.insert({id, actor_ptr});
@@ -530,7 +530,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           if (dummy_sensor == nullptr) {
             continue;
           }
-          LOG_INFO("Listen sensor: %u, type is: %s. Create dummy sensor: %u", id,
+          CARLAVIZ_LOG_INFO("Listen sensor: %u, type is: %s. Create dummy sensor: %u", id,
                   type_id.c_str(), dummy_sensor->GetId());
           if (utils::Utils::IsStartWith(type_id,
                 "sensor.lidar")) {
@@ -619,11 +619,11 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   }
   for (const auto& id : to_delete_sensor_ids) {
     if (dummy_sensors_.find(id) != dummy_sensors_.end()) {
-      LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
+      CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
       dummy_sensors_[id]->Stop();
       dummy_sensors_[id]->Destroy();
     }
-    // LOG_INFO("NORMAL DELETE SENSOR");
+    // CARLAVIZ_LOG_INFO("NORMAL DELETE SENSOR");
     // auto dummy_id = real_dummy_sensors_relation_[id];
     // recorded_dummy_sensor_ids_.erase(dummy_id);
     dummy_sensors_.erase(id);
@@ -714,11 +714,11 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   for (const auto id : to_stop_listen_sensors) {
     if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
-      LOG_WARNING("Sensor %u does not have matching dummy sensor.", id);
+      CARLAVIZ_LOG_WARNING("Sensor %u does not have matching dummy sensor.", id);
       continue;
     }
     sensor_allow_listen_status_[id] = false;
-    LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
+    CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
     dummy_sensors_[id]->Stop();
     dummy_sensors_[id]->Destroy();
     dummy_sensors_.erase(id);
@@ -1040,7 +1040,7 @@ void CarlaProxy::AddStopSigns(
       boost::shared_ptr<carla::client::Actor> stop_sign) {
   auto id = stop_sign->GetId();
   if (stop_signs_.find(id) == stop_signs_.end()) {
-    LOG_WARNING("Stop sign %u should be added first.", id);
+    CARLAVIZ_LOG_WARNING("Stop sign %u should be added first.", id);
     return;
   }
   for (const auto& stoke : stop_signs_[id]) {
@@ -1057,7 +1057,7 @@ void CarlaProxy::AddTrafficLights(
     boost::shared_ptr<carla::client::TrafficLight> traffic_light) {
   auto id = traffic_light->GetId();
   if (traffic_lights_.find(id) == traffic_lights_.end()) {
-    LOG_WARNING("all traffic lights should be inserted first");
+    CARLAVIZ_LOG_WARNING("all traffic lights should be inserted first");
     return;
   }
 
@@ -1074,7 +1074,7 @@ void CarlaProxy::AddTrafficLights(
       state_str = "green_state";
       break;
     default:
-      LOG_WARNING("Unkown state");
+      CARLAVIZ_LOG_WARNING("Unkown state");
       break;
   }
   for (auto& polygon : traffic_lights_[id]) {
@@ -1144,7 +1144,7 @@ void CarlaProxy::AddTrafficLightAreas(boost::shared_ptr<carla::client::Actor> ac
     }
     auto tmp_waypoints = now_waypoint->GetNext(area_length);
     if (tmp_waypoints.empty()) {
-      LOG_WARNING(
+      CARLAVIZ_LOG_WARNING(
           "the waypoint of the trigger volume of a traffic light is too "
           "close to the intersection, the map does not show the volumn");
     } else {
@@ -1190,7 +1190,7 @@ void CarlaProxy::AddTrafficLightAreas(boost::shared_ptr<carla::client::Actor> ac
     }
     auto tmp_waypoints = now_waypoint->GetNext(area_length);
     if (tmp_waypoints.empty()) {
-      LOG_WARNING(
+      CARLAVIZ_LOG_WARNING(
           "the waypoint of the trigger volume of a traffic light is too "
           "close to the intersection, the map does not show the volumn");
     } else {
@@ -1219,7 +1219,7 @@ void CarlaProxy::AddStopSignAreas(boost::shared_ptr<carla::client::Actor> stop_s
     carla::SharedPtr<carla::client::Map> map_ptr) {
   auto stop_sign_waypoint = map_ptr->GetWaypoint(stop_sign->GetLocation());
   if (stop_sign_waypoint == nullptr) {
-    LOG_WARNING("Stop sign: %u cannot get its waypoint. Ignore this one.", stop_sign->GetId());
+    CARLAVIZ_LOG_WARNING("Stop sign: %u cannot get its waypoint. Ignore this one.", stop_sign->GetId());
     return;
   }
 
@@ -1294,7 +1294,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     auto image_data =
       boost::dynamic_pointer_cast<carla::sensor::data::Image>(data);
     if (image_data == nullptr) {
-      LOG_WARNING("Data received from %s is not image data", type_id.c_str());
+      CARLAVIZ_LOG_WARNING("Data received from %s is not image data", type_id.c_str());
       return;
     }
     utils::Image encoded_image;
@@ -1305,7 +1305,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     } else if (type_id == "sensor.camera.semantic_segmentation") {
       encoded_image = GetEncodedLabelImage(*image_data);
     } else {
-      LOG_ERROR("Unknown camera type: %s", type_id.c_str());
+      CARLAVIZ_LOG_ERROR("Unknown camera type: %s", type_id.c_str());
     }
     image_data_lock_.lock();
     if (image_data_queues_.find(id) != image_data_queues_.end()) {
@@ -1326,7 +1326,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     auto lidar_data = boost::dynamic_pointer_cast<
       carla::sensor::data::LidarMeasurement>(data);
     if (lidar_data == nullptr) {
-      LOG_WARNING("Data received from %s is not lidar data", type_id.c_str());
+      CARLAVIZ_LOG_WARNING("Data received from %s is not lidar data", type_id.c_str());
       return;
     }
     auto point_cloud = GetPointCloud(*(lidar_data));
@@ -1349,7 +1349,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     auto radar_data = boost::dynamic_pointer_cast<
       carla::sensor::data::RadarMeasurement>(data);
     if (radar_data == nullptr) {
-      LOG_WARNING("Data received from %s is not data data", type_id.c_str());
+      CARLAVIZ_LOG_WARNING("Data received from %s is not data data", type_id.c_str());
       return;
     }
     auto radar_info = GetRadarInfo(*radar_data);
@@ -1364,7 +1364,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     auto collision_data = boost::dynamic_pointer_cast<
       carla::sensor::data::CollisionEvent>(data);
     if (collision_data == nullptr) {
-      LOG_WARNING("Data received from %s is not collision data", type_id.c_str());
+      CARLAVIZ_LOG_WARNING("Data received from %s is not collision data", type_id.c_str());
       return;
     }
     auto collision_event = GetCollision(*collision_data, parent_name);
@@ -1379,7 +1379,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     auto gnss_data = boost::dynamic_pointer_cast<
       carla::sensor::data::GnssMeasurement>(data);
     if (gnss_data == nullptr) {
-      LOG_WARNING("Data received from %s is not gnss data", type_id.c_str());
+      CARLAVIZ_LOG_WARNING("Data received from %s is not gnss data", type_id.c_str());
       return;
     }
     auto gnss_info = GetGNSSInfo(*gnss_data, parent_name);
@@ -1394,7 +1394,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     auto obstacle_data = boost::dynamic_pointer_cast<
       carla::sensor::data::ObstacleDetectionEvent>(data);
     if (obstacle_data == nullptr) {
-      LOG_WARNING("Data received from %s is not obstacle data", type_id.c_str());
+      CARLAVIZ_LOG_WARNING("Data received from %s is not obstacle data", type_id.c_str());
       return;
     }
     auto obstacle_info = GetObstacleInfo(*obstacle_data, parent_name);
@@ -1408,7 +1408,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     auto imu_data = boost::dynamic_pointer_cast<
       carla::sensor::data::IMUMeasurement>(data);
     if (imu_data == nullptr) {
-      LOG_WARNING("Data received from %s is not imu data", type_id.c_str());
+      CARLAVIZ_LOG_WARNING("Data received from %s is not imu data", type_id.c_str());
       return;
     }
     auto imu_info = GetIMUInfo(*imu_data, parent_name);
@@ -1418,7 +1418,7 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
     return;
   }
 
-  LOG_WARNING("Receive unhandled data %s", type_id.c_str());
+  CARLAVIZ_LOG_WARNING("Receive unhandled data %s", type_id.c_str());
 }
 
 std::pair<std::string, boost::shared_ptr<carla::client::Sensor>> CarlaProxy::CreateDummySensor(
@@ -1436,7 +1436,7 @@ std::pair<std::string, boost::shared_ptr<carla::client::Sensor>> CarlaProxy::Cre
   std::string parent_name;
   auto parent_transform = carla::geom::Transform();
   if (parent == nullptr) {
-    LOG_WARNING("Real sensor with id %ud has no attached actor, "
+    CARLAVIZ_LOG_WARNING("Real sensor with id %ud has no attached actor, "
                 "did you attach it to an actor or successfully desotry it last time?",
                 real_sensor->GetId());
     parent_name = "null";
@@ -1485,7 +1485,7 @@ utils::Image CarlaProxy::GetEncodedRGBImage(
   unsigned int error = lodepng::encode(data_str, pixel_data, image.GetWidth(),
                                        image.GetHeight(), state);
   if (error) {
-    LOG_ERROR("Encoding png error");
+    CARLAVIZ_LOG_ERROR("Encoding png error");
   }
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
@@ -1505,7 +1505,7 @@ utils::Image CarlaProxy::GetEncodedDepthImage(
   unsigned int error = lodepng::encode(data_str, pixel_data, image.GetWidth(),
                                        image.GetHeight(), state);
   if (error) {
-    LOG_ERROR("Encoding png error");
+    CARLAVIZ_LOG_ERROR("Encoding png error");
   }
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
@@ -1516,7 +1516,7 @@ utils::Image CarlaProxy::GetEncodedLabelImage(
   for (auto i = 0; i < image.size(); i++) {
     auto p = image[i];
     if (label_color_map.find(p.r) == label_color_map.end()) {
-      LOG_WARNING("Unknown tag: %u", p.r);
+      CARLAVIZ_LOG_WARNING("Unknown tag: %u", p.r);
       auto& color = label_color_map[0];
       pixel_data[i * 3] = (color[0]);
       pixel_data[i * 3 + 1] = (color[1]);
@@ -1534,7 +1534,7 @@ utils::Image CarlaProxy::GetEncodedLabelImage(
   unsigned int error = lodepng::encode(data_str, pixel_data, image.GetWidth(),
                                        image.GetHeight(), state);
   if (error) {
-    LOG_ERROR("Encoding png error");
+    CARLAVIZ_LOG_ERROR("Encoding png error");
   }
   return utils::Image(std::move(data_str), image.GetWidth(), image.GetHeight(), image.GetTimestamp());
 }
@@ -1544,7 +1544,7 @@ CollisionEvent CarlaProxy::GetCollision(const carla::sensor::data::CollisionEven
   auto other_actor = collision_event.GetOtherActor();
   std::string other_actor_name;
   if (other_actor == nullptr) {
-    LOG_WARNING("%s collides with null actor, it is wired.", parent_name.c_str());
+    CARLAVIZ_LOG_WARNING("%s collides with null actor, it is wired.", parent_name.c_str());
     other_actor_name = "null";
   } else {
     other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
@@ -1563,7 +1563,7 @@ utils::ObstacleInfo CarlaProxy::GetObstacleInfo(const carla::sensor::data::Obsta
   auto other_actor = obs_event.GetOtherActor();
   std::string other_actor_name = "null";
   if (other_actor == nullptr) {
-    LOG_WARNING("Other actor is null");
+    CARLAVIZ_LOG_WARNING("Other actor is null");
   } else {
     other_actor_name = other_actor->GetTypeId() + " " + std::to_string(other_actor->GetId());
   }

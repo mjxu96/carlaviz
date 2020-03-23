@@ -60,7 +60,7 @@ void DrawingProxy::AddDrawings(xviz::XVIZBuilder& xviz) {
 }
 
 void DrawingProxy::Accept() {
-  LOG_INFO("Waiting for a drawing client to connect. Listening to port %u....",
+  CARLAVIZ_LOG_INFO("Waiting for a drawing client to connect. Listening to port %u....",
            listen_port_);
   try {
     boost::asio::io_context ioc{1};
@@ -73,7 +73,7 @@ void DrawingProxy::Accept() {
       t.detach();
     }
   } catch (const std::exception& e) {
-    LOG_ERROR("%s", e.what());
+    CARLAVIZ_LOG_ERROR("%s", e.what());
   }
 }
 
@@ -87,14 +87,14 @@ void DrawingProxy::AddClient(
       boost::make_shared<websocket::stream<tcp::socket>>(std::move(socket));
   try {
     client_ptr->accept();
-    LOG_INFO("Drawing client %u connected", id);
+    CARLAVIZ_LOG_INFO("Drawing client %u connected", id);
 
     for (;;) {
       boost::beast::multi_buffer buffer;
       boost::beast::error_code ec;
       size_t size = client_ptr->read(buffer, ec);
       if (ec.value() != 0) {
-        LOG_INFO("Drawing client %u connection closed", id);
+        CARLAVIZ_LOG_INFO("Drawing client %u connection closed", id);
         CleanUpDrawing(id);
         return;
       }
@@ -112,9 +112,9 @@ void DrawingProxy::AddClient(
   } catch (boost::system::system_error const& se) {
     CleanUpDrawing(id);
     if (se.code() != websocket::error::closed) {
-      LOG_ERROR("Drawing client read error %s", se.what());
+      CARLAVIZ_LOG_ERROR("Drawing client read error %s", se.what());
     } else {
-      LOG_INFO("Drawing client %u connection closed", id);
+      CARLAVIZ_LOG_INFO("Drawing client %u connection closed", id);
     }
   }
 }
@@ -124,7 +124,7 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
   try {
     decoded_json = Json::parse(str);
   } catch (std::exception const& e) {
-    LOG_ERROR(
+    CARLAVIZ_LOG_ERROR(
         "Receive bad json data from drawing client, ignore this data message, "
         "the message is %s",
         str.c_str());
@@ -158,23 +158,23 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
                     polyline.points.push_back(-point_vertices[1]);
                     polyline.points.push_back(point_vertices[2]);
                   } else {
-                    LOG_ERROR("Point should have 3 coordinates");
+                    CARLAVIZ_LOG_ERROR("Point should have 3 coordinates");
                     break;
                   }
                 } else {
-                  LOG_ERROR(
+                  CARLAVIZ_LOG_ERROR(
                       "Point in vertices entry in drawing message is not array");
                   break;
                 }
               }
               polylines.push_back(std::move(polyline));
             } else {
-              LOG_ERROR("One client should send multiple lines");
+              CARLAVIZ_LOG_ERROR("One client should send multiple lines");
             }
             
           }
         } else {
-          LOG_ERROR("Vertices entry in drawing message is not array");
+          CARLAVIZ_LOG_ERROR("Vertices entry in drawing message is not array");
           break;
         }
       }
@@ -211,23 +211,23 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
                     p.points.push_back(-point_vertices[1]);
                     p.points.push_back(point_vertices[2]);
                   } else {
-                    LOG_ERROR("Point should have 3 coordinates");
+                    CARLAVIZ_LOG_ERROR("Point should have 3 coordinates");
                     break;
                   }
                 } else {
-                  LOG_ERROR(
+                  CARLAVIZ_LOG_ERROR(
                       "Point in vertices entry in drawing message is not array");
                   break;
                 }
               }
               points.push_back(std::move(p));
             } else {
-              LOG_ERROR("One client should send multiple lines");
+              CARLAVIZ_LOG_ERROR("One client should send multiple lines");
             }
             
           }
         } else {
-          LOG_ERROR("Vertices entry in drawing message is not array");
+          CARLAVIZ_LOG_ERROR("Vertices entry in drawing message is not array");
           break;
         }
       }
@@ -249,7 +249,7 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
             t.message = tt["message"].get<std::string>();
             auto pos = tt["position"].get<std::vector<double>>();
             if (pos.size() != 3) {
-              LOG_ERROR("Position should have 3 coordinates");
+              CARLAVIZ_LOG_ERROR("Position should have 3 coordinates");
               break;
             } else {
               pos[1] = -pos[1];
@@ -258,7 +258,7 @@ void DrawingProxy::Decode(const std::string& str, uint32_t id) {
             texts.push_back(std::move(t));
           }
         } else {
-          LOG_ERROR("Input texts should be array");
+          CARLAVIZ_LOG_ERROR("Input texts should be array");
         }
       }
 

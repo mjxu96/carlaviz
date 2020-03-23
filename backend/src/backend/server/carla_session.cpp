@@ -22,11 +22,11 @@ CarlaSession::CarlaSession(std::shared_ptr<websocketpp::connection<websocketpp::
 void CarlaSession::OnConnect() {
   auto err_code = conn_ptr_->send(handler_weak_ptr_.lock()->GetMetadataWithMap());
   if (err_code) {
-    LOG_INFO("Cannot send metadata");
+    CARLAVIZ_LOG_INFO("Cannot send metadata");
     is_error_ = true;
     return;
   }
-  LOG_INFO("Frontend connected");
+  CARLAVIZ_LOG_INFO("Frontend connected");
   std::lock_guard lock_g(send_lock_);
   is_metadata_send_ = true;
 }
@@ -41,7 +41,7 @@ void CarlaSession::Main() {
       is_metadata_send_ = true;
       auto err_c = conn_ptr_->send(handler_weak_ptr_.lock()->GetMetadata());
       if (err_c) {
-        LOG_INFO("Cannot send metadata without map");
+        CARLAVIZ_LOG_INFO("Cannot send metadata without map");
         send_lock_.unlock();
         is_error_ = true;
         return;
@@ -52,7 +52,7 @@ void CarlaSession::Main() {
     auto err_code = conn_ptr_->send(handler_weak_ptr_.lock()->GetUpdateData(), websocketpp::frame::opcode::BINARY);
     if (err_code) {
       if (err_code.message() != "invalid state") {
-        LOG_ERROR("Cannot send update data, %s", err_code.message().c_str());
+        CARLAVIZ_LOG_ERROR("Cannot send update data, %s", err_code.message().c_str());
       }
       is_error_ = true;
       return;
@@ -63,7 +63,7 @@ void CarlaSession::Main() {
 
 void CarlaSession::OnDisconnect() {
   is_error_ = true;
-  LOG_INFO("Frontend disconnected");
+  CARLAVIZ_LOG_INFO("Frontend disconnected");
 }
 
 void CarlaSession::OnMessage(websocketpp::connection_hdl hdl, std::shared_ptr<websocketpp::config::core::message_type> msg_ptr) {
@@ -71,7 +71,7 @@ void CarlaSession::OnMessage(websocketpp::connection_hdl hdl, std::shared_ptr<we
     Json setting_json = Json::parse(msg_ptr->get_payload());
     stream_settings_callback_(setting_json.get<std::unordered_map<std::string, bool>>());
   } catch (const std::exception& e) {
-    LOG_WARNING("When paring %s, get error: %s", msg_ptr->get_payload().c_str(),
+    CARLAVIZ_LOG_WARNING("When paring %s, get error: %s", msg_ptr->get_payload().c_str(),
       e.what());
   }
 }

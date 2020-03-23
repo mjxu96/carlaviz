@@ -44,7 +44,7 @@ void CarlaHandler::StartReadData() {
     std::lock_guard lock_g(update_lock_);
     update_str_ = std::move(output);
     // auto end = std::chrono::high_resolution_clock::now();
-    // LOG_INFO("Data: %.3f   lock: %.3f", std::chrono::duration<double, std::milli>(data_end - start).count(),
+    // CARLAVIZ_LOG_INFO("Data: %.3f   lock: %.3f", std::chrono::duration<double, std::milli>(data_end - start).count(),
       // std::chrono::duration<double, std::milli>(end - data_end).count());
   }
 }
@@ -77,7 +77,7 @@ void CarlaHandler::UpdateMetadata(const std::string& metadata_str) {
   for (const auto& [id, session_ptr] : children_sessions_) {
     auto carla_session_ptr = std::dynamic_pointer_cast<CarlaSession>(session_ptr);
     if (carla_session_ptr == nullptr) {
-      LOG_ERROR("Child session should not be nullptr");
+      CARLAVIZ_LOG_ERROR("Child session should not be nullptr");
       continue;
     }
     if (carla_session_ptr->SetSendStatus(false)) {

@@ -20,70 +20,70 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __MACROLOGGER_H__
-#define __MACROLOGGER_H__
+#ifndef CARLAVIZ_LOGGER_H_
+#define CARLAVIZ_LOGGER_H_
 
 #include <time.h>
 #include <string.h>
 
 // === auxiliar functions
-static inline char *timenow();
+static inline char *carlaviz_timenow();
 
-#define NO_LOGS         0x00
-#define ERROR_LEVEL     0x01
-#define WARNING_LEVEL   0x02
-#define INFO_LEVEL      0x03
-#define DEBUG_LEVEL     0x04
+#define CARLAVIZ_NO_LOGS         0x00
+#define CARLAVIZ_ERROR_LEVEL     0x01
+#define CARLAVIZ_WARNING_LEVEL   0x02
+#define CARLAVIZ_INFO_LEVEL      0x03
+#define CARLAVIZ_DEBUG_LEVEL     0x04
 
-#ifndef LOG_LEVEL
-#define LOG_LEVEL   DEBUG_LEVEL
+#ifndef CARLAVIZ_LOG_LEVEL
+#define CARLAVIZ_LOG_LEVEL   CARLAVIZ_DEBUG_LEVEL
 #endif
 
 
-#define PRINTFUNCTION(format, ...)      fprintf(stderr, format, __VA_ARGS__)
+#define CARLAVIZ_PRINTFUNCTION(format, ...)      fprintf(stderr, format, __VA_ARGS__)
 
 
-#define LOG_FMT             "%s %-10s "
-#define LOG_ARGS(LOG_TAG)   timenow(), LOG_TAG
+#define CARLAVIZ_LOG_FMT             "%s %-10s "
+#define CARLAVIZ_LOG_ARGS(LOG_TAG)   carlaviz_timenow(), LOG_TAG
 
-#define NEWLINE     "\n"
+#define CARLAVIZ_NEWLINE     "\n"
 
-#define ERROR_TAG    "[ERROR]"
-#define WARNING_TAG  "[WARNING]"
-#define INFO_TAG     "[INFO]"
-#define DEBUG_TAG    "[DEBUG]"
+#define CARLAVIZ_ERROR_TAG    "[ERROR]"
+#define CARLAVIZ_WARNING_TAG  "[WARNING]"
+#define CARLAVIZ_INFO_TAG     "[INFO]"
+#define CARLAVIZ_DEBUG_TAG    "[DEBUG]"
 
-#if LOG_LEVEL >= DEBUG_LEVEL
-#define LOG_DEBUG(message, args...)     PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(DEBUG_TAG), ## args)
+#if CARLAVIZ_LOG_LEVEL >= CARLAVIZ_DEBUG_LEVEL
+#define CARLAVIZ_LOG_DEBUG(message, args...)     CARLAVIZ_PRINTFUNCTION(CARLAVIZ_LOG_FMT message CARLAVIZ_NEWLINE, CARLAVIZ_LOG_ARGS(CARLAVIZ_DEBUG_TAG), ## args)
 #else
-#define LOG_DEBUG(message, args...)
+#define CARLAVIZ_LOG_DEBUG(message, args...)
 #endif
 
-#if LOG_LEVEL >= INFO_LEVEL
-#define LOG_INFO(message, args...)      PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(INFO_TAG), ## args)
+#if CARLAVIZ_LOG_LEVEL >= CARLAVIZ_INFO_LEVEL
+#define CARLAVIZ_LOG_INFO(message, args...)      CARLAVIZ_PRINTFUNCTION(CARLAVIZ_LOG_FMT message CARLAVIZ_NEWLINE, CARLAVIZ_LOG_ARGS(CARLAVIZ_INFO_TAG), ## args)
 #else
-#define LOG_INFO(message, args...)
+#define CARLAVIZ_LOG_INFO(message, args...)
 #endif
 
-#if LOG_LEVEL >= WARNING_LEVEL
-#define LOG_WARNING(message, args...)      PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(WARNING_TAG), ## args)
+#if CARLAVIZ_LOG_LEVEL >= CARLAVIZ_WARNING_LEVEL
+#define CARLAVIZ_LOG_WARNING(message, args...)      CARLAVIZ_PRINTFUNCTION(CARLAVIZ_LOG_FMT message CARLAVIZ_NEWLINE, CARLAVIZ_LOG_ARGS(CARLAVIZ_WARNING_TAG), ## args)
 #else
-#define LOG_WARNING(message, args...)
+#define CARLAVIZ_LOG_WARNING(message, args...)
 #endif
 
-#if LOG_LEVEL >= ERROR_LEVEL
-#define LOG_ERROR(message, args...)     PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(ERROR_TAG), ## args)
+#if CARLAVIZ_LOG_LEVEL >= CARLAVIZ_ERROR_LEVEL
+#define CARLAVIZ_LOG_ERROR(message, args...)     CARLAVIZ_PRINTFUNCTION(CARLAVIZ_LOG_FMT message CARLAVIZ_NEWLINE, CARLAVIZ_LOG_ARGS(CARLAVIZ_ERROR_TAG), ## args)
 #else
-#define LOG_ERROR(message, args...)
+#define CARLAVIZ_LOG_ERROR(message, args...)
 #endif
 
-#if LOG_LEVEL >= NO_LOGS
-#define LOG_IF_ERROR(condition, message, args...) if (condition) PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(ERROR_TAG), ## args)
+#if CARLAVIZ_LOG_LEVEL >= CARLAVIZ_NO_LOGS
+#define CARLAVIZ_LOG_IF_ERROR(condition, message, args...) if (condition) CARLAVIZ_PRINTFUNCTION(CARLAVIZ_LOG_FMT message CARLAVIZ_NEWLINE, CARLAVIZ_LOG_ARGS(CARLAVIZ_ERROR_TAG), ## args)
 #else
-#define LOG_IF_ERROR(condition, message, args...)
+#define CARLAVIZ_LOG_IF_ERROR(condition, message, args...)
 #endif
 
-static inline char *timenow() {
+static inline char *carlaviz_timenow() {
     static char buffer[64];
     time_t rawtime;
     struct tm *timeinfo;
