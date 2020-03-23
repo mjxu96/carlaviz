@@ -17,8 +17,8 @@ cd CARLA_SIMULATOR_PATH
 #    if you run this command in a remote machine, replace localhost 
 #    with the ip address of the machine where you run this command, 
 #    otherwise, keep it as localhost
-docker pull mjxu96/carlaviz:0.9.7 # based on your carla version
-docker run -it --network="host" -e CARLAVIZ_HOST_IP=localhost mjxu96/carlaviz:0.9.7 # based on your carla version
+docker pull mjxu96/carlaviz:0.9.8 # based on your carla version
+docker run -it --network="host" -e CARLAVIZ_HOST_IP=localhost mjxu96/carlaviz:0.9.8 # based on your carla version
 
 # 3. run this script
 python3 example.py

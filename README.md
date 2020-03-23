@@ -2,7 +2,7 @@
 # CarlaViz [![Build Status](https://travis-ci.com/wx9698/carlaviz.svg?branch=master)](https://travis-ci.com/wx9698/carlaviz)
 Visualize carla in the web browser.
 
-Now support Carla 0.9.6, 0.9.7
+Now support Carla 0.9.6, 0.9.7 and 0.9.8.
 
 <img src="https://github.com/wx9698/carlaviz/raw/master/docs/images/demo1.png"></img>
 
@@ -14,6 +14,7 @@ Docker image is provided. Run following command to pull this image (including fr
 # pull the image based on your carla version
 docker pull mjxu96/carlaviz:0.9.6
 docker pull mjxu96/carlaviz:0.9.7
+docker pull mjxu96/carlaviz:0.9.8
 ```
 
 ### How to run it?

@@ -34,7 +34,6 @@ def main():
         # set ego vehicle's role name to let CarlaViz know this vehicle is the ego vehicle
         blueprints_vehicles[0].set_attribute('role_name', 'ego') # or set to 'hero'
         batch = [carla.command.SpawnActor(blueprints_vehicles[0], ego_transform).then(carla.command.SetAutopilot(carla.command.FutureActor, True))]
-        # ego_vehicle = world.spawn_actor(blueprints_vehicles[0], ego_transform)
         results = client.apply_batch_sync(batch, True)
         if not results[0].error:
             ego_vehicle = world.get_actor(results[0].actor_id)
