@@ -12,7 +12,7 @@ echo -e "CARLAVIZ_HOST_IP=${CARLAVIZ_HOST_IP}" >> /home/carla/.env
 
 echo "Make sure you have launched the carla server."
 echo "Launching backend."
-./carlaviz/backend/bin/backend &
+./carlaviz/backend/bin/backend ${CARLA_SERVER_IP} ${CARLA_SERVER_PORT} &
 sleep 5
 
 echo "Backend launched."

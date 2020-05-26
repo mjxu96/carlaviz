@@ -29,6 +29,11 @@ void Backend::SetTimeInterval(uint32_t time_interval) {
   time_interval_ = time_interval;
 }
 
+void Backend::SetCarlaHostAndPort(const std::string& host, uint16_t port) {
+  carla_host_ = host;
+  carla_port_ = port;
+}
+
 void Backend::Run() {
   try {
     if (is_experimental_) {
@@ -77,7 +82,7 @@ void Backend::Clear() {
 
 void Backend::Init() {
 
-  carla_proxy_ = std::make_shared<CarlaProxy>("localhost", 2000u, is_experimental_);
+  carla_proxy_ = std::make_shared<CarlaProxy>(carla_host_, carla_port_, is_experimental_);
   carla_proxy_->Init();
 
   drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
@@ -111,14 +116,10 @@ void Backend::Init() {
 int main(int argc, char** argv) {
   signal(SIGINT, signal_handler);
   signal(SIGTERM, signal_handler);
-  if (argc > 1) {
-    backend.SetIsExperimental(true);
-    uint32_t ti = std::stoi(std::string(argv[1]));
-    if (ti < 50u) {
-      CARLAVIZ_LOG_WARNING("The value %u is too small, reset to 50", ti);
-      ti = 50u;
-    }
-    backend.SetTimeInterval(ti);
+  if (argc > 2) {
+    // CARLAVIZ_LOG_INFO("You are running Carla simulator on %s:%s", argv[1], argv[2]);
+    uint16_t port = (uint16_t) std::stoi(argv[2]);
+    backend.SetCarlaHostAndPort(argv[1], port);
   }
   backend.Init();
   backend.Run();

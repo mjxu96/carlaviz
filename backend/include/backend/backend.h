@@ -27,12 +27,15 @@ class Backend {
   void Clear();
   void SetIsExperimental(bool is_experimental);
   void SetTimeInterval(uint32_t time_interval);
+  void SetCarlaHostAndPort(const std::string& host, uint16_t port);
 
  private:
   std::shared_ptr<DrawingProxy> drawing_proxy_{nullptr};
   std::shared_ptr<xviz::XVIZServer> server_{nullptr};
   std::shared_ptr<FrontendProxy> frontend_proxy_{nullptr};
   std::shared_ptr<CarlaProxy> carla_proxy_{nullptr};
+  std::string carla_host_{"localhost"};
+  uint16_t carla_port_{2000u};
   bool is_experimental_{false};
   uint32_t time_interval_{100u};
 };
