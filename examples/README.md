@@ -14,7 +14,7 @@ cd CARLA_SIMULATOR_PATH
 ./CarlaUE4.sh
 
 # 2. pull and launch the docker image
-#    if you run this command in a remote machine, replace localhost 
+#    if you run this command in a remote machine, replace CARLAVIZ_HOST_IP 
 #    with the ip address of the machine where you run this command, 
 #    otherwise, keep it as localhost
 docker pull mjxu96/carlaviz:0.9.9 # based on your carla version

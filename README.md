@@ -28,6 +28,8 @@ Although the container image is out-of-box to use, you are also welcome to build
 
 Refer to this [page](https://github.com/wx9698/carlaviz/blob/master/docs/build.md) for building instructions.
 
+## Author
+[Minjun Xu](https://github.com/wx9698)   mjxu96@gmail.com
 
 ## Used Libraries
 1. [uber streetscape.gl](https://github.com/uber/streetscape.gl) as frontend
