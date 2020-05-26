@@ -474,7 +474,7 @@ void CarlaProxy::UpdateMetadata() {
 }
 
 XVIZBuilder CarlaProxy::GetUpdateData() {
-  auto world_snapshots = world_ptr_->WaitForTick(5s);
+  auto world_snapshots = world_ptr_->WaitForTick(20s);
   return GetUpdateData(world_snapshots);
 }
 

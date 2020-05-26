@@ -50,6 +50,8 @@ namespace road {
     // compute transform requires the roads to have the RoadInfo
     SolveSignalReferencesAndTransforms();
 
+    SolveControllerAndJuntionReferences();
+
     // remove temporal already used information
     _temp_road_info_container.clear();
     _temp_lane_info_container.clear();
@@ -59,6 +61,8 @@ namespace road {
     // or move it (will return move -> Map(Map &&))
     Map map(std::move(_map_data));
     CreateJunctionBoundingBoxes(map);
+    ComputeJunctionRoadConflicts(map);
+    CheckSignalsOnRoads(map);
 
     return map;
   }
@@ -279,8 +283,12 @@ namespace road {
         const double t_position,
         const std::string signal_reference_orientation) {
 
+      const double epsilon = 0.00001;
+      RELEASE_ASSERT(s_position >= 0.0);
+      // Prevent s_position from being equal to the road length
+      double fixed_s = geom::Math::Clamp(s_position, 0.0, road->GetLength() - epsilon);
       _temp_road_info_container[road].emplace_back(std::make_unique<element::RoadInfoSignal>(
-          signal_id, s_position, t_position, signal_reference_orientation));
+          signal_id, road->GetId(), fixed_s, t_position, signal_reference_orientation));
       auto road_info_signal = static_cast<element::RoadInfoSignal*>(
           _temp_road_info_container[road].back().get());
       _temp_signal_reference_container.emplace_back(road_info_signal);
@@ -539,6 +547,13 @@ namespace road {
     _map_data.GetJunction(junction_id)->GetConnection(connection_id)->AddLaneLink(from, to);
   }
 
+  void MapBuilder::AddJunctionController(
+      const JuncId junction_id,
+      std::set<road::ContId>&& controllers) {
+    DEBUG_ASSERT(_map_data.GetJunction(junction_id) != nullptr);
+    _map_data.GetJunction(junction_id)->_controllers = std::move(controllers);
+  }
+
   Lane *MapBuilder::GetLane(
       const RoadId road_id,
       const LaneId lane_id,
@@ -731,6 +746,18 @@ namespace road {
     }
   }
 
+  geom::Transform MapBuilder::ComputeSignalTransform(std::unique_ptr<Signal> &signal, MapData &data) {
+    DirectedPoint point = data.GetRoad(signal->_road_id).GetDirectedPointIn(signal->_s);
+    point.ApplyLateralOffset(static_cast<float>(-signal->_t));
+    point.location.y *= -1; // Unreal Y axis hack
+    point.location.z += static_cast<float>(signal->_zOffset);
+    geom::Transform transform(point.location, geom::Rotation(
+        geom::Math::ToDegrees(static_cast<float>(signal->_pitch)),
+        geom::Math::ToDegrees(static_cast<float>(-(point.tangent + signal->_hOffset))),
+        geom::Math::ToDegrees(static_cast<float>(signal->_roll))));
+    return transform;
+  }
+
   void MapBuilder::SolveSignalReferencesAndTransforms() {
     for(auto signal_reference : _temp_signal_reference_container){
       signal_reference->_signal =
@@ -739,18 +766,26 @@ namespace road {
 
     for(auto& signal_pair : _temp_signal_container){
       auto& signal = signal_pair.second;
-      DirectedPoint point = GetRoad(signal->_road_id)->GetDirectedPointIn(signal->_s);
-      point.ApplyLateralOffset(static_cast<float>(-signal->_t));
-      point.location.y *= -1; // Unreal Y axis hack
-      point.location.z += static_cast<float>(signal->_zOffset);
-      geom::Transform transform(point.location, geom::Rotation(
-          static_cast<float>(signal->_pitch),
-          static_cast<float>(-(point.tangent + signal->_hOffset)),
-          static_cast<float>(signal->_roll)));
-      signal->_transform = transform;
+      signal->_transform = ComputeSignalTransform(signal, _map_data);
     }
 
     _map_data._signals = std::move(_temp_signal_container);
+
+    GenerateDefaultValiditiesForSignalReferences();
+  }
+
+  void MapBuilder::SolveControllerAndJuntionReferences() {
+    for(const auto& junction : _map_data._junctions) {
+      for(const auto& controller : junction.second._controllers) {
+        auto it = _map_data._controllers.find(controller);
+        DEBUG_ASSERT(it != _map_data._controllers.end());
+        it->second->_junctions.insert(junction.first);
+        for(const auto & signal : it->second->_signals) {
+          auto signal_it = _map_data._signals.find(signal);
+          signal_it->second->_controllers.insert(controller);
+        }
+      }
+    }
   }
 
   void MapBuilder::CreateJunctionBoundingBoxes(Map &map) {
@@ -805,7 +840,10 @@ namespace road {
         for (int i = 0; i < number_intervals; ++i) {
           if (interval < std::numeric_limits<double>::epsilon())
             break;
-          next_wp = map.GetNext(next_wp, interval).back();
+          auto next = map.GetNext(next_wp, interval);
+          if(next.size()){
+            next_wp = next.back();
+          }
 
           location = map.ComputeTransform(next_wp).location;
           get_min_max(location);
@@ -815,6 +853,149 @@ namespace road {
       carla::geom::Vector3D extent(0.5f * (maxx - minx), 0.5f * (maxy - miny), 0.5f * (maxz - minz));
 
       junction->_bounding_box = carla::geom::BoundingBox(location, extent);
+    }
+  }
+
+void MapBuilder::CreateController(
+  const ContId controller_id,
+  const std::string controller_name,
+  const uint32_t controller_sequence,
+  const std::set<road::SignId>&& signals) {
+
+    // Add the Controller to MapData
+    auto controller_pair = _map_data._controllers.emplace(
+      std::make_pair(
+          controller_id,
+          std::make_unique<Controller>(controller_id, controller_name, controller_sequence)));
+
+    DEBUG_ASSERT(controller_pair.first != _map_data._controllers.end());
+    DEBUG_ASSERT(controller_pair.first->second);
+
+    // Add the signals owned by the controller
+    controller_pair.first->second->_signals = std::move(signals);
+
+    // Add ContId to the signal owned by this Controller
+    auto& signals_map = _map_data._signals;
+    for(auto signal: signals) {
+      auto it = signals_map.find(signal);
+      if(it != signals_map.end()) {
+        it->second->_controllers.insert(signal);
+      }
+    }
+}
+
+  void MapBuilder::ComputeJunctionRoadConflicts(Map &map) {
+    for (auto &junctionpair : map._data.GetJunctions()) {
+      auto& junction = junctionpair.second;
+      junction._road_conflicts = (map.ComputeJunctionConflicts(junction.GetId()));
+    }
+  }
+
+  void MapBuilder::GenerateDefaultValiditiesForSignalReferences() {
+    for (auto * signal_reference : _temp_signal_reference_container) {
+      if (signal_reference->_validities.size() == 0) {
+        Road* road = GetRoad(signal_reference->GetRoadId());
+        auto lanes = road->GetLanesByDistance(signal_reference->GetS());
+        switch (signal_reference->GetOrientation()) {
+          case SignalOrientation::Positive: {
+            LaneId min_lane = 1;
+            LaneId max_lane = 0;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id > max_lane) {
+                max_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+            break;
+          }
+          case SignalOrientation::Negative: {
+            LaneId min_lane = 0;
+            LaneId max_lane = -1;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id < min_lane) {
+                min_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+            break;
+          }
+          case SignalOrientation::Both: {
+            // Get positive lanes
+            LaneId min_lane = 1;
+            LaneId max_lane = 0;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id > max_lane) {
+                max_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+
+            // get negative lanes
+            min_lane = 0;
+            max_lane = -1;
+            for (const auto* lane : lanes) {
+              auto lane_id = lane->GetId();
+              if(lane_id < min_lane) {
+                min_lane = lane_id;
+              }
+            }
+            if(min_lane <= max_lane) {
+              AddValidityToSignalReference(signal_reference, min_lane, max_lane);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  void MapBuilder::CheckSignalsOnRoads(Map &map) {
+    for (auto& signal_pair : map._data._signals) {
+      auto& signal = signal_pair.second;
+      auto signal_position = signal->GetTransform().location;
+      auto closest_waypoint_to_signal =
+          map.GetClosestWaypointOnRoad(signal_position);
+      if(closest_waypoint_to_signal) {
+        auto distance_to_road =
+            (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
+            signal_position).Length();
+        double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
+        int iter = 0;
+        int MaxIter = 10;
+        // Displaces signal until it finds a suitable spot
+        while(distance_to_road < lane_width * 0.5 && iter < MaxIter) {
+          if(iter == 0) {
+            log_warning("Traffic sign",
+                signal->GetSignalId(),
+                "overlaps a driving lane. Moving out of the road...");
+          }
+          geom::Vector3D displacement = 1.f*(signal->GetTransform().GetRightVector()) *
+              static_cast<float>(abs(lane_width))*0.5f;
+          signal_position += displacement;
+          closest_waypoint_to_signal =
+              map.GetClosestWaypointOnRoad(signal_position);
+          distance_to_road =
+              (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
+              signal_position).Length();
+          lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
+          iter++;
+        }
+        if(iter == MaxIter) {
+          log_warning("Failed to find suitable place for signal.");
+        } else {
+          // Only perform the displacement if a good location has been found
+          signal->_transform.location = signal_position;
+        }
+      }
     }
   }
 

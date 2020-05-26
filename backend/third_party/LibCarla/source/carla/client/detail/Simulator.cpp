@@ -74,6 +74,7 @@ namespace detail {
       const bool enable_garbage_collection)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER("SimulatorClient("s + host + ":" + std::to_string(port) + ")"),
       _client(host, port, worker_threads),
+      _light_manager(new LightManager()),
       _gc_policy(enable_garbage_collection ?
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
@@ -89,19 +90,21 @@ namespace detail {
       using namespace std::literals::chrono_literals;
       _episode->WaitForState(10ms);
       auto episode = GetCurrentEpisode();
-      if (episode.GetId() != id) {
+      if (episode.GetId() != id && !_client.CheckIntermediateEpisode()) {
         return episode;
       }
     }
     throw_exception(std::runtime_error("failed to connect to newly created map"));
   }
 
-  EpisodeProxy Simulator::LoadOpenDriveEpisode(std::string opendrive) {
+  EpisodeProxy Simulator::LoadOpenDriveEpisode(
+      std::string opendrive,
+      const rpc::OpendriveGenerationParameters & params) {
     // The "OpenDriveMap" is an ".umap" located in:
     // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
     // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
     constexpr auto custom_opendrive_map = "OpenDriveMap";
-    _client.CopyOpenDriveToServer(std::move(opendrive));
+    _client.CopyOpenDriveToServer(std::move(opendrive), params);
     return LoadEpisode(custom_opendrive_map);
   }
 
@@ -117,6 +120,7 @@ namespace detail {
       if (!GetEpisodeSettings().synchronous_mode) {
         WaitForTick(_client.GetTimeout());
       }
+      _light_manager->SetEpisode(EpisodeProxy{shared_from_this()});
     }
     return EpisodeProxy{shared_from_this()};
   }

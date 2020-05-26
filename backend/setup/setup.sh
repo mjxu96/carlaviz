@@ -57,7 +57,12 @@ rm -Rf ${BOOST_BASENAME}-source
 BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
 log "Retrieving boost."
-wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
+wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+# try to use the backup boost we have in Jenkins
+if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
+  log "Using boost backup"
+  wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+fi
 
 log "Building boost filesystem object file."
 tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz

@@ -206,6 +206,10 @@ namespace road {
         const LaneId from,
         const LaneId to);
 
+    void AddJunctionController(
+        const JuncId junction_id,
+        std::set<ContId>&& controllers);
+
     void AddRoadSection(
         const RoadId road_id,
         const SectionId section_index,
@@ -325,6 +329,16 @@ namespace road {
         const LaneId lane_id,
         const double s);
 
+    // Called from ControllerParser
+    void CreateController(
+        const ContId controller_id,
+        const std::string controller_name,
+        const uint32_t controller_sequence,
+        const std::set<road::SignId>&& signals
+        );
+
+
+
     void SetGeoReference(const geom::GeoLocation &geo_reference) {
       _map_data._geo_reference = geo_reference;
     }
@@ -339,8 +353,22 @@ namespace road {
     /// Create the bounding boxes of each junction
     void CreateJunctionBoundingBoxes(Map &map);
 
+    geom::Transform ComputeSignalTransform(std::unique_ptr<Signal> &signal,  MapData &data);
+
     /// Solves the signal references in the road
     void SolveSignalReferencesAndTransforms();
+
+    /// Solve the references between Controllers and Juntions
+    void SolveControllerAndJuntionReferences();
+
+    /// Compute the conflicts of the roads (intersecting roads)
+    void ComputeJunctionRoadConflicts(Map &map);
+
+    /// Generates a default validity field for signal references with missing validity record in OpenDRIVE
+    void GenerateDefaultValiditiesForSignalReferences();
+
+    /// Checks signals overlapping driving lanes and emits a warning
+    void CheckSignalsOnRoads(Map &map);
 
     /// Return the pointer to a lane object.
     Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);

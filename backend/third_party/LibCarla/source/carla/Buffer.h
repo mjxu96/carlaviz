@@ -196,7 +196,7 @@ namespace carla {
     }
 
     static constexpr size_type max_size() noexcept {
-      return std::numeric_limits<size_type>::max();
+      return (std::numeric_limits<size_type>::max)();
     }
 
     size_type capacity() const noexcept {
@@ -261,6 +261,18 @@ namespace carla {
         throw_exception(std::invalid_argument("message size too big"));
       }
       reset(static_cast<size_type>(size));
+    }
+
+    /// Resize the buffer, a new block of size @a size is
+    /// allocated if the capacity is not enough and the data is copied.
+    void resize(uint64_t size) {
+      if(_capacity < size) {
+        std::unique_ptr<value_type[]> data = std::move(_data);
+        uint64_t old_size = size;
+        reset(size);
+        copy_from(data.get(), static_cast<size_type>(old_size));
+      }
+      _size = static_cast<size_type>(size);
     }
 
     /// Release the contents of this buffer and set its size and capacity to
