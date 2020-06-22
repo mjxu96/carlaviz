@@ -228,7 +228,7 @@ void CarlaProxy::Clear() {
   for (const auto&[id, dummy_sensor] : dummy_sensors_) {
     if (dummy_sensor->IsAlive()) {
       CARLAVIZ_LOG_INFO("Stop listening sensor: %u", id);
-      dummy_sensor->Destroy();
+      dummy_sensor->Stop();
     }
   }
   CARLAVIZ_LOG_INFO("Carla proxy clear!");
@@ -619,13 +619,13 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   }
   for (const auto& id : to_delete_sensor_ids) {
     if (dummy_sensors_.find(id) != dummy_sensors_.end()) {
-      CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
+      CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy1 sensor: %u", id, dummy_sensors_[id]->GetId());
       dummy_sensors_[id]->Stop();
-      dummy_sensors_[id]->Destroy();
+      // dummy_sensors_[id]->Destroy();
     }
     // CARLAVIZ_LOG_INFO("NORMAL DELETE SENSOR");
     // auto dummy_id = real_dummy_sensors_relation_[id];
-    // recorded_dummy_sensor_ids_.erase(dummy_id);
+    recorded_dummy_sensor_ids_.erase(id);
     dummy_sensors_.erase(id);
     real_dummy_sensors_relation_.erase(id);
     real_sensors_.erase(id);
@@ -718,10 +718,11 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       continue;
     }
     sensor_allow_listen_status_[id] = false;
-    CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
+    CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy2 sensor: %u", id, dummy_sensors_[id]->GetId());
     dummy_sensors_[id]->Stop();
-    dummy_sensors_[id]->Destroy();
+    // dummy_sensors_[id]->Destroy();
     dummy_sensors_.erase(id);
+    recorded_dummy_sensor_ids_.erase(id);
     real_dummy_sensors_relation_.erase(id);
   }
 
@@ -1444,13 +1445,14 @@ std::pair<std::string, boost::shared_ptr<carla::client::Sensor>> CarlaProxy::Cre
     parent_transform = parent->GetTransform();
     parent_name = parent->GetTypeId() + " " + std::to_string(parent->GetId());
   }
-  auto sensor_transform = real_sensor->GetTransform();
-  auto relative_transform =
-      GetRelativeTransform(sensor_transform, parent_transform);
+  // auto sensor_transform = real_sensor->GetTransform();
+  // auto relative_transform =
+  //     GetRelativeTransform(sensor_transform, parent_transform);
 
-  auto dummy_sensor = boost::static_pointer_cast<carla::client::Sensor>(
-      world_ptr_->SpawnActor(blueprint, relative_transform, parent.get()));
-  return {parent_name, dummy_sensor};
+  // auto dummy_sensor = boost::static_pointer_cast<carla::client::Sensor>(
+  //     world_ptr_->SpawnActor(blueprint, relative_transform, parent.get()));
+  // return {parent_name, dummy_sensor};
+  return {parent_name, real_sensor};
 }
 
 utils::PointCloud CarlaProxy::GetPointCloud(
