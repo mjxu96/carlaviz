@@ -24,8 +24,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && \
   apt install -y git build-essential gcc-7 cmake libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool rsync
 
-# install nodejs 10.x
-RUN curl -sL https://deb.nodesource.com/setup_10.x |  bash - && \
+# install nodejs 12.x
+RUN curl -sL https://deb.nodesource.com/setup_12.x |  bash - && \
   apt-get install -y nodejs
 
 # install yarn
