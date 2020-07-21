@@ -224,13 +224,6 @@ void CarlaProxy::Init() {
 }
 
 void CarlaProxy::Clear() {
-  client_ptr_->SetTimeout(500ms);
-  for (const auto&[id, dummy_sensor] : dummy_sensors_) {
-    if (dummy_sensor->IsAlive()) {
-      CARLAVIZ_LOG_INFO("Stop listening sensor: %u", id);
-      dummy_sensor->Destroy();
-    }
-  }
   CARLAVIZ_LOG_INFO("Carla proxy clear!");
 }
 
@@ -332,8 +325,8 @@ void CarlaProxy::UpdateMetadataBuilder() {
   for (const auto& [c_id, s_name] : camera_streams_) {
     base_metadata_builder
       .Stream(s_name)
-        .Category(Category::StreamMetadata_Category_PRIMITIVE)
-        .Type(Primitive::StreamMetadata_PrimitiveType_IMAGE);
+        .Category(StreamMetadata::PRIMITIVE)
+        .Type(StreamMetadata::IMAGE);
     camera_streams_vec.push_back(s_name);
   }
 
@@ -359,13 +352,13 @@ void CarlaProxy::UpdateMetadataBuilder() {
 xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
   XVIZMetadataBuilder xviz_metadata_builder;
     xviz_metadata_builder
-        .Stream("/vehicle_pose").Category(Category::StreamMetadata_Category_POSE)
+        .Stream("/vehicle_pose").Category(StreamMetadata::POSE)
         .Stream("/game/time")
           .Category(StreamMetadata::UI_PRIMITIVE)
         .Stream("/object/vehicles")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Category(StreamMetadata::PRIMITIVE)
+          .Type(StreamMetadata::POLYGON)
+          .Coordinate(StreamMetadata::IDENTITY)
           .StreamStyle(
             "{"
               "\"extruded\": true,"
@@ -373,9 +366,9 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
               "\"height\": 2.0"
             "}")
         .Stream("/object/walkers")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Category(StreamMetadata::PRIMITIVE)
+          .Type(StreamMetadata::POLYGON)
+          .Coordinate(StreamMetadata::IDENTITY)
           .StreamStyle(
             "{"
               "\"extruded\": true,"
@@ -383,13 +376,13 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
               "\"height\": 1.5"
             "}")
         .Stream("/vehicle/acceleration")
-          .Category(Category::StreamMetadata_Category_TIME_SERIES)
+          .Category(StreamMetadata::TIME_SERIES)
           .Unit("m/s^2")
-          .Type(ScalarType::StreamMetadata_ScalarType_FLOAT)
+          .Type(StreamMetadata::FLOAT)
         .Stream("/vehicle/velocity")
-          .Category(Category::StreamMetadata_Category_TIME_SERIES)
+          .Category(StreamMetadata::TIME_SERIES)
           .Unit("m/s")
-          .Type(ScalarType::StreamMetadata_ScalarType_FLOAT)
+          .Type(StreamMetadata::FLOAT)
         .Stream("/traffic/stop_signs")
           .Category(xviz::StreamMetadata::PRIMITIVE)
           .Type(xviz::StreamMetadata::POLYLINE)
@@ -400,9 +393,9 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
             "}")
           .StyleClass(std::string("vertical"), std::string("{\"stroke_width\": 0.2,\"stroke_color\": \"#FF0000\"}"))
         .Stream("/traffic/traffic_lights")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
-          .Type(Primitive::StreamMetadata_PrimitiveType_POLYGON)
+          .Category(xviz::StreamMetadata::PRIMITIVE)
+          .Coordinate(StreamMetadata::IDENTITY)
+          .Type(StreamMetadata::POLYGON)
           .StreamStyle(
             "{"
               "\"extruded\": true,"
@@ -420,9 +413,9 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
         //       "\"fill_color\": \"#FFFFFF\""
         //     "}")
         .Stream("/lidar/points")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Type(Primitive::StreamMetadata_PrimitiveType_POINT)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Category(StreamMetadata::PRIMITIVE)
+          .Type(StreamMetadata::POINT)
+          .Coordinate(StreamMetadata::IDENTITY)
           .StreamStyle(
             "{"
               "\"point_color_mode\": \"ELEVATION\","
@@ -437,22 +430,22 @@ xviz::XVIZMetadataBuilder CarlaProxy::GetBaseMetadataBuilder() {
               "\"radius_pixels\": 2.0"
             "}")
         .Stream("/drawing/polylines")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Type(Primitive::StreamMetadata_PrimitiveType_POLYLINE)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Category(StreamMetadata::PRIMITIVE)
+          .Type(StreamMetadata::POLYLINE)
+          .Coordinate(StreamMetadata::IDENTITY)
           .StreamStyle(
             "{"
               "\"stroke_color\": \"#FFD700\","
               "\"stroke_width\": 2.0"
             "}")
         .Stream("/drawing/points")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Type(Primitive::StreamMetadata_PrimitiveType_POLYLINE)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Category(StreamMetadata::PRIMITIVE)
+          .Type(StreamMetadata::POLYLINE)
+          .Coordinate(StreamMetadata::IDENTITY)
         .Stream("/drawing/texts")
-          .Category(Category::StreamMetadata_Category_PRIMITIVE)
-          .Type(Primitive::StreamMetadata_PrimitiveType_TEXT)
-          .Coordinate(CoordinateType::StreamMetadata_CoordinateType_IDENTITY)
+          .Category(StreamMetadata::PRIMITIVE)
+          .Type(StreamMetadata::TEXT)
+          .Coordinate(StreamMetadata::IDENTITY)
         .UI(GetUIs({}, {}, {}, {}));
   return xviz_metadata_builder;
 }
@@ -513,25 +506,18 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     if (actor_ptr->GetTypeId().substr(0, 6) == "sensor") {
       auto sensor_ptr =
           boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
-      // if (real_sensors_.find(id) == real_sensors_.end() &&
-      //     dummy_sensors_.find(id) == dummy_sensors_.end()) {
+
       auto is_this_sensor_allow_listen = IsSensorAllowListen(id);
-      if ((real_sensors_.find(id) == real_sensors_.end() || !SensorAllowListenStatus(id)) &&
-             recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
+      if ((real_sensors_.find(id) == real_sensors_.end() || !SensorAllowListenStatus(id))) {
         if (!sensor_ptr->IsAlive()) {
           continue;
         }
         if (is_this_sensor_allow_listen && !SensorAllowListenStatus(id)) {
           auto type_id = actor_ptr->GetTypeId();
           real_sensor_type_[id] = type_id;
-          auto dummy_sensor_with_parent_name = CreateDummySensor(sensor_ptr);
-          auto parent_name = dummy_sensor_with_parent_name.first;
-          auto dummy_sensor = dummy_sensor_with_parent_name.second;
-          if (dummy_sensor == nullptr) {
-            continue;
-          }
-          CARLAVIZ_LOG_INFO("Listen sensor: %u, type is: %s. Create dummy sensor: %u", id,
-                  type_id.c_str(), dummy_sensor->GetId());
+          auto parent_name = GetParentName(sensor_ptr);
+          CARLAVIZ_LOG_INFO("Listen sensor: %u, type is: %s.", id,
+                  type_id.c_str());
           if (utils::Utils::IsStartWith(type_id,
                 "sensor.lidar")) {
             AddStreamNameSensorIdRelation("/lidar/points", id);
@@ -566,9 +552,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
             AddTableStreams("/sensor/other/imu");
             AddStreamNameSensorIdRelation("/sensor/other/imu", id);
           }
-          auto dummy_id = dummy_sensor->GetId();
-          recorded_dummy_sensor_ids_.insert(dummy_id);
-          dummy_sensors_.insert({id, dummy_sensor});
           double rotation_frequency = 10.0;
           if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
                                         "sensor.lidar")) {
@@ -578,14 +561,12 @@ XVIZBuilder CarlaProxy::GetUpdateData(
               }
             }
           }
-          dummy_sensor->Listen(std::bind(
-            &CarlaProxy::HandleSensorData, this, id, rotation_frequency, type_id, parent_name, std::placeholders::_1
+          sensor_ptr->Listen(std::bind(
+            &CarlaProxy::HandleSensorData, this, id, rotation_frequency, 
+            type_id, parent_name, std::placeholders::_1
           ));
-          real_dummy_sensors_relation_.insert({id, dummy_id});
+          real_sensors_[id] = sensor_ptr;
         }
-      }
-      if (recorded_dummy_sensor_ids_.find(id) == recorded_dummy_sensor_ids_.end()) {
-        tmp_real_sensors.insert(id);
       }
       if (!is_this_sensor_allow_listen && SensorAllowListenStatus(id)) {
         to_stop_listen_sensors.insert(id);
@@ -611,23 +592,16 @@ XVIZBuilder CarlaProxy::GetUpdateData(
 
   actors_ = std::move(tmp_actors);
 
-  std::vector<uint32_t> to_delete_sensor_ids;
-  for (const auto& real_sensor_id : real_sensors_) {
-    if (tmp_real_sensors.find(real_sensor_id) == tmp_real_sensors.end()) {
-      to_delete_sensor_ids.push_back(real_sensor_id);
+  std::vector<uint32_t> to_stop_listen_sensor_ids;
+  for (const auto& [real_sensor_id, real_sensor_ptr] : real_sensors_) {
+    if (actors_.find(real_sensor_id) == actors_.end()) {
+      to_stop_listen_sensor_ids.push_back(real_sensor_id);
     }
   }
-  for (const auto& id : to_delete_sensor_ids) {
-    if (dummy_sensors_.find(id) != dummy_sensors_.end()) {
-      CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
-      dummy_sensors_[id]->Stop();
-      dummy_sensors_[id]->Destroy();
-    }
-    // CARLAVIZ_LOG_INFO("NORMAL DELETE SENSOR");
-    // auto dummy_id = real_dummy_sensors_relation_[id];
-    // recorded_dummy_sensor_ids_.erase(dummy_id);
-    dummy_sensors_.erase(id);
-    real_dummy_sensors_relation_.erase(id);
+  for (const auto& id : to_stop_listen_sensor_ids) {
+    CARLAVIZ_LOG_INFO("Stop listening sensor: %u.", id);
+    real_sensors_[id]->Stop();
+
     real_sensors_.erase(id);
 
     stream_settings_lock_.lock();
@@ -710,20 +684,20 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
   }
 
-  real_sensors_ = std::move(tmp_real_sensors);
+  // real_sensors_ = std::move(tmp_real_sensors);
 
-  for (const auto id : to_stop_listen_sensors) {
-    if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
-      CARLAVIZ_LOG_WARNING("Sensor %u does not have matching dummy sensor.", id);
-      continue;
-    }
-    sensor_allow_listen_status_[id] = false;
-    CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
-    dummy_sensors_[id]->Stop();
-    dummy_sensors_[id]->Destroy();
-    dummy_sensors_.erase(id);
-    real_dummy_sensors_relation_.erase(id);
-  }
+  // for (const auto id : to_stop_listen_sensors) {
+  //   if (dummy_sensors_.find(id) == dummy_sensors_.end()) {
+  //     CARLAVIZ_LOG_WARNING("Sensor %u does not have matching dummy sensor.", id);
+  //     continue;
+  //   }
+  //   sensor_allow_listen_status_[id] = false;
+  //   CARLAVIZ_LOG_INFO("Stop listening sensor: %u. Stop dummy sensor: %u", id, dummy_sensors_[id]->GetId());
+  //   dummy_sensors_[id]->Stop();
+  //   dummy_sensors_[id]->Destroy();
+  //   dummy_sensors_.erase(id);
+  //   real_dummy_sensors_relation_.erase(id);
+  // }
 
 
   point_3d_t ego_position(0, 0, 0);
@@ -862,8 +836,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   std::unordered_map<uint32_t, std::string> tmp_non_experimental_server_images_;
   image_data_lock_.lock();
   for (const auto [camera_id, is_received] : is_image_received_) {
-    if (real_dummy_sensors_relation_.find(camera_id) ==
-        real_dummy_sensors_relation_.end()) {
+    if (real_sensors_.find(camera_id) == real_sensors_.end()) {
       to_delete_image_ids.push_back(camera_id);
       continue;
     }
@@ -905,7 +878,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   std::vector<uint32_t> to_delete_lidar_ids;
   lidar_data_lock_.lock();
   for (auto& [lidar_id, point_cloud_queue] : lidar_data_queues_) {
-    if (real_dummy_sensors_relation_.find(lidar_id) == real_dummy_sensors_relation_.end()) {
+    if (real_sensors_.find(lidar_id) == real_sensors_.end()) {
       to_delete_lidar_ids.push_back(lidar_id);
       continue;
     }
@@ -1284,11 +1257,13 @@ carla::geom::Transform CarlaProxy::GetRelativeTransform(
 
 
 void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency, 
-  const std::string& type_id, const std::string& parent_name, carla::SharedPtr<carla::sensor::SensorData> data) {
+  const std::string& type_id, const std::string& parent_name, 
+  carla::SharedPtr<carla::sensor::SensorData> data) {
+  
   if (data == nullptr) {
     return;
   }
-  
+
   // image
   if (Utils::IsStartWith(type_id, "sensor.camera")) {
     auto image_data =
@@ -1421,49 +1396,33 @@ void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency,
   CARLAVIZ_LOG_WARNING("Receive unhandled data %s", type_id.c_str());
 }
 
-std::pair<std::string, boost::shared_ptr<carla::client::Sensor>> CarlaProxy::CreateDummySensor(
+std::string CarlaProxy::GetParentName(
     boost::shared_ptr<carla::client::Sensor> real_sensor) {
-  auto real_sensor_attribute = real_sensor->GetAttributes();
-  auto type_id = real_sensor->GetTypeId();
-  auto blueprint_lib = world_ptr_->GetBlueprintLibrary();
-  auto blueprint = (*(blueprint_lib->Filter(type_id)))[0];
-
-  for (const auto& attribute : real_sensor_attribute) {
-    blueprint.SetAttribute(attribute.GetId(), attribute.GetValue());
-  }
-
   auto parent = real_sensor->GetParent();
   std::string parent_name;
-  auto parent_transform = carla::geom::Transform();
   if (parent == nullptr) {
     CARLAVIZ_LOG_WARNING("Real sensor with id %ud has no attached actor, "
                 "did you attach it to an actor or successfully desotry it last time?",
                 real_sensor->GetId());
     parent_name = "null";
   } else {
-    parent_transform = parent->GetTransform();
     parent_name = parent->GetTypeId() + " " + std::to_string(parent->GetId());
   }
-  auto sensor_transform = real_sensor->GetTransform();
-  auto relative_transform =
-      GetRelativeTransform(sensor_transform, parent_transform);
-
-  auto dummy_sensor = boost::static_pointer_cast<carla::client::Sensor>(
-      world_ptr_->SpawnActor(blueprint, relative_transform, parent.get()));
-  return {parent_name, dummy_sensor};
+  return parent_name;
 }
 
 utils::PointCloud CarlaProxy::GetPointCloud(
     const carla::sensor::data::LidarMeasurement& lidar_measurement) {
   std::vector<double> points;
   double yaw = lidar_measurement.GetSensorTransform().rotation.yaw;
+  auto sensor_transform = lidar_measurement.GetSensorTransform();
   auto location = lidar_measurement.GetSensorTransform().location;
   for (const auto& point : lidar_measurement) {
-    point_3d_t offset = Utils::GetOffsetAfterTransform(
-        point_3d_t(point.point.x, point.point.y, point.point.z), (yaw + 90.0) / 180.0 * M_PI);
-    points.emplace_back(location.x + offset.get<0>());
-    points.emplace_back(-(location.y + offset.get<1>()));
-    points.emplace_back(location.z - offset.get<2>());
+    auto p = point.point;
+    sensor_transform.TransformPoint(p);
+    points.emplace_back(p.x);
+    points.emplace_back(-p.y);
+    points.emplace_back(p.z);
   }
   return utils::PointCloud(lidar_measurement.GetTimestamp(), std::move(points));
 }
