@@ -6,17 +6,17 @@ Before start, the [docker image](https://github.com/wx9698/carlaviz#docker-image
 #### Backend part
 1. Compiler: g++ (>=7) or clang++ (>=7)
 2. OS: ubuntu 18.04 (only tested on this os)
-3. [Protobuf C++](https://github.com/protocolbuffers/protobuf/blob/master/src/README.md): (>=3.11.0)
+3. [Protobuf C++](https://github.com/protocolbuffers/protobuf/blob/master/src/README.md): (>=3.11.0 <=3.11.4)
 
 #### Frontend part
-1. nodejs 10.x
+1. nodejs 12.x
 2. yarn
 
 Here is the script to download these frontend tools.
 ```bash
-# install nodejs 10.x
+# install nodejs 12.x
 sudo apt-get update
-curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # install yarn

@@ -26,6 +26,10 @@ namespace client {
     return _episode.Lock()->GetBlueprintLibrary();
   }
 
+  rpc::VehicleLightStateList World::GetVehiclesLightStates() const {
+    return _episode.Lock()->GetVehiclesLightStates();
+  }
+
   boost::optional<geom::Location> World::GetRandomLocationFromNavigation() const {
     return _episode.Lock()->GetRandomLocationFromNavigation();
   }
@@ -148,6 +152,10 @@ namespace client {
 
   SharedPtr<LightManager> World::GetLightManager() const {
     return _episode.Lock()->GetLightManager();
+  }
+
+  void World::FreezeAllTrafficLights(bool frozen) {
+    _episode.Lock()->FreezeAllTrafficLights(frozen);
   }
 
 } // namespace client

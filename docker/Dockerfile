@@ -24,8 +24,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && \
   apt install -y git build-essential gcc-7 cmake libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool rsync
 
-# install nodejs 10.x
-RUN curl -sL https://deb.nodesource.com/setup_10.x |  bash - && \
+# install nodejs 12.x
+RUN curl -sL https://deb.nodesource.com/setup_12.x |  bash - && \
   apt-get install -y nodejs
 
 # install yarn
@@ -33,7 +33,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
   echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
   apt-get update && apt-get install -y yarn
 
-RUN echo "0.9.9"
+RUN echo "latest"
 
 RUN cd /home/carla/ && \
   git clone --recurse-submodules https://github.com/wx9698/carlaviz.git && \

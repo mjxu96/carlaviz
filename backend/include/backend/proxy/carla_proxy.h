@@ -165,11 +165,8 @@ class CarlaProxy {
   std::mutex lidar_data_lock_;
   std::unordered_map<uint32_t, std::deque<utils::PointCloud>>
       lidar_data_queues_{};
-  std::unordered_map<uint32_t, uint32_t> real_dummy_sensors_relation_{};
-  std::unordered_set<uint32_t> real_sensors_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
-      dummy_sensors_{};
-  std::unordered_set<uint32_t> recorded_dummy_sensor_ids_{};
+      real_sensors_{};
 
   std::mutex collision_lock_;
   std::unordered_map<uint32_t, utils::CollisionEvent> collision_events_{};
@@ -187,7 +184,7 @@ class CarlaProxy {
   std::unordered_map<uint32_t, utils::RadarInfo> radar_infos_{};
 
   // Carla sensor data related
-  std::pair<std::string, boost::shared_ptr<carla::client::Sensor>>  CreateDummySensor(
+  std::string GetParentName(
       boost::shared_ptr<carla::client::Sensor> real_sensor);
   carla::geom::Transform GetRelativeTransform(
       const carla::geom::Transform& child,
