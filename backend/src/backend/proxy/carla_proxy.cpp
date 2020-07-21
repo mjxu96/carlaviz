@@ -206,7 +206,7 @@ void CarlaProxy::Init() {
       CARLAVIZ_LOG_ERROR("Carla client ptr is null. Exiting");
       return;
     } else {
-      client_ptr_->SetTimeout(10s);
+      client_ptr_->SetTimeout(30s);
       std::string server_version = client_ptr_->GetServerVersion();
       CARLAVIZ_LOG_INFO("Connected to Carla Server, Server version is: %s",
                server_version.c_str());
@@ -467,7 +467,7 @@ void CarlaProxy::UpdateMetadata() {
 }
 
 XVIZBuilder CarlaProxy::GetUpdateData() {
-  auto world_snapshots = world_ptr_->WaitForTick(20s);
+  auto world_snapshots = world_ptr_->WaitForTick(30s);
   return GetUpdateData(world_snapshots);
 }
 
@@ -485,8 +485,6 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   std::unordered_set<uint32_t> tmp_real_sensors;
 
   bool is_ego_found = false;
-
-  std::unordered_set<uint32_t> to_stop_listen_sensors{};
 
   for (const auto& world_snapshot : world_snapshots) {
     uint32_t id = world_snapshot.id;
@@ -569,7 +567,9 @@ XVIZBuilder CarlaProxy::GetUpdateData(
         }
       }
       if (!is_this_sensor_allow_listen && SensorAllowListenStatus(id)) {
-        to_stop_listen_sensors.insert(id);
+        CARLAVIZ_LOG_INFO("Stop listening to not allowed sensor %u", id);
+        real_sensors_[id]->Stop();
+        sensor_allow_listen_status_[id] = false;
       }
       continue;
     }
