@@ -7,7 +7,7 @@ pushd ${BACKEND_DIR} > /dev/null
 bash ./setup/setup.sh
 mkdir build && cd build
 cmake ../
-make backend -j8
+make backend -j`nproc --all`
 popd > /dev/null
 
 # frontend part
