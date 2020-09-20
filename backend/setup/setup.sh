@@ -100,7 +100,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c1
+RPCLIB_PATCH=v2.2.1_c3
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBSTDCXX_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
@@ -205,6 +205,39 @@ rm -rf ${RECAST_BASENAME}-install
 # fi
 
 unset RECAST_BASENAME
+
+# ==============================================================================
+# -- Get and compile libpng 1.6.37 ------------------------------
+# ==============================================================================
+
+# LIBPNG_VERSION=1.6.37
+# LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
+# LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
+# LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
+
+# LIBPNG_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
+# LIBPNG_LIBPATH=${CARLA_BUILD_FOLDER}
+
+# if [[ -d ${LIBPNG_INSTALL} ]] ; then
+#   log "Libpng already installed."
+# else
+#   log "Retrieving libpng."
+#   wget ${LIBPNG_REPO}
+
+#   log "Extracting libpng."
+#   tar -xf libpng-${LIBPNG_VERSION}.tar.xz
+#   mv ${LIBPNG_BASENAME} ${LIBPNG_BASENAME}-source
+
+#   pushd ${LIBPNG_BASENAME}-source >/dev/null
+
+#   ./configure --prefix=${CARLA_BUILD_FOLDER}/${LIBPNG_INSTALL}
+#   make install
+
+#   popd >/dev/null
+
+#   rm -Rf libpng-${LIBPNG_VERSION}.tar.xz
+#   rm -Rf ${LIBPNG_BASENAME}-source
+# fi
 
 
 
