@@ -2,9 +2,9 @@
 # CarlaViz [![Build Status](https://travis-ci.com/wx9698/carlaviz.svg?branch=master)](https://travis-ci.com/wx9698/carlaviz)
 Visualize carla in the web browser.
 
-Support Carla 0.9.6, 0.9.7, 0.9.8, 0.9.9 and latest version with source files or docker on Linux.
+Support Carla 0.9.6, 0.9.7, 0.9.8, 0.9.9, 0.9.10 and latest version with source files or docker on Linux.
 
-Support Carla 0.9.9 and latest version with docker on Windows.
+Support Carla 0.9.9, 0.9.10 and latest version with docker on Windows.
 
 <img src="https://github.com/wx9698/carlaviz/raw/master/docs/images/demo1.png"></img>
 
@@ -20,6 +20,7 @@ docker pull mjxu96/carlaviz:0.9.8
 docker pull mjxu96/carlaviz:0.9.9  # This refers to 0.9.9.2
 
 # pull the image to use latest CARLA multi-stream feature
+docker pull mjxu96/carlaviz:0.9.10
 docker pull mjxu96/carlaviz:latest
 ```
 

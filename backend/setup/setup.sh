@@ -210,34 +210,35 @@ unset RECAST_BASENAME
 # -- Get and compile libpng 1.6.37 ------------------------------
 # ==============================================================================
 
-# LIBPNG_VERSION=1.6.37
-# LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
-# LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
-# LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
+LIBPNG_VERSION=1.6.37
+LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
+LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
+LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
 
-# LIBPNG_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
-# LIBPNG_LIBPATH=${CARLA_BUILD_FOLDER}
+LIBPNG_INCLUDE=${LIB_HEADER_INCLUDE_PATH}
+LIBPNG_LIBPATH=${CARLA_BUILD_FOLDER}
 
-# if [[ -d ${LIBPNG_INSTALL} ]] ; then
-#   log "Libpng already installed."
-# else
-#   log "Retrieving libpng."
-#   wget ${LIBPNG_REPO}
+log "Retrieving libpng."
+wget ${LIBPNG_REPO}
 
-#   log "Extracting libpng."
-#   tar -xf libpng-${LIBPNG_VERSION}.tar.xz
-#   mv ${LIBPNG_BASENAME} ${LIBPNG_BASENAME}-source
+log "Extracting libpng."
+tar -xf libpng-${LIBPNG_VERSION}.tar.xz
+mv ${LIBPNG_BASENAME} ${LIBPNG_BASENAME}-source
 
-#   pushd ${LIBPNG_BASENAME}-source >/dev/null
+pushd ${LIBPNG_BASENAME}-source >/dev/null
 
-#   ./configure --prefix=${CARLA_BUILD_FOLDER}/${LIBPNG_INSTALL}
-#   make install
+echo "${CARLA_BUILD_FOLDER}/${LIBPNG_INSTALL}"
+./configure --prefix=${CARLA_BUILD_FOLDER}/${LIBPNG_INSTALL}
+make install
 
-#   popd >/dev/null
+popd >/dev/null
 
-#   rm -Rf libpng-${LIBPNG_VERSION}.tar.xz
-#   rm -Rf ${LIBPNG_BASENAME}-source
-# fi
+cp -r ${LIBPNG_BASENAME}-install/include/libpng16 ${LIBPNG_INCLUDE}/libpng16
+cp -r ${LIBPNG_BASENAME}-install/lib/* ${LIBPNG_LIBPATH} > /dev/null
+
+rm -Rf libpng-${LIBPNG_VERSION}.tar.xz
+rm -Rf ${LIBPNG_BASENAME}-source
+rm -Rf ${LIBPNG_BASENAME}-install
 
 
 
@@ -286,7 +287,9 @@ set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
 set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
 set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
 set(RECAST_INCLUDE_PATH "${RECAST_INCLUDE}")
+set(LIBPNG_INCLUDE_PATH "${LIBPNG_INCLUDE}")
 set(RECAST_LIB_PATH "${RECAST_LIBPATH}")
+set(LIBPNG_LIB_PATH "${LIBPNG_LIBPATH}")
 
 
 EOL
