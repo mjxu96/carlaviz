@@ -505,6 +505,10 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       auto sensor_ptr =
           boost::static_pointer_cast<carla::client::Sensor>(actor_ptr);
 
+      if (unsupported_sensors_.find(id) != unsupported_sensors_.end()) {
+        continue;
+      }
+
       auto is_this_sensor_allow_listen = IsSensorAllowListen(id);
       if ((real_sensors_.find(id) == real_sensors_.end() || !SensorAllowListenStatus(id))) {
         if (!sensor_ptr->IsAlive()) {
@@ -516,54 +520,51 @@ XVIZBuilder CarlaProxy::GetUpdateData(
           auto parent_name = GetParentName(sensor_ptr);
           CARLAVIZ_LOG_INFO("Listen sensor: %u, type is: %s.", id,
                   type_id.c_str());
+          double rotation_frequency = 10.0;
           if (utils::Utils::IsStartWith(type_id,
-                "sensor.lidar")) {
+                                        "sensor.lidar.ray_cast")) {
             AddStreamNameSensorIdRelation("/lidar/points", id);
-          }
-          if (type_id == "sensor.other.radar") {
+            for (const auto& attribute : sensor_ptr->GetAttributes()) {
+              if (attribute.GetId() == "rotation_frequency") {
+                rotation_frequency = std::stod(attribute.GetValue());
+                break;
+              }
+            }
+          } else if (type_id == "sensor.other.radar") {
             AddStreamNameSensorIdRelation("/radar/points", id);
-          }
-          if (utils::Utils::IsStartWith(type_id,
+          } else if (utils::Utils::IsStartWith(type_id,
                 "sensor.camera")) {
             AddCameraStream(id, "/camera/" + type_id.substr(14) + "/" + std::to_string(id));
             AddStreamNameSensorIdRelation("/camera/" + type_id.substr(14) + "/" + std::to_string(id), id);
-          }
-          if (utils::Utils::IsStartWith(type_id, "sensor.other.collision")) {
+          } else if (type_id == "sensor.other.collision") {
             AddTableStreams("/sensor/other/collision");
             AddStreamNameSensorIdRelation("/sensor/other/collision", id);
             collision_lock_.lock();
             collision_events_[id] = CollisionEvent(0u, 0u, parent_name, "no collision", -1, 0u);
             collision_lock_.unlock();
-          }
-          if (utils::Utils::IsStartWith(type_id, "sensor.other.gnss")) {
+          } else if (type_id == "sensor.other.gnss") {
             AddTableStreams("/sensor/other/gnss");
             AddStreamNameSensorIdRelation("/sensor/other/gnss", id);
-          }
-          if (type_id == "sensor.other.obstacle") {
+          } else if (type_id == "sensor.other.obstacle") {
             AddTableStreams("/sensor/other/obstacle");
             AddStreamNameSensorIdRelation("/sensor/other/obstacle", id);
             obstacle_lock_.lock();
             obstacle_infos_[id] = ObstacleInfo(parent_name, "no obstacle", -1.0, -1.0, 0u);
             obstacle_lock_.unlock();
-          }
-          if (type_id == "sensor.other.imu") {
+          } else if (type_id == "sensor.other.imu") {
             AddTableStreams("/sensor/other/imu");
             AddStreamNameSensorIdRelation("/sensor/other/imu", id);
+          } else {
+            CARLAVIZ_LOG_INFO("Listen to unsupported sensor, id: %u, type: %s. Not accepting the data from it.", id, type_id.c_str());
+            unsupported_sensors_.insert(id);
           }
-          double rotation_frequency = 10.0;
-          if (utils::Utils::IsStartWith(sensor_ptr->GetTypeId(),
-                                        "sensor.lidar")) {
-            for (const auto& attribute : sensor_ptr->GetAttributes()) {
-              if (attribute.GetId() == "rotation_frequency") {
-                rotation_frequency = std::stod(attribute.GetValue());
-              }
-            }
-          }
-          sensor_ptr->Listen(std::bind(
-            &CarlaProxy::HandleSensorData, this, id, rotation_frequency, 
-            type_id, parent_name, std::placeholders::_1
-          ));
           real_sensors_[id] = sensor_ptr;
+          if (unsupported_sensors_.find(id) == unsupported_sensors_.end()) {
+            sensor_ptr->Listen(std::bind(
+              &CarlaProxy::HandleSensorData, this, id, rotation_frequency, 
+              type_id, parent_name, std::placeholders::_1
+            ));
+          }
         }
       }
       if (!is_this_sensor_allow_listen && SensorAllowListenStatus(id)) {
@@ -600,8 +601,8 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   }
   for (const auto& id : to_stop_listen_sensor_ids) {
     CARLAVIZ_LOG_INFO("Stop listening sensor: %u.", id);
+    unsupported_sensors_.erase(id);
     real_sensors_[id]->Stop();
-
     real_sensors_.erase(id);
 
     stream_settings_lock_.lock();
@@ -624,7 +625,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
     }
  
 
-    if (utils::Utils::IsStartWith(type_id, "sensor.lidar")) {
+    if (utils::Utils::IsStartWith(type_id, "sensor.lidar.ray_cast")) {
       lidar_data_lock_.lock();
       lidar_data_queues_.erase(id);
       lidar_data_lock_.unlock();
@@ -676,7 +677,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
       imu_lock_.lock();
       auto is_previous_empty = imu_infos_.empty();
       imu_infos_.erase(id);
-      if (imu_infos_.empty() && is_previous_empty) {
+      if (imu_infos_.empty() && !is_previous_empty) {
         RemoveTableStreams("/sensor/other/imu");
       }
       imu_lock_.unlock();

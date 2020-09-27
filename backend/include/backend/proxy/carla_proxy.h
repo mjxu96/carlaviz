@@ -167,6 +167,7 @@ class CarlaProxy {
       lidar_data_queues_{};
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Sensor>>
       real_sensors_{};
+  std::unordered_set<uint32_t> unsupported_sensors_{};
 
   std::mutex collision_lock_;
   std::unordered_map<uint32_t, utils::CollisionEvent> collision_events_{};

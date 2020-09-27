@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 project(carlaviz-backend)
-SET(CMAKE_CXX_FLAGS "-std=c++17 -pthread -fPIC -O3 -DNDEBUG")
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+message(STATUS "CMAKE BUILD TYPE: ${CMAKE_BUILD_TYPE}")
+SET(CMAKE_CXX_FLAGS "-std=c++17 -pthread -fPIC")
 
 SET(CLIENT_ROOT_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 

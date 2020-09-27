@@ -13,13 +13,11 @@ Support Carla 0.9.9, 0.9.10 and latest version with docker on Windows.
 Docker image is provided. Run following command to pull this image (including frontend and backend).
 
 ```bash
-# pull the image based on your carla version (single-stream)
+# pull the image based on your carla version
 docker pull mjxu96/carlaviz:0.9.6
 docker pull mjxu96/carlaviz:0.9.7
 docker pull mjxu96/carlaviz:0.9.8
 docker pull mjxu96/carlaviz:0.9.9  # This refers to 0.9.9.2
-
-# pull the image to use latest CARLA multi-stream feature
 docker pull mjxu96/carlaviz:0.9.10
 docker pull mjxu96/carlaviz:latest
 ```
@@ -34,6 +32,11 @@ Refer to this [page](https://github.com/wx9698/carlaviz/blob/master/docs/build.m
 
 ## Author
 [Minjun Xu](https://github.com/wx9698)   mjxu96@gmail.com
+
+## TODOs
+
+[ ] Add support for changing map during the simulation.
+[ ] Check if there are memory leaks.
 
 ## Used Libraries
 1. [uber streetscape.gl](https://github.com/uber/streetscape.gl) as frontend
