@@ -33,13 +33,11 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
   echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
   apt-get update && apt-get install -y yarn
 
-RUN echo "latest"
-
-RUN cd /home/carla/ && \
-  git clone --recurse-submodules https://github.com/wx9698/carlaviz.git && \
-  cd carlaviz && \
+RUN cd /home/carla && \
+  git clone --recurse-submodules https://github.com/wx9698/carlaviz.git && cd carlaviz && \
+  git checkout 0.9.10.1 && \
+  echo `git describe --tags` && \
   bash ./setup/setup.sh
-
 
 EXPOSE 8080-8081
 EXPOSE 8089
@@ -49,9 +47,8 @@ ENV CARLAVIZ_HOST_IP localhost
 ENV CARLA_SERVER_IP localhost
 ENV CARLA_SERVER_PORT 2000
 
-COPY run.sh /home/carla/
-WORKDIR /home/carla
+WORKDIR /home/carla/carlaviz
 
-CMD ["./run.sh"]
+CMD ["./docker/run.sh"]
 
 ENTRYPOINT ["/bin/bash", "-c"]

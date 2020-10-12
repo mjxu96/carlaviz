@@ -2,11 +2,13 @@
 # CarlaViz [![Build Status](https://travis-ci.com/wx9698/carlaviz.svg?branch=master)](https://travis-ci.com/wx9698/carlaviz)
 Visualize carla in the web browser.
 
-Support Carla 0.9.6, 0.9.7, 0.9.8, 0.9.9, 0.9.10 and latest version with source files or docker on Linux.
-
-Support Carla 0.9.9, 0.9.10 and latest version with docker on Windows.
-
 <img src="https://github.com/wx9698/carlaviz/raw/master/docs/images/demo1.png"></img>
+
+## Version Supported
+| Platform | Supported Carla Version | Docker/Source |
+| ------------- | --------------------- | --- |
+| Ubuntu | 0.9.6, 0.9.7, 0.9.8, 0.9.9.2, 0.9.9.4, 0.9.10, 0.9.10.1 | Docker image and source |
+| Windows | 0.9.9.2, 0.9.10, 0.9.10.1 | Only docker image |
 
 ## Instructions
 ### Docker image
@@ -18,7 +20,9 @@ docker pull mjxu96/carlaviz:0.9.6
 docker pull mjxu96/carlaviz:0.9.7
 docker pull mjxu96/carlaviz:0.9.8
 docker pull mjxu96/carlaviz:0.9.9  # This refers to 0.9.9.2
+docker pull mjxu96/carlaviz:0.9.9.4
 docker pull mjxu96/carlaviz:0.9.10
+docker pull mjxu96/carlaviz:0.9.10.1
 docker pull mjxu96/carlaviz:latest
 ```
 
@@ -32,11 +36,6 @@ Refer to this [page](https://github.com/wx9698/carlaviz/blob/master/docs/build.m
 
 ## Author
 [Minjun Xu](https://github.com/wx9698)   mjxu96@gmail.com
-
-## TODOs
-
-[ ] Add support for changing map during the simulation.
-[ ] Check if there are memory leaks.
 
 ## Used Libraries
 1. [uber streetscape.gl](https://github.com/uber/streetscape.gl) as frontend

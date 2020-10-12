@@ -6466,9 +6466,9 @@ prop-types@^15.5.10, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.2,
     object-assign "^4.1.1"
     react-is "^16.8.1"
 
-"protobufjs@git+https://github.com/jlisee/protobuf.js.git#ed8e699671da6f9a169074aa0f2a160cefe0844a":
+"protobufjs@https://github.com/jlisee/protobuf.js#ed8e699671da6f9a169074aa0f2a160cefe0844a":
   version "6.8.8"
-  resolved "git+https://github.com/jlisee/protobuf.js.git#ed8e699671da6f9a169074aa0f2a160cefe0844a"
+  resolved "https://github.com/jlisee/protobuf.js#ed8e699671da6f9a169074aa0f2a160cefe0844a"
   dependencies:
     "@protobufjs/aspromise" "^1.1.2"
     "@protobufjs/base64" "^1.1.2"
