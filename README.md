@@ -19,7 +19,7 @@ Docker image is provided. Run following command to pull this image (including fr
 docker pull mjxu96/carlaviz:0.9.6
 docker pull mjxu96/carlaviz:0.9.7
 docker pull mjxu96/carlaviz:0.9.8
-docker pull mjxu96/carlaviz:0.9.9  # This refers to 0.9.9.2
+docker pull mjxu96/carlaviz:0.9.9.2
 docker pull mjxu96/carlaviz:0.9.9.4
 docker pull mjxu96/carlaviz:0.9.10
 docker pull mjxu96/carlaviz:0.9.10.1
