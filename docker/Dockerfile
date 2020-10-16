@@ -35,7 +35,6 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
 
 RUN cd /home/carla && \
   git clone --recurse-submodules https://github.com/wx9698/carlaviz.git && cd carlaviz && \
-  git checkout 0.9.10.1 && \
   echo `git describe --tags` && \
   bash ./setup/setup.sh
 
