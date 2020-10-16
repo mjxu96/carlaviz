@@ -479,6 +479,7 @@ XVIZBuilder CarlaProxy::GetUpdateData(
   double now_time = world_snapshots.GetTimestamp().elapsed_seconds;
   size_t now_frame = world_snapshots.GetFrame();
 
+  frame_.store(now_frame);
 
   std::unordered_map<uint32_t, boost::shared_ptr<carla::client::Actor>>
       tmp_actors;
@@ -1260,6 +1261,10 @@ carla::geom::Transform CarlaProxy::GetRelativeTransform(
 void CarlaProxy::HandleSensorData(uint32_t id, double rotation_frequency, 
   const std::string& type_id, const std::string& parent_name, 
   carla::SharedPtr<carla::sensor::SensorData> data) {
+
+  if (frame_.load() > (data->GetFrame() + 1)) {
+    return;
+  }
   
   if (data == nullptr) {
     return;

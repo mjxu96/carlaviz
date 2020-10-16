@@ -149,6 +149,7 @@ class CarlaProxy {
 
   std::shared_ptr<xviz::Metadata> metadata_ptr_{nullptr};
 
+  std::atomic<size_t> frame_;
   // Metadata related
   xviz::XVIZMetadataBuilder metadata_builder_{};
   std::unordered_map<uint32_t, std::string> camera_streams_{};
