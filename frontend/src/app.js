@@ -46,7 +46,7 @@ const carlaLog = new XVIZLiveLoader({
   bufferLength: 10,
   serverConfig: {
     defaultLogLength: 50,
-    serverUrl: "ws://" + __HOST_IP__ + ":8081"
+    serverUrl: "ws://" + __HOST_IP__ + ":" + __HOST_PORT__
   },
   worker: true,
   maxConcurrency: 10
