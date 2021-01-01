@@ -34,7 +34,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
   apt-get update && apt-get install -y yarn
 
 RUN cd /home/carla && \
-  git clone --recurse-submodules https://github.com/wx9698/carlaviz.git && cd carlaviz && \
+  git clone --recurse-submodules -b host-port-feature https://github.com/kael53/carlaviz.git && cd carlaviz && \
   echo `git describe --tags` && \
   bash ./setup/setup.sh
 
@@ -42,10 +42,7 @@ EXPOSE 8080-8081
 EXPOSE 8089
 
 USER carla
-ENV CARLAVIZ_HOST_IP localhost
-ENV CARLAVIZ_HOST_PORT 8081
-ENV CARLA_SERVER_IP localhost
-ENV CARLA_SERVER_PORT 2000
+ENV CARLAVIZ_HOST_IP localhost CARLAVIZ_HOST_PORT 8080 CARLA_SERVER_IP localhost CARLA_SERVER_PORT 2000
 
 WORKDIR /home/carla/carlaviz
 

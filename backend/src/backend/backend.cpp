@@ -16,7 +16,7 @@ void signal_handler(int signal_num) {
 
 using namespace carlaviz;
 
-double GetTime(std::chrono::high_resolution_clock::time_point& t1, 
+double GetTime(std::chrono::high_resolution_clock::time_point& t1,
   std::chrono::high_resolution_clock::time_point& t2) {
   return std::chrono::duration<double, std::milli>(t2 - t1).count();
 }
@@ -32,6 +32,10 @@ void Backend::SetTimeInterval(uint32_t time_interval) {
 void Backend::SetCarlaHostAndPort(const std::string& host, uint16_t port) {
   carla_host_ = host;
   carla_port_ = port;
+}
+
+void Backend::SetFrontendPort(uint16_t port) {
+  frontend_port_ = port;
 }
 
 void Backend::Run() {
@@ -85,12 +89,12 @@ void Backend::Init() {
   carla_proxy_ = std::make_shared<CarlaProxy>(carla_host_, carla_port_, is_experimental_);
   carla_proxy_->Init();
 
-  drawing_proxy_ = std::make_shared<DrawingProxy>(8089u);
+  drawing_proxy_ = std::make_shared<DrawingProxy>(frontend_port_+9); // default 8089
   drawing_proxy_->StartListen();
 
   if (is_experimental_) {
     std::vector<std::shared_ptr<xviz::XVIZBaseHandler>> handlers;
-    auto carla_handler = std::make_shared<carlaviz::CarlaHandler>(carla_proxy_, drawing_proxy_, time_interval_); 
+    auto carla_handler = std::make_shared<carlaviz::CarlaHandler>(carla_proxy_, drawing_proxy_, time_interval_);
     carla_handler->SetStreamSettingsCallback(std::bind(
       &CarlaProxy::SetTransmissionStreams, carla_proxy_, std::placeholders::_1
     ));
@@ -100,7 +104,7 @@ void Backend::Init() {
       &CarlaHandler::UpdateMetadata, carla_handler, std::placeholders::_1
     ));
   } else {
-    frontend_proxy_ = std::make_shared<FrontendProxy>(8081u);
+    frontend_proxy_ = std::make_shared<FrontendProxy>(frontend_port_+1); // default 8081
     frontend_proxy_->StartListen();
     frontend_proxy_->SetMapString(carla_proxy_->GetMapString());
     frontend_proxy_->UpdateMetadata(carla_proxy_->GetMetadata());
@@ -116,10 +120,10 @@ void Backend::Init() {
 int main(int argc, char** argv) {
   signal(SIGINT, signal_handler);
   signal(SIGTERM, signal_handler);
-  if (argc > 2) {
+  if (argc > 3) {
     // CARLAVIZ_LOG_INFO("You are running Carla simulator on %s:%s", argv[1], argv[2]);
-    uint16_t port = (uint16_t) std::stoi(argv[2]);
-    backend.SetCarlaHostAndPort(argv[1], port);
+    backend.SetCarlaHostAndPort(argv[1], std::stoi(argv[2]));
+    backend.SetFrontendPort(std::stoi(argv[3]));
   }
   backend.Init();
   backend.Run();
