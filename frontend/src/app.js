@@ -46,7 +46,7 @@ const carlaLog = new XVIZLiveLoader({
   bufferLength: 10,
   serverConfig: {
     defaultLogLength: 50,
-    serverUrl: "ws://" + __HOST__ + ":" + parseInt(__PORT__) + 1 // 8081 default backend port
+    serverUrl: "ws://" + __HOST__ + ":" + (parseInt(__PORT__) + 1) // 8081 default backend port
   },
   worker: true,
   maxConcurrency: 10

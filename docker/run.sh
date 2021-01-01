@@ -8,12 +8,12 @@ trap cleanup SIGINT
 trap cleanup SIGTERM
 trap cleanup KILL
 
-echo -e "HOST=${CARLAVIZ_HOST_IP}" >> /home/carla/.env
-echo -e "PORT=${CARLAVIZ_HOST_PORT}" >> /home/carla/.env
+echo -e "HOST=${CARLAVIZ_HOST}" >> /home/carla/.env
+echo -e "PORT=${CARLAVIZ_PORT}" >> /home/carla/.env
 
 echo "Make sure you have launched the carla server."
 echo "Launching backend."
-./backend/bin/backend ${CARLA_SERVER_IP} ${CARLA_SERVER_PORT} ${CARLAVIZ_HOST_PORT} &
+./backend/bin/backend ${CARLA_SERVER_IP} ${CARLA_SERVER_PORT} ${CARLAVIZ_PORT} &
 sleep 5
 
 echo "Backend launched."
