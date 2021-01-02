@@ -37,6 +37,10 @@ const CONFIG = {
     path: resolve('./dist'),
     filename: 'bundle.js'
   },
+  devServer: {
+    host: process.env.HOST || 'localhost',
+    port: process.env.PORT || '8080'
+  },
   module: {
     noParse: /(mapbox-gl)\.js$/,
     rules: [

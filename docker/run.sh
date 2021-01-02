@@ -21,7 +21,7 @@ echo "Launching frontend"
 
 sleep 2
 cd ./frontend/
-yarn start | tee .log &
+yarn start | tee frontend.log &
 while ! grep "Compiled successfully" .log &> /dev/null; do sleep 1; done
 echo "Frontend launched. Please open your browser"
 sleep infinity

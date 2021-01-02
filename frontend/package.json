@@ -3,7 +3,7 @@
   "description": "A template app of streetscape.gl",
   "version": "0.1.0",
   "scripts": {
-    "start": "webpack-dev-server --host 0.0.0.0 --disable-host-check --env.live --progress --hot --open",
+    "start": "webpack-dev-server --disable-host-check --env.live --progress --hot --open",
     "prettier": "prettier --write '{public,src}/**/*.{ts,js,css,html}' index.html"
   },
   "dependencies": {
