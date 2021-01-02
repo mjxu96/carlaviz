@@ -1,7 +1,7 @@
 {
-  "name": "streetscape.gl-quick-start",
-  "description": "A template app of streetscape.gl",
-  "version": "0.1.0",
+  "name": "carlaviz",
+  "description": "Visualize carla in the web browser",
+  "version": "0.9.10",
   "scripts": {
     "start": "webpack-dev-server --disable-host-check --env.live --progress --hot --open",
     "prettier": "prettier --write '{public,src}/**/*.{ts,js,css,html}' index.html"

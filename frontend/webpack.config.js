@@ -38,8 +38,8 @@ const CONFIG = {
     filename: 'bundle.js'
   },
   devServer: {
-    host: process.env.HOST || 'localhost',
-    port: process.env.PORT || '8080'
+    host: process.env.CARLAVIZ_HOST || 'localhost',
+    port: process.env.CARLAVIZ_PORT || '8080'
   },
   module: {
     noParse: /(mapbox-gl)\.js$/,
@@ -88,8 +88,8 @@ module.exports = (env = {}) => {
   config.plugins = config.plugins.concat([
     new webpack.DefinePlugin({__IS_STREAMING__: JSON.stringify(Boolean(env.stream))}),
     new webpack.DefinePlugin({__IS_LIVE__: JSON.stringify(Boolean(env.live))}),
-    new webpack.DefinePlugin({__HOST__: JSON.stringify(process.env.HOST || 'localhost')}),
-    new webpack.DefinePlugin({__PORT__: JSON.stringify(process.env.PORT || '8080')})
+    new webpack.DefinePlugin({__HOST__: JSON.stringify(process.env.CARLAVIZ_HOST || 'localhost')}),
+    new webpack.DefinePlugin({__PORT__: JSON.stringify(process.env.CARLAVIZ_PORT || '8080')})
   ]);
 
   return config;
