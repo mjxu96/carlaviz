@@ -35,7 +35,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
 
 RUN cd /home/carla && \
   git clone --recurse-submodules -b host-port-feature https://github.com/kael53/carlaviz.git && cd carlaviz && \
-  echo `git describe --tags` && touch frontend.log && chown carla frontend.log && \
+  echo `git describe --tags` && touch frontend.log backend.log && chown carla frontend.log backend.log && \
   bash ./setup/setup.sh
 
 EXPOSE 8080-8081
