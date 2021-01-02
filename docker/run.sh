@@ -8,20 +8,20 @@ trap cleanup SIGINT
 trap cleanup SIGTERM
 trap cleanup KILL
 
-echo -e "HOST=${CARLAVIZ_HOST}" >> /home/carla/.env
-echo -e "PORT=${CARLAVIZ_PORT}" >> /home/carla/.env
+echo -e "HOST=${CARLAVIZ_HOST}" >> ~/.env
+echo -e "PORT=${CARLAVIZ_PORT}" >> ~/.env
 
 echo "Make sure you have launched the carla server."
 echo "Launching backend."
-./backend/bin/backend ${CARLA_SERVER_IP} ${CARLA_SERVER_PORT} ${CARLAVIZ_PORT} &
+./backend/bin/backend ${CARLA_SERVER_IP} ${CARLA_SERVER_PORT} ${CARLAVIZ_PORT} | tee backend.log &
 sleep 5
 
 echo "Backend launched."
 echo "Launching frontend"
 
 sleep 2
-cd ./frontend/
-yarn start | tee frontend.log &
-while ! grep "Compiled successfully" .log &> /dev/null; do sleep 1; done
+cd frontend/
+yarn start | tee ../frontend.log &
+while ! grep "Compiled successfully" ../frontend.log &> /dev/null; do sleep 1; done
 echo "Frontend launched. Please open your browser"
 sleep infinity
