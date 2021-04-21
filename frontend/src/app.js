@@ -41,12 +41,15 @@ import githubIcon from "../public/github_icon.png";
 
 import "./index.css";
 
+const backendHostname = (__BACKEND_HOST__ === "" ? document.location.hostname : __BACKEND_HOST__)
+const backendPort = (__BACKEND_PORT__ === "" ? 8081 : __BACKEND_PORT__)
+
 const carlaLog = new XVIZLiveLoader({
   logGuid: "mock",
   bufferLength: 10,
   serverConfig: {
     defaultLogLength: 50,
-    serverUrl: "ws://" + __HOST_IP__ + ":" + __HOST_PORT__
+    serverUrl: "ws://" + backendHostname + ":" + backendPort
   },
   worker: true,
   maxConcurrency: 10

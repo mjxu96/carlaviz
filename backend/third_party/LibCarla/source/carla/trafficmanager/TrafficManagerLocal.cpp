@@ -148,6 +148,7 @@ void TrafficManagerLocal::Run() {
       previous_update_instance = current_instance;
     }
 
+    std::unique_lock<std::mutex> registration_lock(registration_mutex);
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
 
@@ -198,6 +199,8 @@ void TrafficManagerLocal::Run() {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
     }
+
+    registration_lock.unlock();
 
     // Sending the current cycle's batch command to the simulator.
     if (synchronous_mode) {
@@ -278,6 +281,7 @@ void TrafficManagerLocal::Reset() {
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
+  std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
   for (const ActorPtr &vehicle: vehicle_list) {
     random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
@@ -285,7 +289,7 @@ void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-
+  std::lock_guard<std::mutex> registration_lock(registration_mutex);
   std::vector<ActorId> actor_id_list;
   for (auto &actor : actor_list) {
     alsm.RemoveActor(actor->GetId(), true);
@@ -361,26 +365,6 @@ bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   return true;
 }
 
-void TrafficManagerLocal::ResetAllTrafficLights() {
-  // Filter based on wildcard pattern.
-  const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-
-  std::vector<TLGroup> list_of_all_groups;
-  std::vector<carla::ActorId> list_of_ids;
-
-  for (auto iter = world_traffic_lights->begin(); iter != world_traffic_lights->end(); iter++) {
-    auto tl = *iter;
-    if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
-      const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-      list_of_all_groups.push_back(tl_group);
-    }
-  }
-
-  for (TLGroup &tl_group : list_of_all_groups) {
-    tl_group.front()->ResetGroup();
-  }
-}
-
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {
   const bool previous_mode = parameters.GetSynchronousMode();
   parameters.SetSynchronousMode(mode);
@@ -404,7 +388,7 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
-  ResetAllTrafficLights();
+  world.ResetAllTrafficLights();
 }
 
 } // namespace traffic_manager
