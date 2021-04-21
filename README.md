@@ -7,8 +7,8 @@ Visualize carla in the web browser.
 ## Version Supported
 | Platform | Supported Carla Version | Docker/Source |
 | ------------- | --------------------- | --- |
-| Ubuntu | 0.9.6, 0.9.7, 0.9.8, 0.9.9.2, 0.9.9.4, 0.9.10, 0.9.10.1 | Docker image and source |
-| Windows | 0.9.9.2, 0.9.10, 0.9.10.1 | Only docker image |
+| Ubuntu | 0.9.6, 0.9.7, 0.9.8, 0.9.9.2, 0.9.9.4, 0.9.10, 0.9.10.1, 0.9.11| Docker image and source |
+| Windows | 0.9.9.2, 0.9.10, 0.9.10.1, 0.9.11| Only docker image |
 
 ## Instructions
 ### Docker image
@@ -23,6 +23,7 @@ docker pull mjxu96/carlaviz:0.9.9.2
 docker pull mjxu96/carlaviz:0.9.9.4
 docker pull mjxu96/carlaviz:0.9.10
 docker pull mjxu96/carlaviz:0.9.10.1
+docker pull mjxu96/carlaviz:0.9.11
 docker pull mjxu96/carlaviz:latest
 ```
 
@@ -42,3 +43,8 @@ Refer to this [page](https://github.com/wx9698/carlaviz/blob/master/docs/build.m
 2. [carla](http://carla.org/)
 3. [mjxu96 xviz](https://github.com/wx9698/xviz)
 4. [boost](https://www.boost.org/)
+
+## TODOS
+- [ ] Load crossroads in the map instead of drawing them in real time.
+- [ ] Re-structure the backend codes.
+- [ ] Add support for changing map.

@@ -30,7 +30,7 @@ sudo apt-get update && sudo apt-get install -y yarn
 # 1.1 clone this repo with submodules
 git clone --recurse-submodules https://github.com/wx9698/carlaviz.git
 # 1.2 (optional) checkout to your carla version
-git checkout 0.9.10
+git checkout 0.9.11
 
 # 2. install packages
 sudo apt-get update
