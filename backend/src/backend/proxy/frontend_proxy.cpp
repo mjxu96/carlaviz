@@ -171,7 +171,8 @@ void FrontendProxy::AddClient(boost::asio::ip::tcp::socket socket) {
     frontend_max_id_++;
   } catch (boost::system::system_error const& se) {
     if (se.code() != websocket::error::closed) {
-      throw se;
+      // log error message instead of throwing the error which would cause the process crash
+      CARLAVIZ_LOG_WARNING("Frontend connection error (may not be an issue), %s", se.what());
     } else {
       CARLAVIZ_LOG_INFO("Frontend connection closed");
     }
