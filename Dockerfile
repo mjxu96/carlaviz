@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:18.04 AS builder
 
 RUN apt update && \
   apt install -y wget autoconf automake libtool curl make g++ unzip
@@ -34,6 +34,18 @@ COPY . /home/carla/carlaviz
 # build carlaviz backend and frontend
 RUN cd /home/carla/carlaviz && bash ./setup/setup.sh
 RUN cd /home/carla/carlaviz && bash ./setup/docker_setup.sh
+
+FROM nginx:1.20
+
+# backend
+COPY --from=builder /home/carla/carlaviz/backend/bin/backend /home/carla/carlaviz/backend/bin/backend
+COPY --from=builder /home/carla/protoc/protobuf-3.11.2/src/.libs/libprotobuf.so.22 /lib/x86_64-linux-gnu/libprotobuf.so.22
+
+# frontend
+COPY --from=builder /home/carla/carlaviz/frontend/dist/ /var/www/carlaviz/
+COPY --from=builder /home/carla/carlaviz/frontend/index.html /var/www/carlaviz/index.html
+COPY ./setup/carlaviz /etc/nginx/conf.d/default.conf
+COPY ./docker/run.sh /home/carla/carlaviz/docker/run.sh
 
 EXPOSE 8080-8081
 EXPOSE 8089
