@@ -44,7 +44,7 @@ COPY --from=builder /home/carla/protoc/protobuf-3.11.2/src/.libs/libprotobuf.so.
 # frontend
 COPY --from=builder /home/carla/carlaviz/frontend/dist/ /var/www/carlaviz/
 COPY --from=builder /home/carla/carlaviz/frontend/index.html /var/www/carlaviz/index.html
-COPY ./setup/carlaviz /etc/nginx/conf.d/default.conf
+COPY ./docker/carlaviz /etc/nginx/conf.d/default.conf
 COPY ./docker/run.sh /home/carla/carlaviz/docker/run.sh
 
 EXPOSE 8080-8081
