@@ -33,7 +33,7 @@ COPY . /home/carla/carlaviz
 
 # build carlaviz backend and frontend
 RUN cd /home/carla/carlaviz && bash ./setup/setup.sh
-RUN cd /home/carla/carlaviz && bash ./setup/docker_setup.sh
+RUN cd /home/carla/carlaviz/frontend && yarn build
 
 FROM nginx:1.20
 
