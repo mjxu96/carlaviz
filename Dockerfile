@@ -11,10 +11,30 @@ RUN yarn && yarn build
 # Backend build stage
 FROM ubuntu:18.04 AS backend
 
-COPY ./backend /home/carla/carlaviz/backend
-
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && \
-    apt install -y wget autoconf automake libtool curl make g++ unzip
+    apt install -y --no-install-recommends \
+    autoconf \
+    automake \
+    build-essential \
+    ca-certificates \
+    cmake \
+    curl \
+    g++ \
+    gcc-7 \
+    git \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libtool \
+    libtool \
+    make \
+    rsync \
+    sed \
+    tzdata \
+    unzip \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
 # install protobuf for xviz
 WORKDIR /home/carla/protoc
@@ -26,14 +46,14 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.11.2/p
     make install && \
     ldconfig
 
-# non-interactive setting for tzdata
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt update && \
-    apt install -y git build-essential gcc-7 cmake libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl wget unzip autoconf libtool rsync
+# setup everything for building
+COPY ./backend/setup /home/carla/carlaviz/backend/setup
+COPY ./backend/third_party/LibCarla /home/carla/carlaviz/backend/third_party/LibCarla
+WORKDIR /home/carla/carlaviz/backend/setup
+RUN bash ./setup.sh
 
 # build carlaviz backend
-WORKDIR /home/carla/carlaviz/backend
-RUN bash ./setup/setup.sh
+COPY ./backend /home/carla/carlaviz/backend
 WORKDIR /home/carla/carlaviz/backend/build
 RUN cmake ../ && make backend -j`nproc --all`
 
