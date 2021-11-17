@@ -48,6 +48,7 @@ COPY ./docker/carlaviz /etc/nginx/conf.d/default.conf
 # backend
 COPY --from=backend /home/carla/carlaviz/backend/bin/backend /home/carla/carlaviz/backend/bin/backend
 COPY --from=backend /home/carla/protoc/protobuf-3.11.2/src/.libs/libprotobuf.so.22 /lib/x86_64-linux-gnu/libprotobuf.so.22
+COPY --from=backend /home/carla/carlaviz/backend/lib/libboost_filesystem.so.1.72.0 /lib/x86_64-linux-gnu/libboost_filesystem.so.1.72.0
 
 COPY ./docker/run.sh /home/carla/carlaviz/docker/run.sh
 
