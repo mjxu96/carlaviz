@@ -6,7 +6,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CLIENT_ROOT_FOLDER}/bin)
 
 include_directories(${CLIENT_ROOT_FOLDER}/include)
 include_directories(${CLIENT_ROOT_FOLDER}/include/system)
-include_directories(${CLIENT_ROOT_FOLDER}/third_party/LibCarla/source)
+include_directories(${CLIENT_ROOT_FOLDER}/third_party/carla/LibCarla/source)
 link_directories(${CLIENT_ROOT_FOLDER}/lib)
 
 add_library(proxy-utils 

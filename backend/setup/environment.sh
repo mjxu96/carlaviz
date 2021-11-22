@@ -16,7 +16,7 @@ CARLA_BUILD_FOLDER=${CARLA_FOLDER}/lib
 # LIBCARLA_ROOT_FOLDER=${CARLA_FOLDER}/src/libcarla
 
 
-CMAKE_CONFIG_FILE=${CARLA_FOLDER}/third_party/LibCarla/cmake/CMakeLists.txt.in
+CMAKE_CONFIG_FILE=${CARLA_FOLDER}/third_party/carla/LibCarla/cmake/CMakeLists.txt.in
 
 LIBCARLA_TEST_CONTENT_FOLDER=${CARLA_BUILD_FOLDER}/test-content
 

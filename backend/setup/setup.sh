@@ -250,7 +250,7 @@ CARLA_VERSION=$(get_git_repository_version)
 
 log "CARLA version ${CARLA_VERSION}."
 
-VERSION_H_FILE=${CARLA_ROOT_FOLDER}/third_party/LibCarla/source/carla/Version.h
+VERSION_H_FILE=${CARLA_ROOT_FOLDER}/third_party/carla/LibCarla/source/carla/Version.h
 VERSION_H_FILE_GEN=${CARLA_BUILD_FOLDER}/Version.h
 
 sed -e "s|\${CARLA_VERSION}|${CARLA_VERSION}|g" ${VERSION_H_FILE}.in > ${VERSION_H_FILE_GEN}

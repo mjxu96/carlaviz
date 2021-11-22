@@ -168,7 +168,7 @@ backend/build/
 backend/bin/
 
 # CMake file
-backend/third_party/LibCarla/cmake/CMakeLists.txt.in
+backend/third_party/carla/LibCarla/cmake/CMakeLists.txt.in
 
 # Carla version file
 backend/include/lib/carla/Version.h
