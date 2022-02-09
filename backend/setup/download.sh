@@ -14,7 +14,7 @@ sudo apt install -y make gcc g++
 # download carla release version
 mkdir carla-simulator
 pushd carla-simulator > /dev/null
-wget http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_0.9.6.tar.gz
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_0.9.13.tar.gz
 tar xvzf CARLA_0.9.6.tar.gz
 popd > /dev/null
 

@@ -7,8 +7,8 @@ Visualize carla in the web browser.
 ## Version Supported
 | Platform | Supported Carla Version | Docker/Source |
 | ------------- | --------------------- | --- |
-| Ubuntu | 0.9.6, 0.9.7, 0.9.8, 0.9.9.2, 0.9.9.4, 0.9.10, 0.9.10.1, 0.9.11, 0.9.12| Docker image and source |
-| Windows | 0.9.9.2, 0.9.10, 0.9.10.1, 0.9.11, 0.9.12| Only docker image |
+| Ubuntu | 0.9.6, 0.9.7, 0.9.8, 0.9.9.2, 0.9.9.4, 0.9.10, 0.9.10.1, 0.9.11, 0.9.12, 0.9.13| Docker image and source |
+| Windows | 0.9.9.2, 0.9.10, 0.9.10.1, 0.9.11, 0.9.12, 0.9.13| Only docker image |
 
 ## Instructions
 ### Docker image
@@ -25,6 +25,7 @@ docker pull mjxu96/carlaviz:0.9.10
 docker pull mjxu96/carlaviz:0.9.10.1
 docker pull mjxu96/carlaviz:0.9.11
 docker pull mjxu96/carlaviz:0.9.12
+docker pull mjxu96/carlaviz:0.9.13
 docker pull mjxu96/carlaviz:latest
 ```
 

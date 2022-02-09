@@ -1,7 +1,7 @@
 {
   "name": "carlaviz_frontend",
   "description": "Frontend of CarlaViz",
-  "version": "0.9.12",
+  "version": "0.9.13",
   "scripts": {
     "start": "webpack-dev-server --host 0.0.0.0 --disable-host-check --env.live --progress --hot --open",
     "prettier": "prettier --write '{public,src}/**/*.{ts,js,css,html}' index.html",

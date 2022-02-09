@@ -45,7 +45,7 @@ function fatal_error {
 
 
 function get_git_repository_version {
-  echo "0.9.12"
+  echo "0.9.13"
 }
 
 function copy_if_changed {
