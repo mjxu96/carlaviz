@@ -15,6 +15,6 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: Build Docker image
-      run: docker build -t carlaviz:${{ github.ref_name }} .
+      run: docker build -t mjxu96/carlaviz:${{ github.ref_name }} .
     - name: Push image
-      run: docker push carlaviz:${{ github.ref_name }}
+      run: docker push mjxu96/carlaviz:${{ github.ref_name }}
