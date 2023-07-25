@@ -1,0 +1,73 @@
+name: CarlaViz CI
+on:
+  push:
+      branches: [ master ]
+  pull_request:
+      branches: [ master ]
+
+env:
+  CARLAVIZ_CI_VERSION_OVERRIDE: "0.0.1"
+
+jobs:
+  build-backend:
+    strategy:
+      matrix:
+        profile: [gcc11, clang14]
+        build_type: [Debug, Release]
+    runs-on: ubuntu-22.04
+    steps:
+    # git checkout
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Copy .clang-format file
+      run: cp ./backend/.clang-format .
+    # clang format check
+    - name: Run clang-format style check
+      uses: jidicula/clang-format-action@v4.10.2
+      with:
+        clang-format-version: '14'
+        check-path: backend
+    # dependencies
+    - name: Install cmake and compilers
+      run: sudo apt install -y cmake g++-11 clang-14 libc++-14-dev
+    - name: Install conan and coverage tool
+      run: pip install conan==1.55.0 && conan user
+    - name: Add conan registry
+      run: conan remote add gitlab https://gitlab.com/api/v4/projects/44861904/packages/conan
+    - name: Copy conan profiles
+      run: bash misc/cicd/conan/copy_conan_profiles.sh ${HOME}/
+    # install packages and build
+    - name: Install
+      run: cd backend && conan install . --build=missing -pr ${HOME}/${{ matrix.profile }} -s build_type=${{ matrix.build_type }}
+    - name: Build
+      run: cd backend && conan build .
+
+  build-frontend:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install
+      uses: borales/actions-yarn@v4
+      with:
+        cmd: install
+        dir: "frontend"
+    - name: Build
+      uses: borales/actions-yarn@v4
+      with:
+        cmd: build
+        dir: "frontend"
+
+  build-docker:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Docker image
+      run: docker build -t carlaviz:test .

@@ -11,6 +11,8 @@ __pycache__/
 # C extensions
 *.so
 
+CMakeUserPresets.json
+
 # Distribution / packaging
 .Python
 build/

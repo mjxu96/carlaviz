@@ -1,8 +1,10 @@
 '''
 File: carla_painter.py
-Author: Minjun Xu (mjxu96@gmail.com)
+Author: Minjun Xu (mjxu96@outlook.com)
 File Created: Monday, 7th October 2019 7:17:32 pm
 '''
+
+raise NotImplementedError("Carla Painter is not updated yet")
 
 from websocket import create_connection
 import logging
