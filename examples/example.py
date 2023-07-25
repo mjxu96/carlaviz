@@ -1,19 +1,25 @@
 
 import carla
 import random
-from carla_painter import CarlaPainter
+import time
+# from carla_painter import CarlaPainter
 
 def do_something(data):
     pass
 
+
 def main():
     try:
         # initialize one painter
-        painter = CarlaPainter('localhost', 8089)
+        # painter = CarlaPainter('localhost', 8089)
 
         client = carla.Client('localhost', 2000)
         client.set_timeout(10.0)
         world = client.get_world()
+
+        for blue_print in world.get_blueprint_library():
+            if blue_print.id.startswith("sensor"):
+                print(blue_print)
 
         # set synchronous mode
         previous_settings = world.get_settings()
@@ -56,7 +62,9 @@ def main():
 
         # attach a camera and a lidar to the ego vehicle
         camera = None
-        blueprint_camera = world.get_blueprint_library().find('sensor.camera.rgb')
+        # blueprint_camera = world.get_blueprint_library().find('sensor.camera.rgb')
+        blueprint_camera = world.get_blueprint_library().find('sensor.camera.instance_segmentation')
+        # blueprint_camera = world.get_blueprint_library().find('sensor.camera.depth')
         blueprint_camera.set_attribute('image_size_x', '640')
         blueprint_camera.set_attribute('image_size_y', '480')
         blueprint_camera.set_attribute('fov', '110')
@@ -66,7 +74,8 @@ def main():
         camera.listen(lambda data: do_something(data))
 
         lidar = None
-        blueprint_lidar = world.get_blueprint_library().find('sensor.lidar.ray_cast')
+        # blueprint_lidar = world.get_blueprint_library().find('sensor.lidar.ray_cast')
+        blueprint_lidar = world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
         blueprint_lidar.set_attribute('range', '30')
         blueprint_lidar.set_attribute('rotation_frequency', '10')
         blueprint_lidar.set_attribute('channels', '32')
@@ -89,14 +98,16 @@ def main():
             trajectories[0].append([ego_location.x, ego_location.y, ego_location.z])
 
             # draw trajectories
-            painter.draw_polylines(trajectories)
+            # painter.draw_polylines(trajectories)
 
             # draw ego vehicle's velocity just above the ego vehicle
             ego_velocity = ego_vehicle.get_velocity()
             velocity_str = "{:.2f}, ".format(ego_velocity.x) + "{:.2f}".format(ego_velocity.y) \
                     + ", {:.2f}".format(ego_velocity.z)
-            painter.draw_texts([velocity_str],
-                        [[ego_location.x, ego_location.y, ego_location.z + 10.0]], size=20)
+            # painter.draw_texts([velocity_str],
+            #             [[ego_location.x, ego_location.y, ego_location.z + 10.0]], size=20)
+
+            time.sleep(0.1)
 
 
     finally:

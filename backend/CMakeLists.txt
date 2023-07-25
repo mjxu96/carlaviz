@@ -1,18 +1,17 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.14)
 
-project(carlaviz-backend)
-if (NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+if(NOT CARLAVIZ_VERSION)
+  set(CARLAVIZ_VERSION "l.0.0")
 endif()
 
-message(STATUS "CMAKE BUILD TYPE: ${CMAKE_BUILD_TYPE}")
-SET(CMAKE_CXX_FLAGS "-std=c++17 -pthread -fPIC")
+project(
+  carlaviz
+  # VERSION ${CARLAVIZ_VERSION}
+  DESCRIPTION "CarlaViz"
+  LANGUAGES CXX)
 
-SET(CLIENT_ROOT_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_BUILD_TYPE "Client")
-include("third_party/LibCarla/cmake/CMakeLists.txt.in")
-add_subdirectory("third_party/LibCarla/cmake")
+set(CARLAVIZ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory("third_party/xviz")
-add_subdirectory("src/backend")
+add_subdirectory("src")

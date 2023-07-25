@@ -41,8 +41,9 @@ import githubIcon from "../public/github_icon.png";
 
 import "./index.css";
 
-const backendHostname = (__BACKEND_HOST__ === "" ? document.location.hostname : __BACKEND_HOST__)
-const backendPort = (__BACKEND_PORT__ === "" ? 8081 : __BACKEND_PORT__)
+const backendHostname =
+  __BACKEND_HOST__ === "" ? document.location.hostname : __BACKEND_HOST__;
+const backendPort = __BACKEND_PORT__ === "" ? 8081 : __BACKEND_PORT__;
 
 const carlaLog = new XVIZLiveLoader({
   logGuid: "mock",
@@ -57,9 +58,13 @@ const carlaLog = new XVIZLiveLoader({
 
 const tableComponentProps = {
   table: {
-    height: 120
+    height: 200
+  },
+  treetable: {
+    height: 200
   }
 };
+
 class CarlaViz extends PureComponent {
   state = {
     log: carlaLog,
@@ -69,6 +74,30 @@ class CarlaViz extends PureComponent {
       showTooltip: true
     }
   };
+
+  async _setMapLayer(map) {
+    this.forceUpdate();
+    console.log(map);
+    this.setState({
+      map: new GeoJsonLayer({
+        coordinateSystem: COORDINATE_SYSTEM.METER_OFFSETS,
+        coordinateOrigin: [0, 0, 0],
+        id: "carla_map",
+        data: map,
+        stroked: true,
+        filled: true,
+        wireframe: false,
+        extruded: true,
+        getFillColor: this._decideFillColor,
+        getLineColor: this._decideGeoJsonLineColor, // [255, 255, 255, 255],
+        getLineWidth: this._decideGeoJsonLineWidth,
+        getElevation: this._decideElevation,
+        getRadius: 0.00001,
+        opacity: 10
+      }),
+      metadataReceived: true
+    });
+  }
 
   componentDidMount() {
     const { log } = this.state;
@@ -81,26 +110,17 @@ class CarlaViz extends PureComponent {
           });
         };
         if (metadata.map) {
-          const mapLayer = new GeoJsonLayer({
-            coordinateSystem: COORDINATE_SYSTEM.METER_OFFSETS,
-            coordinateOrigin: [0, 0, 0],
-            id: "carla_map",
-            data: metadata.map,
-            stroked: true,
-            filled: true,
-            wireframe: true,
-            extruded: true,
-            getFillColor: [255, 255, 255, 255],
-            getLineColor: [255, 255, 255, 255],
-            getLineWidth: 0.1,
-            getRadius: 0.00001,
-            opacity: 10
-          });
-          this.setState({
-            map: mapLayer,
-            metadataReceived: true
-          });
-          console.log("get map");
+          console.log("new map coming in");
+          this.setState(
+            {
+              map: null,
+              metadataReceived: false
+            },
+            () => {
+              console.log("set map");
+              this._setMapLayer(metadata.map);
+            }
+          );
         } else {
           this.setState({
             metadataReceived: true
@@ -127,11 +147,51 @@ class CarlaViz extends PureComponent {
     }
   };
 
+  _decideGeoJsonLineColor = feature => {
+    if (feature.properties.type === "road") {
+      return [255, 255, 255, 255];
+    } else if (feature.properties.type === "stop_sign") {
+      return [255, 0, 0, 255];
+    }
+    return [255, 255, 255, 255];
+  };
+
+  _decideGeoJsonLineWidth = feature => {
+    if (feature.properties.type === "road") {
+      return 0.1;
+    } else if (feature.properties.type === "stop_sign") {
+      return 0.05;
+    }
+    return 0.1;
+  };
+
+  _decideElevation = feature => {
+    if (Object.hasOwn(feature.properties, "height")) {
+      return feature.properties.height;
+    }
+    return 0.0;
+  };
+
+  _decideFillColor = feature => {
+    if (feature.properties.type === "building") {
+      return [105, 105, 105, 255];
+    } else if (feature.properties.type === "sidewalk") {
+      return [112, 128, 144, 255];
+    } else if (feature.properties.type === "plant") {
+      return [0, 255, 255, 255];
+    }
+    return [255, 255, 255, 255];
+  };
+
   render() {
     const { log, map, metadataReceived, settings } = this.state;
     let customLayers = [];
     if (map) {
+      console.log("get another map", map);
       customLayers = [map];
+    } else {
+      console.log("no map");
+      customLayers = [];
     }
 
     return (
@@ -139,11 +199,11 @@ class CarlaViz extends PureComponent {
         <div id="control-panel">
           <div id="github">
             <p>
-              <a href="https://github.com/wx9698/carlaviz" target="_blank">
+              <a href="https://github.com/mjxu96/carlaviz" target="_blank">
                 CarlaViz
               </a>
             </p>
-            <a href="https://github.com/wx9698/carlaviz" target="_blank">
+            <a href="https://github.com/mjxu96/carlaviz" target="_blank">
               <img src={githubIcon}></img>
             </a>
           </div>

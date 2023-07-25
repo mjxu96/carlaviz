@@ -1,11 +1,12 @@
 {
   "name": "carlaviz_frontend",
+  "license": "MIT",
   "description": "Frontend of CarlaViz",
-  "version": "0.9.13",
+  "version": "0.9.14",
   "scripts": {
-    "start": "webpack-dev-server --host 0.0.0.0 --disable-host-check --env.live --progress --hot --open",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider webpack-dev-server --host 0.0.0.0 --disable-host-check --env.live --progress --hot --open",
     "prettier": "prettier --write '{public,src}/**/*.{ts,js,css,html}' index.html",
-    "build": "NODE_ENV=production webpack -p"
+    "build": "NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=production webpack -p"
   },
   "dependencies": {
     "@deck.gl/core": "^8.0.0",
