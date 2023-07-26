@@ -39,8 +39,8 @@ cd CARLA_SIMULATOR_PATH
 
 # 2. in another terminal, run backend
 ./backend/build/Debug/src/backend \
-  --simulator_host localhost \ # the simulator's host
-  --simulator_port 2000       # the simulator's port
+  --simulator_host localhost \
+  --simulator_port 2000
 # More usage and parameters can check below command
 # ./backend/build/Debug/src/backend --help
 

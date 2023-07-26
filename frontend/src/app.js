@@ -77,7 +77,6 @@ class CarlaViz extends PureComponent {
 
   async _setMapLayer(map) {
     this.forceUpdate();
-    console.log(map);
     this.setState({
       map: new GeoJsonLayer({
         coordinateSystem: COORDINATE_SYSTEM.METER_OFFSETS,
@@ -110,14 +109,12 @@ class CarlaViz extends PureComponent {
           });
         };
         if (metadata.map) {
-          console.log("new map coming in");
           this.setState(
             {
               map: null,
               metadataReceived: false
             },
             () => {
-              console.log("set map");
               this._setMapLayer(metadata.map);
             }
           );
@@ -125,7 +122,6 @@ class CarlaViz extends PureComponent {
           this.setState({
             metadataReceived: true
           });
-          console.log("receive metadata without map");
         }
       })
       .on("error", console.error)
@@ -187,10 +183,8 @@ class CarlaViz extends PureComponent {
     const { log, map, metadataReceived, settings } = this.state;
     let customLayers = [];
     if (map) {
-      console.log("get another map", map);
       customLayers = [map];
     } else {
-      console.log("no map");
       customLayers = [];
     }
 

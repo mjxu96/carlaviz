@@ -107,8 +107,7 @@ def main():
             # painter.draw_texts([velocity_str],
             #             [[ego_location.x, ego_location.y, ego_location.z + 10.0]], size=20)
 
-            time.sleep(0.1)
-
+            time.sleep(0.05)
 
     finally:
         if previous_settings is not None:

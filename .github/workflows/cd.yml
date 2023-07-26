@@ -3,6 +3,8 @@ on:
   push:
     tags:
     - '[0-9]+.[0-9]+.[0-9]+'  # semantic version
+    branches:
+    - master
 
 jobs:
   release:
@@ -14,7 +16,15 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Build Docker image
+    - name: Build Docker image on Tag
+      if: github.ref != 'refs/heads/master'
       run: docker build -t mjxu96/carlaviz:${{ github.ref_name }} .
-    - name: Push image
+    - name: Push image on Tag
+      if: github.ref != 'refs/heads/master'
       run: docker push mjxu96/carlaviz:${{ github.ref_name }}
+    - name: Build Docker image on Master
+      if: github.ref == 'refs/heads/master'
+      run: docker build -t mjxu96/carlaviz:latest .
+    - name: Push image on Master
+      if: github.ref == 'refs/heads/master'
+      run: docker push mjxu96/carlaviz:latest
