@@ -9,11 +9,7 @@ env:
   CARLAVIZ_CI_VERSION_OVERRIDE: "0.0.1"
 
 jobs:
-  build-backend:
-    strategy:
-      matrix:
-        profile: [gcc11, clang14]
-        build_type: [Debug, Release]
+  clang-format-check:
     runs-on: ubuntu-22.04
     steps:
     # git checkout
@@ -28,14 +24,36 @@ jobs:
       with:
         clang-format-version: '14'
         check-path: backend
+
+  build-backend:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022]
+        profile: [gcc11, clang14, msvc17]
+        build_type: [Debug, Release]
+        exclude:
+          - os: windows-2022
+            profile: gcc11
+          - os: windows-2022
+            profile: clang14
+          - os: ubuntu-22.04
+            profile: msvc17
+    runs-on: ${{ matrix.os }}
+    steps:
+    # git checkout
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     # dependencies
     - name: Install cmake and compilers
+      if: matrix.os == 'ubuntu-22.04'
       run: sudo apt install -y cmake g++-11 clang-14 libc++-14-dev
     - name: Install conan and coverage tool
       run: pip install conan==1.55.0 && conan user
     - name: Add conan registry
       run: conan remote add gitlab https://gitlab.com/api/v4/projects/44861904/packages/conan
     - name: Copy conan profiles
+      shell: bash
       run: bash misc/cicd/conan/copy_conan_profiles.sh ${HOME}/
     # install packages and build
     - name: Install

@@ -27,7 +27,7 @@
 
 #pragma once
 
-#ifdef __cpp_lib_format
+#if defined(__cpp_lib_format) || defined(_WIN32)
 #include <format>
 #else
 #include <fmt/chrono.h>

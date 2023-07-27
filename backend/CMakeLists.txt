@@ -6,7 +6,7 @@ endif()
 
 project(
   carlaviz
-  # VERSION ${CARLAVIZ_VERSION}
+  VERSION ${CARLAVIZ_VERSION}
   DESCRIPTION "CarlaViz"
   LANGUAGES CXX)
 

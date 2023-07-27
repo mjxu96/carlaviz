@@ -40,3 +40,7 @@ endif()
 
 add_executable(backend backend.cc)
 target_link_libraries(backend carlaviz)
+if (MSVC)
+  target_compile_options(backend PRIVATE /bigobj)
+endif ()
+

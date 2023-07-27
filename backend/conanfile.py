@@ -52,12 +52,12 @@ class CarlaViz(ConanFile):
 
     def requirements(self):
         self.requires("gflags/2.2.2")  # for cmd option parse
-        self.requires("spdlog/1.11.0")
+        self.requires("spdlog/1.12.0")
         self.requires("fmt/9.1.0")
         if self.options.simulator == "carla":
-            self.requires("carla/0.9.14")
+            self.requires("carla/0.9.14.1")
         if self.options.frontend == "xviz":
-            self.requires("xviz/0.4.2")
+            self.requires("xviz/0.5.1")
             # require GeoJson
             self.requires("nlohmann_json/3.11.2")
             self.requires("websocketpp/0.8.2")

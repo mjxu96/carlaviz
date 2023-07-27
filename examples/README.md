@@ -15,12 +15,12 @@ cd CARLA_SIMULATOR_PATH
 
 # 2. run the docker image
 # Linux
-docker run -it --network="host" mjxu96/carlaviz:0.9.14 \
+docker run -it --network="host" mjxu96/carlaviz:0.9.14.1 \
   --simulator_host localhost \
   --simulator_port 2000
 
 # Windows/MacOS
-docker run -it -p 8080-8081:8080-8081 mjxu96/carlaviz:0.9.14 \
+docker run -it -p 8080-8081:8080-8081 mjxu96/carlaviz:0.9.14.1 \
   --simulator_host host.docker.internal \
   --simulator_port 2000
 
