@@ -81,7 +81,8 @@ template <typename... Args>
 void LogFatal(spdlog::format_string_t<Args...> fmt, Args &&...args) {
   spdlog::critical(fmt, std::forward<Args>(args)...);
   spdlog::default_logger()->flush();
-  throw std::runtime_error(std::format(fmt, std::forward<Args>(args)...));
+  // TODO update fmt::format to std::format
+  throw std::runtime_error(fmt::format(fmt, std::forward<Args>(args)...));
 }
 
 }  // namespace carlaviz::logging

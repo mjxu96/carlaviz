@@ -4,9 +4,9 @@ Before start, the [docker image](https://github.com/mjxu96/carlaviz#docker-image
 
 ## Prerequisites
 #### Backend part
-1. C++20 Compiler and CMake
-2. OS: ubuntu 22.04 (otherwise you need to get glibc >= 2.32)
-3. [Conan](https://docs.conan.io/1/index.html) >= 1.55.0, profiles can be found [here](../misc/cicd/conan/gcc11)
+1. C++20 Compiler (gcc11, clang14 or msvc17) and CMake
+2. OS: windows or ubuntu 22.04 (otherwise you need to get glibc >= 2.32)
+3. [Conan](https://docs.conan.io/1/index.html) >= 1.55.0, profiles can be found [here](../misc/cicd/conan)
 #### Frontend part
 1. nodejs 18.x
 2. yarn

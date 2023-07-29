@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <carlaviz/utils/definitions.h>
 #include <carlaviz/utils/sensor.h>
 #include "base.h"
 
@@ -135,8 +136,8 @@ class XVIZMetadataUpdater {
       .EndContainer()
     .UI("Tables")
       .Container("Tables", xviz::LayoutType::HORIZONTAL)
-        .TreeeTable("Simulator Info", "Simulator Info", "/game/info", false)
-        .TreeeTable("Ego Vehicle Info", "Ego Vehicle Info", "/vehicle/info", false)
+        .TreeTable("Simulator Info", "Simulator Info", "/game/info", false)
+        .TreeTable("Ego Vehicle Info", "Ego Vehicle Info", "/vehicle/info", false)
       .EndContainer()
     .UI("Metrics")
       .Container("Metrics", xviz::LayoutType::VERTICAL)
@@ -188,7 +189,7 @@ class XVIZMetadataUpdater {
         new_metadata_required_);
     if (new_metadata_required_) {
       new_metadata_required_ = false;
-      auto& metadata = metadata_builder_.GetMessage();
+      auto& metadata = metadata_builder_.GetData();
       xviz::Message<xviz::Metadata> metadata_message(metadata);
       std::string metadata_json_string = metadata_message.ToJsonString();
       if (!map_.Empty()) {
@@ -399,7 +400,7 @@ class XVIZTranslation
     }
 
     this->connector_.UpdateSnapshot(
-        xviz::Message<xviz::StateUpdate>(builder_.GetMessage())
+        xviz::Message<xviz::StateUpdate>(builder_.GetData())
             .ToProtobufBinary());
 
     // reset builder every time
