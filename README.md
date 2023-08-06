@@ -28,5 +28,10 @@ Although the container image is out-of-box to use, you are also welcome to build
 
 Refer to this [page](./docs/build.md) for building instructions.
 
-## Author
+## Contribution
+Please read [this](./CONTRIBUTION.md).
+
+## Author and Collaboration
 [Minjun Xu](https://github.com/mjxu96)   mjxu96@outlook.com
+
+Please contact me via email if you want more collaborations.
