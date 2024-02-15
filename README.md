@@ -8,8 +8,8 @@ Visualize carla in the web browser.
 ## Version Supported
 | Platform | Supported Carla Version | Docker/Source |
 | ------------- | --------------------- | --- |
-| Ubuntu | 0.9.6 - 0.9.14.1| Docker image and source |
-| Windows | 0.9.9.2 - 0.9.14.1| Docker image and source |
+| Ubuntu | 0.9.6 - 0.9.15| Docker image and source |
+| Windows | 0.9.9.2 - 0.9.15| Docker image and source |
 
 ## Instructions
 ### Docker image
@@ -17,7 +17,7 @@ Docker image is provided. Run following command to pull this image (including fr
 
 ```bash
 # pull the image based on your carla version
-docker pull mjxu96/carlaviz:0.9.14.1
+docker pull mjxu96/carlaviz:0.9.15
 ```
 
 ### How to run it?

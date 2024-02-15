@@ -1,5 +1,9 @@
 # Change Logs
 
+## 0.9.15
+* Support Carla 0.9.15
+* Update Github CI/CD actions version
+
 ## 0.9.14.1
 * Support Carla 0.9.14.1
 * Completely rewrite the backend part
