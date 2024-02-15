@@ -55,7 +55,7 @@ class CarlaViz(ConanFile):
         self.requires("spdlog/1.12.0")
         self.requires("fmt/9.1.0")
         if self.options.simulator == "carla":
-            self.requires("carla/0.9.14.1")
+            self.requires("carla/0.9.15")
         if self.options.frontend == "xviz":
             self.requires("xviz/0.5.1")
             # require GeoJson
